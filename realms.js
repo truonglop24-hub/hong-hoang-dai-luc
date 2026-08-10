@@ -1,3 +1,5 @@
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+
 const realms = [
     {
         id: 0,
@@ -37,7 +39,7 @@ const realms = [
     {
         id: 7,
         name: "Hợp Thể",
-        maxCultivation: 3000000
+        maxCultivation: 5000000
     },
     {
         id: 8,
@@ -47,32 +49,32 @@ const realms = [
     {
         id: 9,
         name: "Độ Kiếp",
-        maxCultivation: 30000000
+        maxCultivation: 50000000
     },
     {
         id: 10,
-        name: "Chân Tiên",
+        name: "Tán Tiên",
         maxCultivation: 100000000
     },
     {
         id: 11,
-        name: "Kim Tiên",
+        name: "Chân Tiên",
         maxCultivation: 500000000
     },
     {
         id: 12,
-        name: "Thái Ất Kim Tiên",
-        maxCultivation: 2000000000
+        name: "Kim Tiên",
+        maxCultivation: 1000000000
     },
     {
         id: 13,
-        name: "Đại La Kim Tiên",
-        maxCultivation: 10000000000
+        name: "Tiên Vương",
+        maxCultivation: 5000000000
     },
     {
         id: 14,
-        name: "Chuẩn Thánh",
-        maxCultivation: 50000000000
+        name: "Tiên Đế",
+        maxCultivation: 10000000000
     },
     {
         id: 15,
@@ -82,13 +84,37 @@ const realms = [
     {
         id: 16,
         name: "Thiên Đạo",
-        maxCultivation: 1000000000000
+        maxCultivation: 10000000000000
     },
     {
         id: 17,
         name: "Đại Đạo",
-        maxCultivation: 9999999999999
+        maxCultivation: 99999999999999
     }
 ];
 
-module.exports = realms;
+const command = {
+    data: new SlashCommandBuilder()
+        .setName("realms")
+        .setDescription("Xem danh sách cảnh giới tu tiên"),
+
+    async execute(interaction) {
+        const text = realms
+            .map(
+                r =>
+                    `**${r.id}. ${r.name}** — Tối đa: ${r.maxCultivation.toLocaleString()} tu vi`
+            )
+            .join("\n");
+
+        const embed = new EmbedBuilder()
+            .setTitle("🌌 HỒNG HOANG ĐẠI LỤC – CẢNH GIỚI")
+            .setDescription(text)
+            .setFooter({ text: "Con đường tu tiên" });
+
+        await interaction.reply({
+            embeds: [embed]
+        });
+    }
+};
+
+module.exports = command;
