@@ -5,7 +5,7 @@ const {
 
 const {
     createPlayer
-} = require("../../database/database");
+} = require(".database");
 
 module.exports = {
     data: new SlashCommandBuilder()
