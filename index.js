@@ -73,15 +73,14 @@ client.on("interactionCreate", async interaction => {
             "menu_nghenghiep": "nghenghiep",
             "menu_chiendau": "chiendau",
             "menu_donghanh": "donghanh",
-            "menu_phithang": "phithang",
+        
 
-            // Hàng 3
+                  // Hàng 3
             "menu_tongmon": "tongmon",
             "menu_pvp": "pvp",
-            "menu_thienkiep": "thienkiep",
+            
 
             // Hàng 4
-            "menu_sugia": "sugia",
             "menu_dongphu": "dongphu",
             "menu_xephang": "xephang",
             "menu_khac": "khac",
