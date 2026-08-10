@@ -15,14 +15,17 @@ const client = new Client({
     ]
 });
 
+
 client.commands = new Collection();
 
-// ==========================
-// LOAD COMMANDS
-// ==========================
+
+// =========================
+// LOAD COMMAND
+// =========================
+
 const commandFiles = fs.readdirSync(__dirname)
 .filter(file => file.endsWith(".js"))
-.filter(file => 
+.filter(file =>
     ![
         "index.js",
         "database.js",
@@ -34,13 +37,17 @@ const commandFiles = fs.readdirSync(__dirname)
 
 for (const file of commandFiles) {
 
-    const filePath = path.join(__dirname, file);
-
     try {
 
-        const command = require(filePath);
+        const command = require(
+            path.join(__dirname, file)
+        );
 
-        if (command.data && command.execute) {
+
+        if (
+            command.data &&
+            command.execute
+        ) {
 
             client.commands.set(
                 command.data.name,
@@ -54,88 +61,107 @@ for (const file of commandFiles) {
         } else {
 
             console.log(
-                `❌ ${file} không đúng cấu trúc command`
+                `⚠️ Bỏ qua ${file}`
             );
 
         }
 
-    } catch (error) {
 
-        console.log(`❌ Không thể tải ${file}`);
-        console.error(error);
+    } catch(error){
 
-    }
-}
-
-// ==========================
-// READY
-// ==========================
-
-client.once("ready", () => {
-
-    console.log("================================");
-    console.log("🌌 HỒNG HOANG APP ĐÃ GIÁNG LÂM");
-    console.log(`🤖 Bot: ${client.user.tag}`);
-    console.log(`📜 Số lệnh: ${client.commands.size}`);
-    console.log("================================");
-
-});
-
-// ==========================
-// INTERACTION
-// ==========================
-
-client.on("interactionCreate", async interaction => {
-
-    if (!interaction.isChatInputCommand()) return;
-
-    console.log(
-        `📥 Nhận lệnh /${interaction.commandName}`
-    );
-
-    const command = client.commands.get(
-        interaction.commandName
-    );
-
-    if (!command) {
-
-        return interaction.reply({
-            content: "❌ Lệnh này chưa được tải vào bot.",
-            ephemeral: true
-        });
-
-    }
-
-    try {
-
-        await command.execute(interaction);
-
-    } catch (error) {
-
-        console.error(
-            `❌ Lỗi /${interaction.commandName}:`,
-            error
+        console.log(
+            `❌ Lỗi tải ${file}:`,
+            error.message
         );
 
-        if (interaction.replied || interaction.deferred) {
+    }
 
-            await interaction.editReply({
-                content: "❌ Bot gặp lỗi khi xử lý lệnh."
-            });
+}
 
-        } else {
 
-            await interaction.reply({
-                content: "❌ Bot gặp lỗi khi xử lý lệnh.",
-                ephemeral: true
+
+client.once(
+    "clientReady",
+    () => {
+
+        console.log(
+`
+==============================
+🌌 HỒNG HOANG ĐẠI LỤC
+==============================
+
+🤖 Bot: ${client.user.tag}
+
+📜 Số lệnh: ${client.commands.size}
+
+==============================
+`
+        );
+
+    }
+);
+
+
+
+// =========================
+// INTERACTION
+// =========================
+
+client.on(
+"interactionCreate",
+async interaction => {
+
+
+    if(!interaction.isChatInputCommand())
+        return;
+
+
+    const command =
+        client.commands.get(
+            interaction.commandName
+        );
+
+
+    if(!command)
+        return;
+
+
+    try{
+
+        await command.execute(
+            interaction
+        );
+
+
+    }catch(error){
+
+        console.error(error);
+
+
+        if(interaction.replied)
+        {
+            interaction.followUp({
+                content:
+                "❌ Lỗi khi thực hiện lệnh!",
+                ephemeral:true
             });
 
         }
+        else
+        {
+            interaction.reply({
+                content:
+                "❌ Lỗi khi thực hiện lệnh!",
+                ephemeral:true
+            });
+        }
+
     }
+
 });
 
-// ==========================
-// LOGIN
-// ==========================
 
-client.login(process.env.TOKEN);
+
+client.login(
+    process.env.TOKEN
+);
