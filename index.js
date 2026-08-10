@@ -20,12 +20,10 @@ client.commands = new Collection();
 // ==========================
 // LOAD COMMANDS
 // ==========================
+const commandFiles = fs.readdirSync(__dirname)
+    .filter(file => file.endsWith(".js"))
+    .filter(file => file !== "index.js");
 
-const commandFiles = [
-    "batdau.js",
-    "tuvi.js",
-    "tuluyen.js"
-];
 
 for (const file of commandFiles) {
 
