@@ -8,7 +8,7 @@ const {
     db
 } = require("../../database/database");
 
-const realms = require("./data/realms");
+const realms = require("./realms");
 
 const cooldowns = new Map();
 
