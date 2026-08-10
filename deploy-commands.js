@@ -5,37 +5,35 @@ const {
     Routes
 } = require("discord.js");
 
-const fs = require("fs");
-const path = require("path");
-
 const commands = [];
 
-function loadCommands(dir) {
+const commandFiles = [
+    "batdau.js",
+    "tuvi.js",
+    "tuluyen.js"
+];
 
-    const files = fs.readdirSync(dir);
+for (const file of commandFiles) {
 
-    for (const file of files) {
+    try {
 
-        const fullPath = path.join(dir, file);
-
-        if (fs.statSync(fullPath).isDirectory()) {
-            loadCommands(fullPath);
-            continue;
-        }
-
-        if (!file.endsWith(".js")) continue;
-
-        const command = require(fullPath);
+        const command = require(`./${file}`);
 
         if (command.data) {
-            commands.push(command.data.toJSON());
+            commands.push(
+                command.data.toJSON()
+            );
         }
+
+    } catch (error) {
+
+        console.error(
+            `❌ Lỗi tải ${file}:`,
+            error
+        );
+
     }
 }
-
-loadCommands(
-    path.join(__dirname, "commands")
-);
 
 const rest = new REST({
     version: "10"
@@ -58,7 +56,7 @@ const rest = new REST({
         );
 
         console.log(
-            "✅ Đã đăng ký lệnh cho server!"
+            `✅ Đã đăng ký ${commands.length} lệnh!`
         );
 
     } catch (error) {
