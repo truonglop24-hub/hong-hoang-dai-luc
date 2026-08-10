@@ -6,7 +6,7 @@ const {
 const {
     getPlayer,
     db
-} = require("../../database/database");
+} = require("./database");
 
 const realms = require("./realms");
 
