@@ -1,436 +1,763 @@
 const {
-  Client,
-  GatewayIntentBits,
-  REST,
-  Routes,
-  SlashCommandBuilder
+    Client,
+    GatewayIntentBits,
+    REST,
+    Routes,
+    SlashCommandBuilder,
+    EmbedBuilder
 } = require("discord.js");
 
 const fs = require("fs");
+const path = require("path");
 
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds
-  ]
-});
+// ===============================
+// CONFIG
+// ===============================
 
-// =========================
+const TOKEN = process.env.TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
+const GUILD_ID = process.env.GUILD_ID;
+
+// ===============================
 // DATABASE
-// =========================
+// ===============================
 
-const DATA_FILE = "./data.json";
+const DATA_FILE = path.join(__dirname, "data.json");
 
-let database = {};
-
-if (fs.existsSync(DATA_FILE)) {
-  try {
-    database = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
-  } catch {
-    database = {};
-  }
+if (!fs.existsSync(DATA_FILE)) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify({}, null, 2));
 }
 
-function saveDatabase() {
-  fs.writeFileSync(
-    DATA_FILE,
-    JSON.stringify(database, null, 2)
-  );
+function loadData() {
+    try {
+        return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+    } catch {
+        return {};
+    }
 }
 
-function getUser(id) {
-  if (!database[id]) {
-    database[id] = {
-      exp: 0,
-      realm: 0,
-      linhThach: 100,
-      danDuoc: 3,
-      lastTrain: 0
-    };
+let db = loadData();
 
-    saveDatabase();
-  }
-
-  return database[id];
+function saveData() {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
 }
 
-// =========================
-// CẢNH GIỚI
-// =========================
+// ===============================
+// USER DATA
+// ===============================
+
+function createUser(user) {
+    if (!db[user.id]) {
+        db[user.id] = {
+            id: user.id,
+            name: user.username,
+
+            realm: 0,
+            cultivation: 0,
+
+            spiritStones: 1000,
+
+            pills: {
+                tuLinh: 3,
+                dotPha: 1,
+                hoiPhuc: 2,
+                baoMenh: 1
+            },
+
+            lastCultivate: 0,
+            lastDaily: 0,
+
+            totalCultivate: 0,
+            breakthroughs: 0,
+
+            createdAt: Date.now()
+        };
+
+        saveData();
+    }
+
+    return db[user.id];
+}
+
+// ===============================
+// REALMS
+// ===============================
 
 const realms = [
-  {
-    name: "Luyện Khí",
-    max: 1000,
-    success: 100
-  },
-  {
-    name: "Trúc Cơ",
-    max: 3000,
-    success: 80
-  },
-  {
-    name: "Kim Đan",
-    max: 7000,
-    success: 65
-  },
-  {
-    name: "Nguyên Anh",
-    max: 15000,
-    success: 50
-  },
-  {
-    name: "Hóa Thần",
-    max: 30000,
-    success: 40
-  },
-  {
-    name: "Luyện Hư",
-    max: 60000,
-    success: 30
-  },
-  {
-    name: "Hợp Thể",
-    max: 120000,
-    success: 25
-  },
-  {
-    name: "Đại Thừa",
-    max: 250000,
-    success: 20
-  },
-  {
-    name: "Độ Kiếp",
-    max: Infinity,
-    success: 15
-  }
+    {
+        name: "Phàm Nhân",
+        max: 0,
+        requirement: 0,
+        success: 100
+    },
+    {
+        name: "Luyện Khí",
+        max: 9,
+        requirement: 100,
+        success: 90
+    },
+    {
+        name: "Trúc Cơ",
+        max: 9,
+        requirement: 500,
+        success: 80
+    },
+    {
+        name: "Kim Đan",
+        max: 9,
+        requirement: 1500,
+        success: 70
+    },
+    {
+        name: "Nguyên Anh",
+        max: 9,
+        requirement: 4000,
+        success: 60
+    },
+    {
+        name: "Hóa Thần",
+        max: 9,
+        requirement: 10000,
+        success: 50
+    },
+    {
+        name: "Luyện Hư",
+        max: 9,
+        requirement: 25000,
+        success: 45
+    },
+    {
+        name: "Hợp Thể",
+        max: 9,
+        requirement: 60000,
+        success: 40
+    },
+    {
+        name: "Đại Thừa",
+        max: 9,
+        requirement: 150000,
+        success: 35
+    },
+    {
+        name: "Độ Kiếp",
+        max: 9,
+        requirement: 400000,
+        success: 30
+    },
+    {
+        name: "Tiên Nhân",
+        max: 9,
+        requirement: 1000000,
+        success: 25
+    },
+    {
+        name: "Chân Tiên",
+        max: 9,
+        requirement: 3000000,
+        success: 20
+    },
+    {
+        name: "Tiên Vương",
+        max: 9,
+        requirement: 10000000,
+        success: 15
+    },
+    {
+        name: "Tiên Đế",
+        max: 9,
+        requirement: 50000000,
+        success: 10
+    },
+    {
+        name: "Hồng Hoang Chí Tôn",
+        max: 1,
+        requirement: 100000000,
+        success: 5
+    }
 ];
 
-// =========================
-// SLASH COMMANDS
-// =========================
+// ===============================
+// HELPERS
+// ===============================
 
-const commands = [
-  new SlashCommandBuilder()
-    .setName("tuvi")
-    .setDescription("Xem thông tin tu tiên của bản thân"),
+function getRealm(user) {
+    return realms[user.realm] || realms[0];
+}
 
-  new SlashCommandBuilder()
-    .setName("luyentap")
-    .setDescription("Tu luyện để nhận tu vi"),
+function formatNumber(number) {
+    return Number(number).toLocaleString("vi-VN");
+}
 
-  new SlashCommandBuilder()
-    .setName("dotpha")
-    .setDescription("Đột phá cảnh giới"),
+function getProgress(user) {
+    const realm = getRealm(user);
 
-  new SlashCommandBuilder()
-    .setName("linhthach")
-    .setDescription("Xem số linh thạch"),
+    if (user.realm >= realms.length - 1) {
+        return "MAX";
+    }
 
-  new SlashCommandBuilder()
-    .setName("danduoc")
-    .setDescription("Xem số đan dược"),
+    const next = realms[user.realm + 1];
 
-  new SlashCommandBuilder()
-    .setName("top")
-    .setDescription("Xem bảng xếp hạng tu sĩ")
-].map(command => command.toJSON());
-
-// =========================
-// READY
-// =========================
-
-client.once("ready", async () => {
-  console.log(`Bot đã online: ${client.user.tag}`);
-
-  const rest = new REST({ version: "10" })
-    .setToken(process.env.TOKEN);
-
-  try {
-    await rest.put(
-      Routes.applicationCommands(client.user.id),
-      {
-        body: commands
-      }
+    const percent = Math.min(
+        100,
+        Math.floor((user.cultivation / next.requirement) * 100)
     );
 
-    console.log("Đã đăng ký lệnh tu tiên!");
-  } catch (error) {
-    console.error(error);
-  }
+    const barLength = 10;
+    const filled = Math.floor(percent / 10);
+
+    return "█".repeat(filled) +
+        "░".repeat(barLength - filled) +
+        ` ${percent}%`;
+}
+
+function cooldownRemaining(timestamp, cooldown) {
+    const remaining = cooldown - (Date.now() - timestamp);
+
+    if (remaining <= 0) return 0;
+
+    return remaining;
+}
+
+function formatTime(ms) {
+    const seconds = Math.ceil(ms / 1000);
+
+    if (seconds < 60) {
+        return `${seconds} giây`;
+    }
+
+    const minutes = Math.ceil(seconds / 60);
+
+    if (minutes < 60) {
+        return `${minutes} phút`;
+    }
+
+    const hours = Math.ceil(minutes / 60);
+
+    return `${hours} giờ`;
+}
+
+// ===============================
+// DISCORD CLIENT
+// ===============================
+
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds
+    ]
 });
 
-// =========================
-// COMMAND HANDLER
-// =========================
+// ===============================
+// SLASH COMMANDS
+// ===============================
+
+const commands = [
+
+    new SlashCommandBuilder()
+        .setName("tuvi")
+        .setDescription("Xem thông tin tu vi của bản thân"),
+
+    new SlashCommandBuilder()
+        .setName("luyentap")
+        .setDescription("Tu luyện để tăng tu vi"),
+
+    new SlashCommandBuilder()
+        .setName("dotpha")
+        .setDescription("Đột phá cảnh giới"),
+
+    new SlashCommandBuilder()
+        .setName("tui")
+        .setDescription("Xem túi đồ và đan dược"),
+
+    new SlashCommandBuilder()
+        .setName("top")
+        .setDescription("Xem bảng xếp hạng tu vi"),
+
+    new SlashCommandBuilder()
+        .setName("daily")
+        .setDescription("Nhận linh thạch mỗi ngày"),
+
+    new SlashCommandBuilder()
+        .setName("trogiup")
+        .setDescription("Xem toàn bộ lệnh tu tiên")
+
+].map(command => command.toJSON());
+
+// ===============================
+// REGISTER COMMANDS
+// ===============================
+
+async function registerCommands() {
+
+    if (!CLIENT_ID) {
+        console.log("❌ Thiếu CLIENT_ID");
+        return;
+    }
+
+    const rest = new REST({
+        version: "10"
+    }).setToken(TOKEN);
+
+    try {
+
+        console.log("🔄 Đang đăng ký slash commands...");
+
+        if (GUILD_ID) {
+
+            await rest.put(
+                Routes.applicationGuildCommands(
+                    CLIENT_ID,
+                    GUILD_ID
+                ),
+                {
+                    body: commands
+                }
+            );
+
+            console.log("✅ Đã đăng ký lệnh cho server.");
+
+        } else {
+
+            await rest.put(
+                Routes.applicationCommands(CLIENT_ID),
+                {
+                    body: commands
+                }
+            );
+
+            console.log("✅ Đã đăng ký lệnh toàn hệ thống.");
+
+        }
+
+    } catch (error) {
+        console.error("❌ Không thể đăng ký commands:", error);
+    }
+}
+
+// ===============================
+// READY
+// ===============================
+
+client.once("ready", () => {
+
+    console.log(`================================`);
+    console.log(`☯ HỒNG HOANG ĐẠI LỤC`);
+    console.log(`☯ Bot: ${client.user.tag}`);
+    console.log(`☯ Trạng thái: ONLINE`);
+    console.log(`================================`);
+
+    client.user.setActivity("Hồng Hoang Đại Lục", {
+        type: 0
+    });
+});
+
+// ===============================
+// INTERACTION
+// ===============================
 
 client.on("interactionCreate", async interaction => {
 
-  if (!interaction.isChatInputCommand()) return;
+    if (!interaction.isChatInputCommand()) return;
 
-  const user = getUser(interaction.user.id);
+    const user = createUser(interaction.user);
 
-  // =========================
-  // /tuvi
-  // =========================
+    // ===========================
+    // TU VI
+    // ===========================
 
-  if (interaction.commandName === "tuvi") {
+    if (interaction.commandName === "tuvi") {
 
-    const realm = realms[user.realm];
+        const realm = getRealm(user);
 
-    return interaction.reply({
-      content:
-`☯️ **THÔNG TIN TU SĨ**
+        const embed = new EmbedBuilder()
+            .setTitle("☯ Hồ Sơ Tu Tiên")
+            .setDescription(
+                `**${interaction.user.username}**\n\n` +
+                `🌌 **Cảnh giới:** ${realm.name}\n` +
+                `✨ **Tu vi:** ${formatNumber(user.cultivation)}\n` +
+                `💎 **Linh thạch:** ${formatNumber(user.spiritStones)}\n\n` +
+                `📈 **Tiến độ đột phá:**\n${getProgress(user)}\n\n` +
+                `⚡ **Số lần đột phá:** ${user.breakthroughs}\n` +
+                `🧘 **Số lần tu luyện:** ${user.totalCultivate}`
+            )
+            .setColor(0x7b2cff)
+            .setFooter({
+                text: "Hồng Hoang Đại Lục"
+            });
 
-👤 Tu sĩ: **${interaction.user.username}**
+        await interaction.reply({
+            embeds: [embed]
+        });
 
-⚔️ Cảnh giới: **${realm.name}**
+        return;
+    }
 
-✨ Tu vi: **${user.exp.toLocaleString()}**
-💎 Linh thạch: **${user.linhThach.toLocaleString()}**
-💊 Đan dược: **${user.danDuoc}**
+    // ===========================
+    // LUYỆN TẬP
+    // ===========================
 
-📈 Tu vi cần để đột phá:
-**${realm.max === Infinity ? "Đã đạt cảnh giới tối cao" : realm.max.toLocaleString()}**
+    if (interaction.commandName === "luyentap") {
 
-🌌 Tỷ lệ đột phá:
-**${realm.success}%**`
-    });
-  }
+        const cooldown = 60 * 1000;
 
-  // =========================
-  // /luyentap
-  // =========================
-
-  if (interaction.commandName === "luyentap") {
-
-    const cooldown = 60 * 1000;
-    const now = Date.now();
-
-    if (now - user.lastTrain < cooldown) {
-
-      const remaining =
-        Math.ceil(
-          (cooldown - (now - user.lastTrain)) / 1000
+        const remaining = cooldownRemaining(
+            user.lastCultivate,
+            cooldown
         );
 
-      return interaction.reply({
-        content:
-`⏳ **Ngươi đang vận công!**
+        if (remaining > 0) {
 
-Hãy chờ **${remaining} giây** rồi tiếp tục tu luyện.`,
-        ephemeral: true
-      });
+            await interaction.reply(
+                `⏳ **Đạo hữu cần tĩnh tâm!**\n` +
+                `Hãy chờ **${formatTime(remaining)}** rồi tiếp tục tu luyện.`
+            );
+
+            return;
+        }
+
+        const realm = getRealm(user);
+
+        let gain = Math.floor(
+            Math.random() * 201
+        ) + 100;
+
+        gain += user.realm * 100;
+
+        user.cultivation += gain;
+        user.totalCultivate++;
+        user.lastCultivate = Date.now();
+
+        // Thưởng linh thạch
+        const stones = Math.floor(
+            Math.random() * 101
+        ) + 50;
+
+        user.spiritStones += stones;
+
+        saveData();
+
+        await interaction.reply(
+            `🧘 **Tu luyện thành công!**\n\n` +
+            `🌌 Cảnh giới: **${realm.name}**\n` +
+            `✨ Tu vi nhận được: **+${formatNumber(gain)}**\n` +
+            `💎 Linh thạch nhận được: **+${formatNumber(stones)}**\n\n` +
+            `📈 Tu vi hiện tại: **${formatNumber(user.cultivation)}**`
+        );
+
+        return;
     }
 
-    const gain =
-      Math.floor(
-        Math.random() * 401
-      ) + 500;
+    // ===========================
+    // ĐỘT PHÁ
+    // ===========================
 
-    user.exp += gain;
-    user.linhThach += 10;
-    user.lastTrain = now;
+    if (interaction.commandName === "dotpha") {
 
-    saveDatabase();
+        if (user.realm >= realms.length - 1) {
 
-    return interaction.reply(
-`🧘 **TU LUYỆN THÀNH CÔNG!**
+            await interaction.reply(
+                "👑 **Đạo hữu đã đạt cảnh giới Hồng Hoang Chí Tôn!**\n" +
+                "Không còn cảnh giới nào cao hơn."
+            );
 
-✨ Ngươi hấp thu linh khí trời đất.
+            return;
+        }
 
-⚡ Tu vi nhận được: **+${gain}**
-💎 Linh thạch nhận được: **+10**
+        const currentRealm = getRealm(user);
+        const nextRealm = realms[user.realm + 1];
 
-📊 Tu vi hiện tại:
-**${user.exp.toLocaleString()}**
+        if (user.cultivation < nextRealm.requirement) {
 
-⏳ Cooldown: **60 giây**`
-    );
-  }
+            const missing =
+                nextRealm.requirement -
+                user.cultivation;
 
-  // =========================
-  // /dotpha
-  // =========================
+            await interaction.reply(
+                `❌ **Đột phá thất bại!**\n\n` +
+                `🌌 Cảnh giới hiện tại: **${currentRealm.name}**\n` +
+                `🔮 Cảnh giới tiếp theo: **${nextRealm.name}**\n\n` +
+                `✨ Còn thiếu **${formatNumber(missing)} tu vi**.`
+            );
 
-  if (interaction.commandName === "dotpha") {
+            return;
+        }
 
-    if (user.realm >= realms.length - 1) {
+        // Tăng tỷ lệ nếu có đan dược
+        let successRate = nextRealm.success;
 
-      return interaction.reply(
-`🌌 **ĐỘ KIẾP**
+        let usedPill = false;
 
-Ngươi đã đạt cảnh giới cao nhất hiện tại.
+        if (user.pills.dotPha > 0) {
 
-⚡ Không thể đột phá thêm.`
-      );
+            successRate += 15;
+
+            usedPill = true;
+
+            user.pills.dotPha--;
+        }
+
+        const roll = Math.random() * 100;
+
+        if (roll <= successRate) {
+
+            user.realm++;
+            user.breakthroughs++;
+
+            // Trừ một phần tu vi
+            user.cultivation = Math.floor(
+                user.cultivation * 0.25
+            );
+
+            saveData();
+
+            const newRealm = getRealm(user);
+
+            await interaction.reply(
+                `⚡ **ĐỘT PHÁ THÀNH CÔNG!** ⚡\n\n` +
+                `🌌 **${currentRealm.name}**\n` +
+                `⬇️\n` +
+                `👑 **${newRealm.name}**\n\n` +
+                `🎲 Tỷ lệ thành công: **${successRate}%**\n` +
+                `${usedPill ? "💊 Đã sử dụng Đột Phá Đan\n" : ""}` +
+                `✨ Tu vi còn lại: **${formatNumber(user.cultivation)}**`
+            );
+
+        } else {
+
+            // Mất tu vi khi thất bại
+            const loss = Math.floor(
+                user.cultivation * 0.10
+            );
+
+            user.cultivation = Math.max(
+                0,
+                user.cultivation - loss
+            );
+
+            saveData();
+
+            await interaction.reply(
+                `💥 **ĐỘT PHÁ THẤT BẠI!**\n\n` +
+                `🌌 Cảnh giới: **${currentRealm.name}**\n` +
+                `🎲 Tỷ lệ thành công: **${successRate}%**\n` +
+                `💔 Tu vi tổn thất: **-${formatNumber(loss)}**\n` +
+                `${usedPill ? "💊 Đột Phá Đan đã được sử dụng.\n" : ""}` +
+                `✨ Tu vi hiện tại: **${formatNumber(user.cultivation)}**`
+            );
+        }
+
+        return;
     }
 
-    const realm = realms[user.realm];
+    // ===========================
+    // TÚI ĐỒ
+    // ===========================
 
-    if (user.exp < realm.max) {
+    if (interaction.commandName === "tui") {
 
-      return interaction.reply(
-`❌ **Đột phá thất bại!**
+        const embed = new EmbedBuilder()
+            .setTitle("🎒 Túi Đồ Tu Tiên")
+            .setDescription(
+                `💎 **Linh thạch:** ${formatNumber(user.spiritStones)}\n\n` +
 
-Cảnh giới hiện tại:
-**${realm.name}**
+                `💊 **Đan dược:**\n` +
+                `┠ 🔵 Tụ Linh Đan: **${user.pills.tuLinh}**\n` +
+                `┠ 🟣 Đột Phá Đan: **${user.pills.dotPha}**\n` +
+                `┠ 🟢 Hồi Phục Đan: **${user.pills.hoiPhuc}**\n` +
+                `┗ 🔴 Bảo Mệnh Đan: **${user.pills.baoMenh}**`
+            )
+            .setColor(0x00bfff);
 
-✨ Tu vi hiện tại:
-**${user.exp.toLocaleString()}**
+        await interaction.reply({
+            embeds: [embed]
+        });
 
-📈 Cần:
-**${realm.max.toLocaleString()} tu vi**
-
-💡 Hãy tiếp tục dùng \`/luyentap\`.`
-      );
+        return;
     }
 
-    if (user.danDuoc <= 0) {
+    // ===========================
+    // TOP
+    // ===========================
 
-      return interaction.reply(
-`❌ **Không đủ đan dược!**
+    if (interaction.commandName === "top") {
 
-Muốn đột phá cần ít nhất **1 đan dược**.
+        const players = Object.values(db)
+            .sort((a, b) => {
 
-💊 Đan dược hiện tại:
-**0**`
-      );
+                if (b.realm !== a.realm) {
+                    return b.realm - a.realm;
+                }
+
+                return b.cultivation - a.cultivation;
+
+            })
+            .slice(0, 10);
+
+        if (players.length === 0) {
+
+            await interaction.reply(
+                "📜 Chưa có đạo hữu nào trên bảng xếp hạng."
+            );
+
+            return;
+        }
+
+        let text = "";
+
+        players.forEach((player, index) => {
+
+            const realm = getRealm(player);
+
+            const medals = [
+                "🥇",
+                "🥈",
+                "🥉"
+            ];
+
+            const medal =
+                medals[index] ||
+                `**${index + 1}.**`;
+
+            text +=
+                `${medal} <@${player.id}> — ` +
+                `**${realm.name}** — ` +
+                `${formatNumber(player.cultivation)} tu vi\n`;
+
+        });
+
+        const embed = new EmbedBuilder()
+            .setTitle("🏆 BẢNG XẾP HẠNG HỒNG HOANG")
+            .setDescription(text)
+            .setColor(0xffd700)
+            .setFooter({
+                text: "Thiên Đạo ghi nhận mọi nỗ lực tu luyện."
+            });
+
+        await interaction.reply({
+            embeds: [embed]
+        });
+
+        return;
     }
 
-    user.danDuoc--;
+    // ===========================
+    // DAILY
+    // ===========================
 
-    const success =
-      Math.random() * 100 < realm.success;
+    if (interaction.commandName === "daily") {
 
-    if (success) {
+        const cooldown = 24 * 60 * 60 * 1000;
 
-      user.realm++;
-      user.exp = 0;
+        const remaining = cooldownRemaining(
+            user.lastDaily,
+            cooldown
+        );
 
-      saveDatabase();
+        if (remaining > 0) {
 
-      return interaction.reply(
-`🌟 **ĐỘT PHÁ THÀNH CÔNG!**
+            await interaction.reply(
+                `⏳ **Đạo hữu đã nhận thiên đạo ban thưởng hôm nay.**\n` +
+                `Hãy quay lại sau **${formatTime(remaining)}**.`
+            );
 
-⚡ Cảnh giới mới:
-**${realms[user.realm].name}**
+            return;
+        }
 
-💊 Đã sử dụng:
-**1 đan dược**
+        const reward =
+            Math.floor(Math.random() * 1001) +
+            1000;
 
-🔥 Con đường tu tiên của ngươi lại tiến thêm một bước!`
-      );
+        user.spiritStones += reward;
+        user.lastDaily = Date.now();
 
-    } else {
+        // Có cơ hội nhận đan
+        if (Math.random() < 0.25) {
+            user.pills.tuLinh++;
+        }
 
-      saveDatabase();
+        saveData();
 
-      return interaction.reply(
-`💥 **ĐỘT PHÁ THẤT BẠI!**
+        await interaction.reply(
+            `🎁 **Thiên Đạo ban thưởng!**\n\n` +
+            `💎 Linh thạch: **+${formatNumber(reward)}**\n` +
+            `💰 Tổng linh thạch: **${formatNumber(user.spiritStones)}**\n\n` +
+            `☯ Hãy tiếp tục con đường tu tiên!`
+        );
 
-⚔️ Cảnh giới:
-**${realm.name}**
-
-📉 Tỷ lệ thành công:
-**${realm.success}%**
-
-💊 Đã tiêu hao:
-**1 đan dược**
-
-😔 Căn cơ chưa đủ vững, hãy tiếp tục tu luyện.`
-      );
-    }
-  }
-
-  // =========================
-  // /linhthach
-  // =========================
-
-  if (interaction.commandName === "linhthach") {
-
-    return interaction.reply(
-`💎 **LINH THẠCH**
-
-👤 ${interaction.user.username}
-
-💰 Linh thạch:
-**${user.linhThach.toLocaleString()} viên**`
-    );
-  }
-
-  // =========================
-  // /danduoc
-  // =========================
-
-  if (interaction.commandName === "danduoc") {
-
-    return interaction.reply(
-`💊 **ĐAN DƯỢC**
-
-👤 ${interaction.user.username}
-
-🧪 Đan dược:
-**${user.danDuoc} viên**
-
-💡 Đan dược được sử dụng khi **đột phá cảnh giới**.`
-    );
-  }
-
-  // =========================
-  // /top
-  // =========================
-
-  if (interaction.commandName === "top") {
-
-    const ranking = Object.entries(database)
-      .sort((a, b) => {
-
-        const scoreA =
-          a[1].realm * 1000000 + a[1].exp;
-
-        const scoreB =
-          b[1].realm * 1000000 + b[1].exp;
-
-        return scoreB - scoreA;
-      })
-      .slice(0, 10);
-
-    if (ranking.length === 0) {
-      return interaction.reply("📜 Chưa có tu sĩ nào.");
+        return;
     }
 
-    let text =
-`🏆 **BẢNG XẾP HẠNG TU TIÊN**
+    // ===========================
+    // HELP
+    // ===========================
 
-`;
+    if (interaction.commandName === "trogiup") {
 
-    for (let i = 0; i < ranking.length; i++) {
+        const embed = new EmbedBuilder()
+            .setTitle("☯ HỒNG HOANG ĐẠI LỤC")
+            .setDescription(
+                "**Hệ thống tu tiên nâng cao**\n\n" +
 
-      const [id, data] = ranking[i];
+                "🧘 `/luyentap`\n" +
+                "Tu luyện và nhận tu vi + linh thạch.\n\n" +
 
-      const member =
-        await interaction.guild.members
-          .fetch(id)
-          .catch(() => null);
+                "📊 `/tuvi`\n" +
+                "Xem cảnh giới, tu vi và tiến độ.\n\n" +
 
-      const name =
-        member?.user.username || "Tu sĩ";
+                "⚡ `/dotpha`\n" +
+                "Đột phá cảnh giới với tỷ lệ thành công.\n\n" +
 
-      text +=
-`${i + 1}. **${name}**
-⚔️ ${realms[data.realm].name}
-✨ ${data.exp.toLocaleString()} tu vi
+                "🎒 `/tui`\n" +
+                "Xem linh thạch và đan dược.\n\n" +
 
-`;
+                "🏆 `/top`\n" +
+                "Xem bảng xếp hạng tu tiên.\n\n" +
+
+                "🎁 `/daily`\n" +
+                "Nhận linh thạch mỗi ngày.\n\n" +
+
+                "🌌 **Cảnh giới:**\n" +
+                "Luyện Khí → Trúc Cơ → Kim Đan → Nguyên Anh → Hóa Thần → Luyện Hư → Hợp Thể → Đại Thừa → Độ Kiếp → Tiên Nhân → Chân Tiên → Tiên Vương → Tiên Đế → Hồng Hoang Chí Tôn"
+            )
+            .setColor(0x8a2be2);
+
+        await interaction.reply({
+            embeds: [embed]
+        });
+
+        return;
     }
-
-    return interaction.reply(text);
-  }
-
 });
 
-// =========================
-// LOGIN
-// =========================
+// ===============================
+// ERROR HANDLING
+// ===============================
 
-client.login(process.env.TOKEN);
+process.on("unhandledRejection", error => {
+    console.error("Unhandled rejection:", error);
+});
+
+process.on("uncaughtException", error => {
+    console.error("Uncaught exception:", error);
+});
+
+// ===============================
+// START
+// ===============================
+
+if (!TOKEN) {
+    console.error("❌ Railway chưa có biến TOKEN.");
+    process.exit(1);
+}
+
+if (!CLIENT_ID) {
+    console.error("❌ Railway chưa có biến CLIENT_ID.");
+    process.exit(1);
+}
+
+registerCommands().finally(() => {
+
+    client.login(TOKEN).catch(error => {
+        console.error("❌ Không thể đăng nhập bot:", error);
+    });
+
+});
