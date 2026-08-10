@@ -76,8 +76,7 @@ function getMainMenu(player, username) {
             `🧪 **Linh Phù**\n` +
             `**${player.linhPhu ?? "0/3"}**\n\n` +
 
-            `🌩️ **Thiên Kiếp**\n` +
-            `${player.thienKiepDaVuot ? "✅ Đã vượt" : "❌ Chưa vượt"}`
+            
         )
         .setImage(
             process.env.MENU_IMAGE_URL ||
@@ -146,19 +145,9 @@ function getMainMenu(player, username) {
             .setEmoji("⚔️")
             .setStyle(ButtonStyle.Danger),
 
-        new ButtonBuilder()
-            .setCustomId("menu_thienkiep")
-            .setLabel("Vượt Thiên Kiếp")
-            .setEmoji("🌩️")
-            .setStyle(ButtonStyle.Danger)
-    );
+        
 
-    const row4 = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-            .setCustomId("menu_sugia")
-            .setLabel("Sứ Giả")
-            .setEmoji("👹")
-            .setStyle(ButtonStyle.Danger),
+    
 
         new ButtonBuilder()
             .setCustomId("menu_dongphu")
