@@ -5,7 +5,7 @@ const {
 
 const {
     getPlayer
-} = require("../../database/database");
+} = require("./database/database");
 
 module.exports = {
 
