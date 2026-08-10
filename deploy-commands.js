@@ -17,6 +17,7 @@ const commandFiles = [
     "thongtin.js",
     "top.js",
     "tuido.js"
+    "bequan.js"
 ];
 
 
