@@ -21,8 +21,15 @@ client.commands = new Collection();
 // LOAD COMMANDS
 // ==========================
 const commandFiles = fs.readdirSync(__dirname)
-    .filter(file => file.endsWith(".js"))
-    .filter(file => file !== "index.js");
+.filter(file => file.endsWith(".js"))
+.filter(file => 
+    ![
+        "index.js",
+        "database.js",
+        "deploy-commands.js",
+        "realms.js"
+    ].includes(file)
+);
 
 
 for (const file of commandFiles) {
