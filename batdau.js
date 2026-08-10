@@ -3,49 +3,123 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
+
 const {
-    createPlayer
-} = require(".database");
+    createPlayer,
+    getPlayer
+} = require("./database");
+
+
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName("batdau")
-        .setDescription("Bắt đầu con đường tu tiên"),
 
-    async execute(interaction) {
 
-        const player = createPlayer(
-            interaction.user.id,
-            interaction.user.username
-        );
+data:
 
-        if (player.created_at) {
-            const embed = new EmbedBuilder()
-                .setTitle("🌌 Hồng Hoang Khai Thiên")
-                .setDescription(
-                    `Đạo hữu **${interaction.user.username}** đã bước vào con đường tu tiên!`
-                )
-                .addFields(
-                    {
-                        name: "🌿 Linh căn",
-                        value: player.spirit_root,
-                        inline: true
-                    },
-                    {
-                        name: "⭐ Thiên phú",
-                        value: player.talent,
-                        inline: true
-                    },
-                    {
-                        name: "🌀 Cảnh giới",
-                        value: player.realm_name,
-                        inline: true
-                    }
-                );
+new SlashCommandBuilder()
 
-            return interaction.reply({
-                embeds: [embed]
-            });
-        }
-    }
+.setName("batdau")
+
+.setDescription(
+"Gia nhập Hồng Hoang Đại Lục và bắt đầu tu tiên"
+),
+
+
+
+async execute(interaction){
+
+
+const userId =
+interaction.user.id;
+
+
+
+// kiểm tra đã có nhân vật chưa
+
+const old =
+getPlayer(userId);
+
+
+
+if(old){
+
+return interaction.reply({
+
+content:
+"⚠️ Bạn đã có nhân vật tu tiên rồi!",
+
+ephemeral:true
+
+});
+
+}
+
+
+
+// tạo nhân vật
+
+createPlayer(
+userId,
+interaction.user.username
+);
+
+
+
+const embed =
+new EmbedBuilder()
+
+.setTitle(
+"🌌 HỒNG HOANG ĐẠI LỤC"
+)
+
+.setDescription(
+
+`
+✨ Chúc mừng **${interaction.user.username}**
+
+Bạn đã bước vào con đường tu tiên!
+
+━━━━━━━━━━━━━━
+
+🌱 Cảnh giới:
+**Luyện Khí Nhất Tầng**
+
+💎 Linh thạch:
+**100**
+
+🔥 Linh lực:
+**0**
+
+━━━━━━━━━━━━━━
+
+Hãy dùng:
+
+⚔️ \`/tu-luyen\`
+để hấp thu linh khí
+
+📜 \`/tuvi\`
+để xem hồ sơ
+
+`
+
+)
+
+.setColor(
+0x8b5cf6
+);
+
+
+
+return interaction.reply({
+
+embeds:[
+embed
+]
+
+});
+
+
+}
+
+
 };
