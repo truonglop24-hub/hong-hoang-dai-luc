@@ -17,75 +17,192 @@ const client = new Client({
 
 client.commands = new Collection();
 
+// ==========================
+// LOAD COMMANDS
+// ==========================
+
 const commandsPath = path.join(__dirname, "commands");
 
 function loadCommands(dir) {
+    if (!fs.existsSync(dir)) return;
 
     const files = fs.readdirSync(dir);
 
     for (const file of files) {
 
-        const fullPath = path.join(dir, file);
+        const filePath = path.join(dir, file);
 
-        if (fs.statSync(fullPath).isDirectory()) {
-            loadCommands(fullPath);
+        if (fs.statSync(filePath).isDirectory()) {
+            loadCommands(filePath);
             continue;
         }
 
         if (!file.endsWith(".js")) continue;
 
-        const command = require(fullPath);
+        try {
 
-        if (!command.data || !command.execute) continue;
+            const command = require(filePath);
 
-        client.commands.set(
-            command.data.name,
-            command
-        );
+            if (
+                command.data &&
+                command.execute
+            ) {
+
+                client.commands.set(
+                    command.data.name,
+                    command
+                );
+
+                console.log(
+                    `✅ Loaded: /${command.data.name}`
+                );
+
+            } else {
+
+                console.log(
+                    `⚠️ Bỏ qua: ${file}`
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                `❌ Lỗi file ${file}:`
+            );
+
+            console.error(error);
+
+        }
     }
 }
 
 loadCommands(commandsPath);
 
+// ==========================
+// BOT READY
+// ==========================
+
 client.once("ready", () => {
 
-    console.log(
-        `🌌 ${client.user.tag} đã giáng lâm Hồng Hoang!`
-    );
+    console.log("");
+    console.log("================================");
+    console.log("🌌 HỒNG HOANG APP ĐÃ GIÁNG LÂM");
+    console.log(`🤖 Bot: ${client.user.tag}`);
+    console.log(`📜 Commands: ${client.commands.size}`);
+    console.log("================================");
+    console.log("");
 
 });
 
-client.on("interactionCreate", async interaction => {
+// ==========================
+// INTERACTION
+// ==========================
 
-    if (!interaction.isChatInputCommand()) return;
+client.on(
+    "interactionCreate",
+    async interaction => {
 
-    const command =
-        client.commands.get(interaction.commandName);
+        if (!interaction.isChatInputCommand()) {
+            return;
+        }
 
-    if (!command) return;
+        console.log(
+            `📥 Nhận lệnh: /${interaction.commandName}`
+        );
 
-    try {
+        const command =
+            client.commands.get(
+                interaction.commandName
+            );
 
-        await command.execute(interaction);
+        if (!command) {
 
-    } catch (error) {
+            console.log(
+                `❌ Không tìm thấy command: ${interaction.commandName}`
+            );
+
+            if (!interaction.replied) {
+
+                await interaction.reply({
+                    content:
+                        "❌ Lệnh này chưa được tải vào bot.",
+                    ephemeral: true
+                });
+
+            }
+
+            return;
+        }
+
+        try {
+
+            await command.execute(
+                interaction
+            );
+
+            console.log(
+                `✅ Hoàn thành: /${interaction.commandName}`
+            );
+
+        } catch (error) {
+
+            console.error("");
+            console.error(
+                `❌ LỖI /${interaction.commandName}`
+            );
+            console.error(error);
+            console.error("");
+
+            try {
+
+                if (
+                    interaction.replied ||
+                    interaction.deferred
+                ) {
+
+                    await interaction.editReply({
+                        content:
+                            "❌ Bot gặp lỗi khi xử lý lệnh."
+                    });
+
+                } else {
+
+                    await interaction.reply({
+                        content:
+                            "❌ Bot gặp lỗi khi xử lý lệnh.",
+                        ephemeral: true
+                    });
+
+                }
+
+            } catch (replyError) {
+
+                console.error(
+                    "❌ Không thể trả lời interaction:"
+                );
+
+                console.error(replyError);
+
+            }
+        }
+    }
+);
+
+// ==========================
+// LOGIN
+// ==========================
+
+client.login(process.env.TOKEN)
+    .then(() => {
+        console.log("🔑 Đang đăng nhập Discord...");
+    })
+    .catch(error => {
+
+        console.error(
+            "❌ TOKEN KHÔNG HỢP LỆ HOẶC KHÔNG THỂ ĐĂNG NHẬP"
+        );
 
         console.error(error);
 
-        if (interaction.replied || interaction.deferred) {
-
-            await interaction.followUp(
-                "❌ Hệ thống Hồng Hoang gặp lỗi."
-            );
-
-        } else {
-
-            await interaction.reply(
-                "❌ Hệ thống Hồng Hoang gặp lỗi."
-            );
-
-        }
-    }
-});
-
-client.login(process.env.TOKEN);
+    });
