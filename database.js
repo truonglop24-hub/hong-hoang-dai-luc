@@ -1,50 +1,172 @@
-const Database = require("better-sqlite3");
+const fs = require("fs");
+const path = require("path");
 
-const db = new Database("honghoang.db");
+const DATA_FILE = path.join(__dirname, "data.json");
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS players (
-    user_id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    realm INTEGER DEFAULT 0,
-    realm_name TEXT DEFAULT 'Phàm Nhân',
-    cultivation INTEGER DEFAULT 0,
-    spirit_stones INTEGER DEFAULT 1000,
-    merit INTEGER DEFAULT 0,
-    hp INTEGER DEFAULT 100,
-    max_hp INTEGER DEFAULT 100,
-    attack INTEGER DEFAULT 10,
-    defense INTEGER DEFAULT 10,
-    speed INTEGER DEFAULT 10,
-    luck INTEGER DEFAULT 1,
-    talent TEXT DEFAULT 'Phàm Cốt',
-    spirit_root TEXT DEFAULT 'Ngũ Hành',
-    created_at INTEGER
-);
-`);
+function loadData() {
+    try {
+        if (!fs.existsSync(DATA_FILE)) {
+            fs.writeFileSync(DATA_FILE, JSON.stringify({ players: {} }, null, 2));
+        }
 
-function getPlayer(userId) {
-    return db
-        .prepare("SELECT * FROM players WHERE user_id = ?")
-        .get(userId);
+        return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+    } catch (error) {
+        console.error("❌ Lỗi đọc database:", error);
+        return { players: {} };
+    }
 }
 
-function createPlayer(userId, name) {
-    const exists = getPlayer(userId);
+function saveData(data) {
+    try {
+        fs.writeFileSync(
+            DATA_FILE,
+            JSON.stringify(data, null, 2)
+        );
+    } catch (error) {
+        console.error("❌ Lỗi lưu database:", error);
+    }
+}
 
-    if (exists) return exists;
+function getPlayer(userId) {
+    const data = loadData();
+    return data.players[userId] || null;
+}
 
-    db.prepare(`
-        INSERT INTO players
-        (user_id, name, created_at)
-        VALUES (?, ?, ?)
-    `).run(userId, name, Date.now());
+function createPlayer(userId, username) {
+    const data = loadData();
 
-    return getPlayer(userId);
+    if (data.players[userId]) {
+        return data.players[userId];
+    }
+
+    const player = {
+        id: userId,
+        username: username,
+
+        realm: "Luyện Khí",
+        level: 1,
+        linhLuc: 0,
+        linhThach: 100,
+
+        exp: 0,
+
+        beQuan: false,
+        beQuanUntil: 0,
+
+        inventory: {
+            danDuoc: [],
+            linhThu: []
+        },
+
+        linhThuActive: null,
+
+        lastTraining: 0,
+        lastDungeon: 0,
+        lastBoss: 0
+    };
+
+    data.players[userId] = player;
+    saveData(data);
+
+    return player;
+}
+
+function updatePlayer(userId, changes) {
+    const data = loadData();
+
+    if (!data.players[userId]) {
+        return null;
+    }
+
+    data.players[userId] = {
+        ...data.players[userId],
+        ...changes
+    };
+
+    saveData(data);
+
+    return data.players[userId];
+}
+
+function addLinhThach(userId, amount) {
+    const player = getPlayer(userId);
+
+    if (!player) return null;
+
+    player.linhThach += amount;
+
+    updatePlayer(userId, {
+        linhThach: player.linhThach
+    });
+
+    return player.linhThach;
+}
+
+function removeLinhThach(userId, amount) {
+    const player = getPlayer(userId);
+
+    if (!player) return false;
+
+    if (player.linhThach < amount) {
+        return false;
+    }
+
+    player.linhThach -= amount;
+
+    updatePlayer(userId, {
+        linhThach: player.linhThach
+    });
+
+    return true;
+}
+
+function addLinhLuc(userId, amount) {
+    const player = getPlayer(userId);
+
+    if (!player) return null;
+
+    player.linhLuc += amount;
+
+    updatePlayer(userId, {
+        linhLuc: player.linhLuc
+    });
+
+    return player.linhLuc;
+}
+
+function addItem(userId, type, item) {
+    const player = getPlayer(userId);
+
+    if (!player) return null;
+
+    if (!player.inventory[type]) {
+        player.inventory[type] = [];
+    }
+
+    player.inventory[type].push(item);
+
+    updatePlayer(userId, {
+        inventory: player.inventory
+    });
+
+    return player.inventory;
+}
+
+function getAllPlayers() {
+    const data = loadData();
+
+    return Object.values(data.players);
 }
 
 module.exports = {
-    db,
+    loadData,
+    saveData,
     getPlayer,
-    createPlayer
+    createPlayer,
+    updatePlayer,
+    addLinhThach,
+    removeLinhThach,
+    addLinhLuc,
+    addItem,
+    getAllPlayers
 };
