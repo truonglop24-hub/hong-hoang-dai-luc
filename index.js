@@ -55,8 +55,96 @@ client.once("ready", async () => {
         console.error("❌ Không thể đăng ký slash commands:", error);
     }
 });
-
 client.on("interactionCreate", async interaction => {
+
+    // =========================
+    // XỬ LÝ NÚT MENU
+    // =========================
+    if (interaction.isButton()) {
+
+        const buttonCommands = {
+
+            // Hàng 1
+            "menu_tuluyen": "tuluyen",
+            "menu_dotpha": "dotpha",
+            "menu_tuhanh": "tuhanh",
+
+            // Hàng 2
+            "menu_nghenghiep": "nghenghiep",
+            "menu_chiendau": "chiendau",
+            "menu_donghanh": "donghanh",
+            "menu_phithang": "phithang",
+
+            // Hàng 3
+            "menu_tongmon": "tongmon",
+            "menu_pvp": "pvp",
+            "menu_thienkiep": "thienkiep",
+
+            // Hàng 4
+            "menu_sugia": "sugia",
+            "menu_dongphu": "dongphu",
+            "menu_xephang": "xephang",
+            "menu_khac": "khac",
+
+            // Hàng 5
+            "menu_giaodich": "giaodich",
+            "menu_khodo": "khodo"
+        };
+
+        // Nút Đóng
+        if (interaction.customId === "menu_dong") {
+            return interaction.update({
+                content: "🔒 **Menu đã được đóng.**",
+                embeds: [],
+                components: []
+            });
+        }
+
+        const commandName = buttonCommands[interaction.customId];
+
+        if (!commandName) {
+            return interaction.reply({
+                content: "❌ Không tìm thấy chức năng của nút này.",
+                ephemeral: true
+            });
+        }
+
+        const command = client.commands.get(commandName);
+
+        if (!command) {
+            return interaction.reply({
+                content:
+                    `❌ Lệnh \`/${commandName}\` chưa được cài đặt.\n` +
+                    `Hãy tạo file \`${commandName}.js\` trong thư mục commands.`,
+                ephemeral: true
+            });
+        }
+
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            console.error(`❌ Lỗi nút ${interaction.customId}:`, error);
+
+            if (interaction.replied || interaction.deferred) {
+                await interaction.followUp({
+                    content: "❌ Đã xảy ra lỗi khi thực hiện chức năng.",
+                    ephemeral: true
+                }).catch(() => {});
+            } else {
+                await interaction.reply({
+                    content: "❌ Đã xảy ra lỗi khi thực hiện chức năng.",
+                    ephemeral: true
+                }).catch(() => {});
+            }
+        }
+
+        return;
+    }
+
+
+    // =========================
+    // XỬ LÝ SLASH COMMAND
+    // =========================
     if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
@@ -71,7 +159,11 @@ client.on("interactionCreate", async interaction => {
     try {
         await command.execute(interaction);
     } catch (error) {
-        console.error(`❌ Lỗi /${interaction.commandName}:`, error);
+
+        console.error(
+            `❌ Lỗi /${interaction.commandName}:`,
+            error
+        );
 
         const message = {
             content: "❌ Đã xảy ra lỗi khi thực hiện lệnh.",
@@ -85,5 +177,6 @@ client.on("interactionCreate", async interaction => {
         }
     }
 });
+
 
 client.login(process.env.TOKEN);
