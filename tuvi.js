@@ -1,65 +1,35 @@
-const {
-    SlashCommandBuilder,
-    EmbedBuilder
-} = require("discord.js");
-
-const {
-    getPlayer
-} = require("./database");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { getPlayer } = require("./database");
 
 module.exports = {
-
     data: new SlashCommandBuilder()
         .setName("tuvi")
-        .setDescription("Xem thông tin tu vi"),
+        .setDescription("Xem thông tin tu vi của bản thân"),
 
     async execute(interaction) {
+        const p = getPlayer(interaction.user.id);
 
-        const player = getPlayer(interaction.user.id);
-
-        if (!player) {
-            return interaction.reply(
-                "❌ Bạn chưa bắt đầu tu tiên. Hãy dùng `/batdau`."
-            );
+        if (!p) {
+            return interaction.reply({
+                content: "⚠️ Hãy dùng `/batdau` trước.",
+                ephemeral: true
+            });
         }
 
         const embed = new EmbedBuilder()
-            .setTitle(`🌌 Hồ Sơ Tu Tiên — ${player.name}`)
+            .setTitle(`📜 TU VI • ${interaction.user.username}`)
             .addFields(
-                {
-                    name: "🌀 Cảnh giới",
-                    value: player.realm_name,
-                    inline: true
-                },
-                {
-                    name: "✨ Tu vi",
-                    value: `${player.cultivation}`,
-                    inline: true
-                },
-                {
-                    name: "💰 Linh thạch",
-                    value: `${player.spirit_stones}`,
-                    inline: true
-                },
-                {
-                    name: "🌿 Linh căn",
-                    value: player.spirit_root,
-                    inline: true
-                },
-                {
-                    name: "⭐ Thiên phú",
-                    value: player.talent,
-                    inline: true
-                },
-                {
-                    name: "⚔️ Công kích",
-                    value: `${player.attack}`,
-                    inline: true
-                }
+                { name: "🌱 Cảnh giới", value: `${p.canhGioi} tầng ${p.tang}`, inline: true },
+                { name: "🔥 Linh lực", value: `${p.linhLuc}`, inline: true },
+                { name: "💎 Linh thạch", value: `${p.linhThach}`, inline: true },
+                { name: "❤️ HP", value: `${p.hp}/${p.maxHp}`, inline: true },
+                { name: "⚔️ Công", value: `${p.cong}`, inline: true },
+                { name: "🛡️ Thủ", value: `${p.thu}`, inline: true },
+                { name: "✨ Kinh nghiệm", value: `${p.kinhNghiem}`, inline: true },
+                { name: "🐉 Boss đã hạ", value: `${p.bossDaGiet}`, inline: true },
+                { name: "🏯 Phó bản", value: `${p.phoBanDaHoanThanh}`, inline: true }
             );
 
-        await interaction.reply({
-            embeds: [embed]
-        });
+        return interaction.reply({ embeds: [embed] });
     }
 };

@@ -1,15 +1,14 @@
 {
   "name": "tu-tien-hong-hoang",
-  "version": "1.0.0",
-  "description": "Bot Discord game Tu Tien Hong Hoang",
+  "version": "2.0.0",
+  "description": "Discord bot Hồng Hoang Đại Lục",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "deploy": "node deploy-commands.js"
   },
   "dependencies": {
-    "discord.js": "^14.0.0",
-    "dotenv": "^16.0.0",
-    "better-sqlite3": "^11.0.0"
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
   }
 }

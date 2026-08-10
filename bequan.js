@@ -1,20 +1,12 @@
-const {
-    SlashCommandBuilder,
-    EmbedBuilder
-} = require("discord.js");
-
-const {
-    getPlayer,
-    updatePlayer
-} = require("./database");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { getPlayer, updatePlayer } = require("./database");
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("bequan")
-        .setDescription("Bế quan tu luyện để tăng linh lực")
+        .setDescription("Bế quan để nhận phần thưởng lớn hơn")
         .addIntegerOption(option =>
-            option
-                .setName("thoigian")
+            option.setName("thoigian")
                 .setDescription("Số phút bế quan")
                 .setRequired(false)
                 .setMinValue(1)
@@ -22,66 +14,27 @@ module.exports = {
         ),
 
     async execute(interaction) {
+        const p = getPlayer(interaction.user.id);
 
-        const userId = interaction.user.id;
-        const player = getPlayer(userId);
+        if (!p) return interaction.reply({ content: "⚠️ Hãy dùng `/batdau` trước.", ephemeral: true });
+        if (p.beQuan) return interaction.reply({ content: "🧘 Bạn đang bế quan rồi.", ephemeral: true });
 
-        if (!player) {
-            return interaction.reply({
-                content: "⚠️ Bạn chưa có nhân vật! Hãy dùng `/batdau` trước.",
-                ephemeral: true
-            });
-        }
+        const minutes = interaction.options.getInteger("thoigian") || 30;
 
-        if (player.beQuan) {
-            const conLai = Math.max(
-                0,
-                Math.ceil((player.beQuanEnd - Date.now()) / 60000)
-            );
-
-            return interaction.reply({
-                content: `🧘 Bạn đang bế quan!\n⏳ Còn khoảng **${conLai} phút**.`,
-                ephemeral: true
-            });
-        }
-
-        const phut = interaction.options.getInteger("thoigian") || 30;
-
-        const endTime = Date.now() + phut * 60 * 1000;
-
-        updatePlayer(userId, {
+        updatePlayer(interaction.user.id, {
             beQuan: true,
-            beQuanEnd: endTime
+            beQuanEnd: Date.now() + minutes * 60 * 1000
         });
 
         const embed = new EmbedBuilder()
-            .setTitle("🧘 BẾ QUAN TU LUYỆN")
-            .setDescription(
-                `**${interaction.user.username}** đã tiến vào động phủ và bắt đầu bế quan!`
-            )
+            .setTitle("🧘 BẾ QUAN")
+            .setDescription(`**${interaction.user.username}** tiến vào động phủ.`)
             .addFields(
-                {
-                    name: "⏳ Thời gian",
-                    value: `**${phut} phút**`,
-                    inline: true
-                },
-                {
-                    name: "🔥 Trạng thái",
-                    value: "Đang bế quan",
-                    inline: true
-                },
-                {
-                    name: "📜 Cảnh giới",
-                    value: `**${player.canhGioi} ${player.tang}**`,
-                    inline: true
-                }
+                { name: "⏳ Thời gian", value: `${minutes} phút`, inline: true },
+                { name: "🌱 Cảnh giới", value: `${p.canhGioi} tầng ${p.tang}`, inline: true }
             )
-            .setFooter({
-                text: "Dùng /xuatquan để xuất quan khi đã hoàn thành"
-            });
+            .setFooter({ text: "Sau khi hết thời gian, dùng /xuatquan" });
 
-        return interaction.reply({
-            embeds: [embed]
-        });
+        return interaction.reply({ embeds: [embed] });
     }
 };

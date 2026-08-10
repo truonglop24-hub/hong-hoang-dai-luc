@@ -1,56 +1,33 @@
 require("dotenv").config();
 
-const {
-    REST,
-    Routes
-} = require("discord.js");
+const fs = require("fs");
+const path = require("path");
+const { REST, Routes } = require("discord.js");
+
+const commandFiles = fs.readdirSync(__dirname)
+    .filter(file => file.endsWith(".js"))
+    .filter(file => !["index.js", "deploy-commands.js", "database.js"].includes(file));
 
 const commands = [];
 
-const commandFiles = [
-    "batdau.js",
-    "tuvi.js",
-    "tuluuyen.js",
-    "Dando.js",
-    "dotpha.js",
-    "linhthach.js",
-    "thongtin.js",
-    "top.js",
-    "tuido.js"
-    "bequan.js"
-];
-
-
 for (const file of commandFiles) {
-
     try {
-
+        delete require.cache[require.resolve(`./${file}`)];
         const command = require(`./${file}`);
 
-        if (command.data) {
-            commands.push(
-                command.data.toJSON()
-            );
+        if (command.data && command.execute) {
+            commands.push(command.data.toJSON());
+            console.log(`✅ Đã tải /${command.data.name}`);
         }
-
     } catch (error) {
-
-        console.error(
-            `❌ Lỗi tải ${file}:`,
-            error
-        );
-
+        console.error(`❌ Lỗi tải ${file}:`, error);
     }
 }
 
-const rest = new REST({
-    version: "10"
-}).setToken(process.env.TOKEN);
+const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
 (async () => {
-
     try {
-
         console.log("📜 Đang đăng ký lệnh...");
 
         await rest.put(
@@ -58,19 +35,11 @@ const rest = new REST({
                 process.env.CLIENT_ID,
                 process.env.GUILD_ID
             ),
-            {
-                body: commands
-            }
+            { body: commands }
         );
 
-        console.log(
-            `✅ Đã đăng ký ${commands.length} lệnh!`
-        );
-
+        console.log(`✅ Đã đăng ký ${commands.length} lệnh.`);
     } catch (error) {
-
-        console.error(error);
-
+        console.error("❌ Lỗi đăng ký lệnh:", error);
     }
-
 })();

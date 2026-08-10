@@ -1,26 +1,16 @@
-const {SlashCommandBuilder}=require("discord.js");
-const {getPlayer}=require("./database");
+const { SlashCommandBuilder } = require("discord.js");
+const { getPlayer } = require("./database");
 
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName("linhthach")
+        .setDescription("Xem số linh thạch"),
 
-module.exports={
+    async execute(interaction) {
+        const p = getPlayer(interaction.user.id);
 
-data:new SlashCommandBuilder()
-.setName("linhthach")
-.setDescription("Xem linh thạch"),
+        if (!p) return interaction.reply({ content: "⚠️ Hãy dùng `/batdau` trước.", ephemeral: true });
 
-
-async execute(interaction){
-
-let p=getPlayer(interaction.user.id);
-
-if(!p)
-return interaction.reply("❌ Chưa có nhân vật");
-
-
-interaction.reply(
-`💎 Linh thạch: **${p.linhthach||0}**`
-);
-
-}
-
+        return interaction.reply(`💎 Bạn đang có **${p.linhThach} linh thạch**.`);
+    }
 };

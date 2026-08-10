@@ -1,172 +1,109 @@
 const fs = require("fs");
 const path = require("path");
 
-const DATA_FILE = path.join(__dirname, "data.json");
+const DB_FILE = path.join(__dirname, "players.json");
 
-function loadData() {
+let players = {};
+
+function load() {
+    if (!fs.existsSync(DB_FILE)) {
+        players = {};
+        return;
+    }
+
     try {
-        if (!fs.existsSync(DATA_FILE)) {
-            fs.writeFileSync(DATA_FILE, JSON.stringify({ players: {} }, null, 2));
-        }
-
-        return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+        players = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
     } catch (error) {
-        console.error("❌ Lỗi đọc database:", error);
-        return { players: {} };
+        console.error("Không thể đọc players.json:", error);
+        players = {};
     }
 }
 
-function saveData(data) {
-    try {
-        fs.writeFileSync(
-            DATA_FILE,
-            JSON.stringify(data, null, 2)
-        );
-    } catch (error) {
-        console.error("❌ Lỗi lưu database:", error);
-    }
+function save() {
+    fs.writeFileSync(DB_FILE, JSON.stringify(players, null, 2), "utf8");
 }
 
-function getPlayer(userId) {
-    const data = loadData();
-    return data.players[userId] || null;
-}
+load();
 
 function createPlayer(userId, username) {
-    const data = loadData();
+    if (players[userId]) return players[userId];
 
-    if (data.players[userId]) {
-        return data.players[userId];
-    }
-
-    const player = {
+    players[userId] = {
         id: userId,
-        username: username,
+        username,
 
-        realm: "Luyện Khí",
-        level: 1,
+        canhGioi: "Luyện Khí",
+        tang: 1,
+        kinhNghiem: 0,
         linhLuc: 0,
         linhThach: 100,
 
-        exp: 0,
+        hp: 100,
+        maxHp: 100,
+        cong: 10,
+        thu: 5,
 
         beQuan: false,
-        beQuanUntil: 0,
+        beQuanEnd: 0,
 
-        inventory: {
+        lastTrain: 0,
+        lastDungeon: 0,
+        lastBoss: 0,
+
+        bossDaGiet: 0,
+        phoBanDaHoanThanh: 0,
+
+        tuiDo: {
             danDuoc: [],
+            vatPham: [],
             linhThu: []
         },
 
-        linhThuActive: null,
-
-        lastTraining: 0,
-        lastDungeon: 0,
-        lastBoss: 0
+        createdAt: Date.now()
     };
 
-    data.players[userId] = player;
-    saveData(data);
-
-    return player;
+    save();
+    return players[userId];
 }
 
-function updatePlayer(userId, changes) {
-    const data = loadData();
+function getPlayer(userId) {
+    return players[userId] || null;
+}
 
-    if (!data.players[userId]) {
-        return null;
-    }
+function updatePlayer(userId, data) {
+    if (!players[userId]) return null;
 
-    data.players[userId] = {
-        ...data.players[userId],
-        ...changes
+    players[userId] = {
+        ...players[userId],
+        ...data
     };
 
-    saveData(data);
-
-    return data.players[userId];
+    save();
+    return players[userId];
 }
 
-function addLinhThach(userId, amount) {
-    const player = getPlayer(userId);
-
-    if (!player) return null;
-
-    player.linhThach += amount;
-
-    updatePlayer(userId, {
-        linhThach: player.linhThach
-    });
-
-    return player.linhThach;
-}
-
-function removeLinhThach(userId, amount) {
-    const player = getPlayer(userId);
-
-    if (!player) return false;
-
-    if (player.linhThach < amount) {
-        return false;
-    }
-
-    player.linhThach -= amount;
-
-    updatePlayer(userId, {
-        linhThach: player.linhThach
-    });
-
-    return true;
-}
-
-function addLinhLuc(userId, amount) {
-    const player = getPlayer(userId);
-
-    if (!player) return null;
-
-    player.linhLuc += amount;
-
-    updatePlayer(userId, {
-        linhLuc: player.linhLuc
-    });
-
-    return player.linhLuc;
+function getAllPlayers() {
+    return Object.values(players);
 }
 
 function addItem(userId, type, item) {
     const player = getPlayer(userId);
-
     if (!player) return null;
 
-    if (!player.inventory[type]) {
-        player.inventory[type] = [];
+    if (!player.tuiDo[type]) {
+        player.tuiDo[type] = [];
     }
 
-    player.inventory[type].push(item);
-
-    updatePlayer(userId, {
-        inventory: player.inventory
-    });
-
-    return player.inventory;
-}
-
-function getAllPlayers() {
-    const data = loadData();
-
-    return Object.values(data.players);
+    player.tuiDo[type].push(item);
+    save();
+    return player;
 }
 
 module.exports = {
-    loadData,
-    saveData,
-    getPlayer,
     createPlayer,
+    getPlayer,
     updatePlayer,
-    addLinhThach,
-    removeLinhThach,
-    addLinhLuc,
+    getAllPlayers,
     addItem,
-    getAllPlayers
+    save
 };

@@ -1,62 +1,25 @@
-const {SlashCommandBuilder,EmbedBuilder}=require("discord.js");
-const {getPlayer}=require("./database");
+const { SlashCommandBuilder } = require("discord.js");
+const { getPlayer } = require("./database");
 
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName("thongtin")
+        .setDescription("Xem thông tin nhân vật"),
 
-module.exports={
+    async execute(interaction) {
+        const p = getPlayer(interaction.user.id);
 
-data:new SlashCommandBuilder()
+        if (!p) {
+            return interaction.reply({ content: "⚠️ Hãy dùng `/batdau` trước.", ephemeral: true });
+        }
 
-.setName("thongtin")
-
-.setDescription("Xem hồ sơ tu tiên"),
-
-
-async execute(interaction){
-
-let p=getPlayer(interaction.user.id);
-
-
-if(!p)
-return interaction.reply("❌ Chưa bắt đầu tu tiên");
-
-
-interaction.reply({
-
-embeds:[
-
-new EmbedBuilder()
-
-.setTitle("🌌 Hồ Sơ Tu Tiên")
-
-.addFields(
-
-{
-name:"👤 Đạo hữu",
-value:p.name
-},
-
-{
-name:"🔥 Cảnh giới",
-value:p.realm_name
-},
-
-{
-name:"✨ Tu vi",
-value:String(p.exp||0)
-},
-
-{
-name:"💎 Linh thạch",
-value:String(p.linhthach||0)
-}
-
-)
-
-]
-
-});
-
-
-}
-
+        return interaction.reply(
+            `👤 **${p.username}**\n` +
+            `🌱 ${p.canhGioi} tầng ${p.tang}\n` +
+            `🔥 Linh lực: **${p.linhLuc}**\n` +
+            `💎 Linh thạch: **${p.linhThach}**\n` +
+            `❤️ HP: **${p.hp}/${p.maxHp}**\n` +
+            `⚔️ Công: **${p.cong}** • 🛡️ Thủ: **${p.thu}**`
+        );
+    }
 };

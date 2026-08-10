@@ -1,39 +1,28 @@
-const {SlashCommandBuilder,EmbedBuilder}=require("discord.js");
-const {getPlayer}=require("./database");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { getPlayer } = require("./database");
 
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName("tuido")
+        .setDescription("Xem túi đồ"),
 
-module.exports={
+    async execute(interaction) {
+        const p = getPlayer(interaction.user.id);
 
-data:new SlashCommandBuilder()
-.setName("tuidou")
-.setDescription("Xem túi đồ"),
+        if (!p) return interaction.reply({ content: "⚠️ Hãy dùng `/batdau` trước.", ephemeral: true });
 
+        const dan = p.tuiDo.danDuoc || [];
+        const item = p.tuiDo.vatPham || [];
+        const pet = p.tuiDo.linhThu || [];
 
-async execute(interaction){
+        const embed = new EmbedBuilder()
+            .setTitle(`🎒 TÚI ĐỒ • ${p.username}`)
+            .addFields(
+                { name: "💊 Đan dược", value: dan.length ? dan.join("\n") : "Trống", inline: true },
+                { name: "📦 Vật phẩm", value: item.length ? item.join("\n") : "Trống", inline: true },
+                { name: "🐉 Linh thú", value: pet.length ? pet.map(x => x.name).join("\n") : "Trống", inline: true }
+            );
 
-let p=getPlayer(interaction.user.id);
-
-
-interaction.reply({
-
-embeds:[
-
-new EmbedBuilder()
-
-.setTitle("🎒 Túi đồ")
-
-.setDescription(
-`
-💊 Đan dược: ${p.dan_duoc||0}
-
-💎 Linh thạch: ${p.linhthach||0}
-`
-)
-
-]
-
-});
-
-}
-
+        return interaction.reply({ embeds: [embed] });
+    }
 };
