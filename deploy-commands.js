@@ -10,8 +10,15 @@ const commands = [];
 const commandFiles = [
     "batdau.js",
     "tuvi.js",
-    "tuluyen.js"
+    "tuluuyen.js",
+    "Dando.js",
+    "dotpha.js",
+    "linhthach.js",
+    "thongtin.js",
+    "top.js",
+    "tuido.js"
 ];
+
 
 for (const file of commandFiles) {
 
