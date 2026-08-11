@@ -711,11 +711,12 @@ module.exports = {
             });
 
             return interaction.reply({
-                content:
-                    `📊 <@${id}>\n` +
-                    `**${stat}**: ${oldValue.toLocaleString()} → **${newValue.toLocaleString()}**`,
-                ephemeral: true
-            });
+    content: "📊 <@" + id + ">\n" +
+        "**" + stat + "**: " +
+        oldValue.toLocaleString() + " -> " +
+        newValue.toLocaleString(),
+    ephemeral: true
+});
         }
 
         // =============================================
