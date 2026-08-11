@@ -605,11 +605,11 @@ module.exports = {
             });
 
             return interaction.reply({
-                content:
-                    `💎 <@${id}>\n` +
-                    `Linh thạch: **${oldValue.toLocaleString()}** → **${newValue.toLocaleString()}**`,
-                ephemeral: true
-            });
+    content: "💎 <@" + id + ">\nLinh thạch: **" +
+        oldValue.toLocaleString() + "** -> **" +
+        newValue.toLocaleString() + "**",
+    ephemeral: true
+});
         }
 
         // =============================================
