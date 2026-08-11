@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getPlayer, updatePlayer } = require("./database");
 
-const COOLDOWN = 60 * 1000;
+const COOLDOWN Cooldo000;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -49,7 +49,7 @@ module.exports = {
                 { name: "🔥 Linh lực", value: `+${linhLuc}`, inline: true },
                 { name: "✨ Kinh nghiệm", value: `+${exp}`, inline: true }
             )
-            .setFooter({ text: "Cooldown: 60 giây" });
+            .setFooter({ text: "Cooldown: 15 giây" });
 
         return interaction.reply({ embeds: [embed] });
     }
