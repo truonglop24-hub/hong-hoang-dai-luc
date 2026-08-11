@@ -171,13 +171,13 @@ module.exports = {
             );
 
         if (
-            ![
-                "tuvi",
-                "linhthach"
-            ].includes(reward)
-        ) {
-
-            return interaction.reply({
+    ![
+        "tuvi",
+        "linhthach",
+        "danduoc"
+    ].includes(reward)
+) {
+              return interaction.reply({
                 content:
                     "❌ Code có phần thưởng không hợp lệ!",
                 ephemeral: true
