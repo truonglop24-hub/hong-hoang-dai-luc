@@ -57,27 +57,26 @@ function getMainMenu(player, username) {
     const linhThach = player.linhThach ?? 0;
 
     const embed = new EmbedBuilder()
-        .setColor(0x3498db)
-        .setTitle("🌌 HỒNG HOANG ĐẠI LỤC")
-        .setDescription(
-            `✨ **${username}**\n\n` +
-            `📜 **Cảnh Giới**\n` +
-            `**${player.canhGioi} tầng ${player.tang}**\n\n` +
+    .setColor(0x3498db)
+    .setTitle("🌌 HỒNG HOANG ĐẠI LỤC")
+    .setDescription(
+        `✨ **${username}**
 
-            `💎 **Linh Thạch**\n` +
-            `**${linhThach}**\n\n` +
+📜 **Cảnh Giới**
+**${player.canhGio}** tầng **${player.tang}**
 
-            `💧 **Linh Lực**\n` +
-            `**${linhLuc}**\n\n` +
+💎 **Linh Thạch**
+**${linhThach}**
 
-            `🔑 **Linh Giới Lệnh**\n` +
-            `**${player.linhGioiLenh ?? 0}**\n\n` +
+💧 **Linh Lực**
+**${linhLuc}**
 
-            `🧪 **Linh Phù**\n` +
-            `**${player.linhPhu ?? "0/3"}**\n\n` +
+🔑 **Linh Giới Lệnh**
+**${player.linhGioiLenh ?? 0}**
 
-            
-        )
+🧪 **Linh Phù**
+**${player.linhPhu ?? "0/3"}**`
+    )
         .setImage(
             process.env.MENU_IMAGE_URL ||
             "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=80"
