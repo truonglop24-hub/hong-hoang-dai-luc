@@ -1,4 +1,3 @@
-```js
 const {
     SlashCommandBuilder,
     PermissionFlagsBits,
@@ -9,7 +8,6 @@ const {
     TextInputBuilder,
     TextInputStyle
 } = require("discord.js");
-
 const fs = require("fs");
 const path = require("path");
 const db = require("./database");
