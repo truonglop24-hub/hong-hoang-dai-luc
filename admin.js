@@ -211,9 +211,8 @@ module.exports = {
                     "🔒 Chỉ Administrator mới có thể sử dụng."
                 )
                 .setFooter({
-                    text:
-                        `Admin: ${interaction.user.tag}`
-                });
+    text: "Admin Panel"
+});
 
         return interaction.reply({
             embeds: [embed],
