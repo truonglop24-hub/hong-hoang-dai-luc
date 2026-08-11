@@ -138,8 +138,31 @@ client.on("interactionCreate", async interaction => {
         }
 
         return;
+    } // =========================
+// XỬ LÝ MODAL
+// =========================
+if (interaction.isModalSubmit()) {
+    try {
+        await handleModal(interaction);
+    } catch (error) {
+        console.error("❌ Lỗi Modal:", error);
+
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp({
+                content: "❌ Đã xảy ra lỗi khi thực hiện chức năng.",
+                ephemeral: true
+            }).catch(() => {});
+        } else {
+            await interaction.reply({
+                content: "❌ Đã xảy ra lỗi khi thực hiện chức năng.",
+                ephemeral: true
+            }).catch(() => {});
+        }
     }
 
+    return;
+}
+ 
 
     // =========================
     // XỬ LÝ SLASH COMMAND
