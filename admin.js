@@ -527,13 +527,12 @@ module.exports = {
             db.updatePlayer(id, {
                 tuvi: newValue
             });
-
             return interaction.reply({
-    content: `⚔️ <@${id}>\nTu vi: **${oldValue.toLocaleString()}** → **${newValue.toLocaleString()}**`,
+    content: "⚔️ <@" + id + ">\\nTu vi: **" +
+        oldValue.toLocaleString() + "** -> **" +
+        newValue.toLocaleString() + "**",
     ephemeral: true
 });
-        }
-
         // =============================================
         // LINH THẠCH
         // =============================================
