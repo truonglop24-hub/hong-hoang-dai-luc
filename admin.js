@@ -808,7 +808,7 @@ module.exports = {
 
             return interaction.reply({
                 content:
-                    `🔑 **Tạo code thành công!**\n\n` +
+                    `🔑 **Tạo code thành công!**\n\n" +
                     `Code: \`${code}\`\n` +
                     `Phần thưởng: **${reward}**\n` +
                     `Số lượng: **${amount.toLocaleString()}**`,
