@@ -529,11 +529,9 @@ module.exports = {
             });
 
             return interaction.reply({
-                content:
-                    `⚔️ <@${id}>\n` +
-                    `Tu vi: **${oldValue.toLocaleString()}** → **${newValue.toLocaleString()}**`,
-                ephemeral: true
-            });
+    content: `⚔️ <@${id}>\nTu vi: **${oldValue.toLocaleString()}** → **${newValue.toLocaleString()}**`,
+    ephemeral: true
+});
         }
 
         // =============================================
