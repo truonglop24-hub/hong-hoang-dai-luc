@@ -772,8 +772,7 @@ module.exports = {
             ) {
                 return interaction.reply({
                     content:
-                        "❌ Phần thưởng phải là `tuvi` hoặc `linhthach`.",
-                    ephemeral: true
+    "❌ Phần thưởng phải là tuvi hoặc linhthach.",
                 });
             }
 
