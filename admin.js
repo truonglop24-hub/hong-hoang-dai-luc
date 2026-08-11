@@ -7,7 +7,15 @@ const {
 const fs = require("fs");
 const path = require("path");
 
-const dataPath = path.join(__dirname, "../data/data.json");
+// ===============================
+// ĐƯỜNG DẪN DATABASE
+// ===============================
+
+const dataPath = path.join(__dirname, "data", "data.json");
+
+// ===============================
+// ĐỌC DATABASE
+// ===============================
 
 function loadData() {
     if (!fs.existsSync(dataPath)) {
@@ -17,8 +25,14 @@ function loadData() {
         };
     }
 
-    return JSON.parse(fs.readFileSync(dataPath, "utf8"));
+    return JSON.parse(
+        fs.readFileSync(dataPath, "utf8")
+    );
 }
+
+// ===============================
+// LƯU DATABASE
+// ===============================
 
 function saveData(data) {
     fs.writeFileSync(
@@ -27,7 +41,16 @@ function saveData(data) {
     );
 }
 
+// ===============================
+// TẠO DATA NGƯỜI CHƠI
+// ===============================
+
 function createUser(data, id) {
+
+    if (!data.users) {
+        data.users = {};
+    }
+
     if (!data.users[id]) {
         data.users[id] = {
             tuvi: 0,
@@ -52,15 +75,46 @@ function createUser(data, id) {
     }
 }
 
+// ===============================
+// CẢNH GIỚI
+// ===============================
+
+const realms = [
+    "Phàm Nhân",
+    "Luyện Khí",
+    "Trúc Cơ",
+    "Kim Đan",
+    "Nguyên Anh",
+    "Hóa Thần",
+    "Luyện Hư",
+    "Hợp Thể",
+    "Đại Thừa",
+    "Độ Kiếp",
+    "Tán Tiên",
+    "Chân Tiên",
+    "Kim Tiên",
+    "Tiên Vương",
+    "Tiên Đế",
+    "Thánh Nhân",
+    "Thiên Đạo",
+    "Đại Đạo"
+];
+
+// ===============================
+// LỆNH ADMIN
+// ===============================
+
 module.exports = {
+
     data: new SlashCommandBuilder()
         .setName("admin")
-        .setDescription("Hệ thống quản trị Hồng Hoang Đại Lục")
+        .setDescription("⚡ Hệ thống quản trị Hồng Hoang Đại Lục")
 
+        // CỘNG TU VI
         .addSubcommand(sub =>
             sub
                 .setName("addtuvi")
-                .setDescription("Cộng tu vi cho người chơi")
+                .setDescription("✨ Cộng tu vi")
                 .addUserOption(option =>
                     option
                         .setName("nguoi")
@@ -76,10 +130,11 @@ module.exports = {
                 )
         )
 
+        // TRỪ TU VI
         .addSubcommand(sub =>
             sub
                 .setName("removetuvi")
-                .setDescription("Trừ tu vi của người chơi")
+                .setDescription("❌ Trừ tu vi")
                 .addUserOption(option =>
                     option
                         .setName("nguoi")
@@ -95,10 +150,11 @@ module.exports = {
                 )
         )
 
+        // CỘNG LINH THẠCH
         .addSubcommand(sub =>
             sub
                 .setName("addlinhthach")
-                .setDescription("Cộng linh thạch")
+                .setDescription("💰 Cộng linh thạch")
                 .addUserOption(option =>
                     option
                         .setName("nguoi")
@@ -114,10 +170,11 @@ module.exports = {
                 )
         )
 
+        // TRỪ LINH THẠCH
         .addSubcommand(sub =>
             sub
                 .setName("removelinhtach")
-                .setDescription("Trừ linh thạch")
+                .setDescription("❌ Trừ linh thạch")
                 .addUserOption(option =>
                     option
                         .setName("nguoi")
@@ -133,10 +190,11 @@ module.exports = {
                 )
         )
 
+        // SET CẢNH GIỚI
         .addSubcommand(sub =>
             sub
                 .setName("setrealm")
-                .setDescription("Thiết lập cảnh giới")
+                .setDescription("🌟 Thiết lập cảnh giới")
                 .addUserOption(option =>
                     option
                         .setName("nguoi")
@@ -146,17 +204,18 @@ module.exports = {
                 .addIntegerOption(option =>
                     option
                         .setName("canhgioi")
-                        .setDescription("ID cảnh giới từ 0 đến 17")
+                        .setDescription("ID cảnh giới 0 - 17")
                         .setRequired(true)
                         .setMinValue(0)
                         .setMaxValue(17)
                 )
         )
 
+        // RESET
         .addSubcommand(sub =>
             sub
                 .setName("reset")
-                .setDescription("Reset toàn bộ dữ liệu người chơi")
+                .setDescription("♻️ Reset người chơi")
                 .addUserOption(option =>
                     option
                         .setName("nguoi")
@@ -165,10 +224,11 @@ module.exports = {
                 )
         )
 
+        // GIVE ITEM
         .addSubcommand(sub =>
             sub
                 .setName("giveitem")
-                .setDescription("Trao vật phẩm cho người chơi")
+                .setDescription("🎁 Trao vật phẩm")
                 .addUserOption(option =>
                     option
                         .setName("nguoi")
@@ -190,35 +250,50 @@ module.exports = {
                 )
         ),
 
+    // ===============================
+    // EXECUTE
+    // ===============================
+
     async execute(interaction) {
 
-        // =========================
+        // ==========================================
         // KIỂM TRA QUYỀN ADMIN
-        // =========================
+        // ==========================================
 
         if (
             !interaction.member.permissions.has(
                 PermissionFlagsBits.Administrator
             )
         ) {
+
             return interaction.reply({
-                content: "🚫 Bạn không có quyền sử dụng lệnh Admin!",
+                content:
+                    "🚫 **Bạn không có quyền sử dụng hệ thống Admin!**",
                 ephemeral: true
             });
+
         }
 
-        const subcommand = interaction.options.getSubcommand();
+        // ==========================================
+        // LẤY LỆNH CON
+        // ==========================================
+
+        const command =
+            interaction.options.getSubcommand();
 
         const data = loadData();
 
-        // =========================
+        // ==========================================
         // CỘNG TU VI
-        // =========================
+        // ==========================================
 
-        if (subcommand === "addtuvi") {
+        if (command === "addtuvi") {
 
-            const user = interaction.options.getUser("nguoi");
-            const amount = interaction.options.getInteger("so_luong");
+            const user =
+                interaction.options.getUser("nguoi");
+
+            const amount =
+                interaction.options.getInteger("so_luong");
 
             createUser(data, user.id);
 
@@ -228,14 +303,14 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setColor(0x2ecc71)
-                .setTitle("⚡ ADMIN - CỘNG TU VI")
+                .setTitle("✨ ADMIN • CỘNG TU VI")
                 .setDescription(
-                    `👤 **Người chơi:** ${user}\n` +
-                    `✨ **Tu vi cộng:** +${amount.toLocaleString()}\n` +
+                    `👤 **Người chơi:** ${user}\n\n` +
+                    `✨ **Đã cộng:** +${amount.toLocaleString()} tu vi\n` +
                     `📊 **Tu vi hiện tại:** ${data.users[user.id].tuvi.toLocaleString()}`
                 )
                 .setFooter({
-                    text: `Admin: ${interaction.user.tag}`
+                    text: `Thực hiện bởi ${interaction.user.tag}`
                 });
 
             return interaction.reply({
@@ -243,49 +318,56 @@ module.exports = {
             });
         }
 
-        // =========================
+        // ==========================================
         // TRỪ TU VI
-        // =========================
+        // ==========================================
 
-        if (subcommand === "removetuvi") {
+        if (command === "removetuvi") {
 
-            const user = interaction.options.getUser("nguoi");
-            const amount = interaction.options.getInteger("so_luong");
+            const user =
+                interaction.options.getUser("nguoi");
+
+            const amount =
+                interaction.options.getInteger("so_luong");
 
             createUser(data, user.id);
 
-            data.users[user.id].tuvi = Math.max(
-                0,
-                data.users[user.id].tuvi - amount
-            );
+            data.users[user.id].tuvi =
+                Math.max(
+                    0,
+                    data.users[user.id].tuvi - amount
+                );
 
             saveData(data);
 
-            const embed = new EmbedBuilder()
-                .setColor(0xe74c3c)
-                .setTitle("⚡ ADMIN - TRỪ TU VI")
-                .setDescription(
-                    `👤 **Người chơi:** ${user}\n` +
-                    `✨ **Tu vi trừ:** -${amount.toLocaleString()}\n` +
-                    `📊 **Tu vi hiện tại:** ${data.users[user.id].tuvi.toLocaleString()}`
-                )
-                .setFooter({
-                    text: `Admin: ${interaction.user.tag}`
-                });
-
             return interaction.reply({
-                embeds: [embed]
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0xe74c3c)
+                        .setTitle("❌ ADMIN • TRỪ TU VI")
+                        .setDescription(
+                            `👤 **Người chơi:** ${user}\n\n` +
+                            `✨ **Đã trừ:** -${amount.toLocaleString()} tu vi\n` +
+                            `📊 **Tu vi hiện tại:** ${data.users[user.id].tuvi.toLocaleString()}`
+                        )
+                        .setFooter({
+                            text: `Thực hiện bởi ${interaction.user.tag}`
+                        })
+                ]
             });
         }
 
-        // =========================
+        // ==========================================
         // CỘNG LINH THẠCH
-        // =========================
+        // ==========================================
 
-        if (subcommand === "addlinhthach") {
+        if (command === "addlinhthach") {
 
-            const user = interaction.options.getUser("nguoi");
-            const amount = interaction.options.getInteger("so_luong");
+            const user =
+                interaction.options.getUser("nguoi");
+
+            const amount =
+                interaction.options.getInteger("so_luong");
 
             createUser(data, user.id);
 
@@ -293,66 +375,67 @@ module.exports = {
 
             saveData(data);
 
-            const embed = new EmbedBuilder()
-                .setColor(0xf1c40f)
-                .setTitle("💰 ADMIN - CỘNG LINH THẠCH")
-                .setDescription(
-                    `👤 **Người chơi:** ${user}\n` +
-                    `💰 **Linh thạch cộng:** +${amount.toLocaleString()}\n` +
-                    `📊 **Linh thạch hiện tại:** ${data.users[user.id].linhthach.toLocaleString()}`
-                )
-                .setFooter({
-                    text: `Admin: ${interaction.user.tag}`
-                });
-
             return interaction.reply({
-                embeds: [embed]
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0xf1c40f)
+                        .setTitle("💰 ADMIN • CỘNG LINH THẠCH")
+                        .setDescription(
+                            `👤 **Người chơi:** ${user}\n\n` +
+                            `💰 **Đã cộng:** +${amount.toLocaleString()} linh thạch\n` +
+                            `📊 **Hiện tại:** ${data.users[user.id].linhthach.toLocaleString()}`
+                        )
+                ]
             });
         }
 
-        // =========================
+        // ==========================================
         // TRỪ LINH THẠCH
-        // =========================
+        // ==========================================
 
-        if (subcommand === "removelinhtach") {
+        if (command === "removelinhtach") {
 
-            const user = interaction.options.getUser("nguoi");
-            const amount = interaction.options.getInteger("so_luong");
+            const user =
+                interaction.options.getUser("nguoi");
+
+            const amount =
+                interaction.options.getInteger("so_luong");
 
             createUser(data, user.id);
 
-            data.users[user.id].linhthach = Math.max(
-                0,
-                data.users[user.id].linhthach - amount
-            );
+            data.users[user.id].linhthach =
+                Math.max(
+                    0,
+                    data.users[user.id].linhthach - amount
+                );
 
             saveData(data);
 
-            const embed = new EmbedBuilder()
-                .setColor(0xe67e22)
-                .setTitle("💰 ADMIN - TRỪ LINH THẠCH")
-                .setDescription(
-                    `👤 **Người chơi:** ${user}\n` +
-                    `💰 **Linh thạch trừ:** -${amount.toLocaleString()}\n` +
-                    `📊 **Linh thạch hiện tại:** ${data.users[user.id].linhthach.toLocaleString()}`
-                )
-                .setFooter({
-                    text: `Admin: ${interaction.user.tag}`
-                });
-
             return interaction.reply({
-                embeds: [embed]
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0xe67e22)
+                        .setTitle("❌ ADMIN • TRỪ LINH THẠCH")
+                        .setDescription(
+                            `👤 **Người chơi:** ${user}\n\n` +
+                            `💰 **Đã trừ:** -${amount.toLocaleString()} linh thạch\n` +
+                            `📊 **Hiện tại:** ${data.users[user.id].linhthach.toLocaleString()}`
+                        )
+                ]
             });
         }
 
-        // =========================
+        // ==========================================
         // SET CẢNH GIỚI
-        // =========================
+        // ==========================================
 
-        if (subcommand === "setrealm") {
+        if (command === "setrealm") {
 
-            const user = interaction.options.getUser("nguoi");
-            const realm = interaction.options.getInteger("canhgioi");
+            const user =
+                interaction.options.getUser("nguoi");
+
+            const realm =
+                interaction.options.getInteger("canhgioi");
 
             createUser(data, user.id);
 
@@ -360,103 +443,82 @@ module.exports = {
 
             saveData(data);
 
-            const realmNames = [
-                "Phàm Nhân",
-                "Luyện Khí",
-                "Trúc Cơ",
-                "Kim Đan",
-                "Nguyên Anh",
-                "Hóa Thần",
-                "Luyện Hư",
-                "Hợp Thể",
-                "Đại Thừa",
-                "Độ Kiếp",
-                "Tán Tiên",
-                "Chân Tiên",
-                "Kim Tiên",
-                "Tiên Vương",
-                "Tiên Đế",
-                "Thánh Nhân",
-                "Thiên Đạo",
-                "Đại Đạo"
-            ];
-
-            const embed = new EmbedBuilder()
-                .setColor(0x9b59b6)
-                .setTitle("🌟 ADMIN - THIẾT LẬP CẢNH GIỚI")
-                .setDescription(
-                    `👤 **Người chơi:** ${user}\n` +
-                    `🌟 **Cảnh giới:** ${realmNames[realm]}\n` +
-                    `🔢 **ID:** ${realm}`
-                )
-                .setFooter({
-                    text: `Admin: ${interaction.user.tag}`
-                });
-
             return interaction.reply({
-                embeds: [embed]
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0x9b59b6)
+                        .setTitle("🌟 ADMIN • CẢNH GIỚI")
+                        .setDescription(
+                            `👤 **Người chơi:** ${user}\n\n` +
+                            `🌟 **Cảnh giới:** ${realms[realm]}\n` +
+                            `🔢 **ID:** ${realm}`
+                        )
+                ]
             });
         }
 
-        // =========================
+        // ==========================================
         // RESET
-        // =========================
+        // ==========================================
 
-        if (subcommand === "reset") {
+        if (command === "reset") {
 
-            const user = interaction.options.getUser("nguoi");
+            const user =
+                interaction.options.getUser("nguoi");
 
-            delete data.users[user.id];
+            if (data.users && data.users[user.id]) {
+                delete data.users[user.id];
+            }
 
             saveData(data);
 
-            const embed = new EmbedBuilder()
-                .setColor(0xe74c3c)
-                .setTitle("♻️ ADMIN - RESET")
-                .setDescription(
-                    `👤 Đã reset toàn bộ dữ liệu của ${user}.`
-                )
-                .setFooter({
-                    text: `Admin: ${interaction.user.tag}`
-                });
-
             return interaction.reply({
-                embeds: [embed]
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0xe74c3c)
+                        .setTitle("♻️ ADMIN • RESET")
+                        .setDescription(
+                            `👤 Đã reset toàn bộ dữ liệu của ${user}.`
+                        )
+                ]
             });
         }
 
-        // =========================
+        // ==========================================
         // GIVE ITEM
-        // =========================
+        // ==========================================
 
-        if (subcommand === "giveitem") {
+        if (command === "giveitem") {
 
-            const user = interaction.options.getUser("nguoi");
-            const item = interaction.options.getString("item");
-            const amount = interaction.options.getInteger("so_luong");
+            const user =
+                interaction.options.getUser("nguoi");
+
+            const item =
+                interaction.options.getString("item");
+
+            const amount =
+                interaction.options.getInteger("so_luong");
 
             createUser(data, user.id);
 
             data.users[user.id].trangbi[item] =
-                (data.users[user.id].trangbi[item] || 0) + amount;
+                (data.users[user.id].trangbi[item] || 0)
+                + amount;
 
             saveData(data);
 
-            const embed = new EmbedBuilder()
-                .setColor(0x3498db)
-                .setTitle("🎁 ADMIN - TRAO VẬT PHẨM")
-                .setDescription(
-                    `👤 **Người chơi:** ${user}\n` +
-                    `🎁 **Vật phẩm:** ${item}\n` +
-                    `📦 **Số lượng:** ${amount}\n` +
-                    `📊 **Tổng sở hữu:** ${data.users[user.id].trangbi[item]}`
-                )
-                .setFooter({
-                    text: `Admin: ${interaction.user.tag}`
-                });
-
             return interaction.reply({
-                embeds: [embed]
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0x3498db)
+                        .setTitle("🎁 ADMIN • TRAO VẬT PHẨM")
+                        .setDescription(
+                            `👤 **Người chơi:** ${user}\n\n` +
+                            `🎁 **Vật phẩm:** ${item}\n` +
+                            `📦 **Số lượng:** ${amount}\n` +
+                            `📊 **Tổng sở hữu:** ${data.users[user.id].trangbi[item]}`
+                        )
+                ]
             });
         }
     }
