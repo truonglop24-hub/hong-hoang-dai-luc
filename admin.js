@@ -238,9 +238,7 @@ module.exports = {
 
         const action =
             interaction.values[0];
-
-        ")
-                    .setLabel("Số lượng")
+                  .setLabel("Số lượng")
                     .setPlaceholder(
                         "Ví dụ: 10000
                // =================================================
