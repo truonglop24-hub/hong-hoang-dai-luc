@@ -517,8 +517,8 @@ if (
                     .setStyle(
                         TextInputStyle.Short
                     )
-                    .setRequired(tr
-                                 ue);
+                    .setRequired(true);
+                                
 
             modal.addComponents(
                 new ActionRowBuilder()
