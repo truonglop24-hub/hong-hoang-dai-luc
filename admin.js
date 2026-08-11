@@ -1308,11 +1308,12 @@ if (reward === "danduoc" && !itemCode) {
         ephemeral: true
     });
 }
-                    content:
-                        "❌ Số lượng không hợp lệ!",
-                    ephemeral: true
-                });
-            }
+                    if (!amount) {
+    return interaction.reply({
+        content: "❌ Số lượng không hợp lệ!",
+        ephemeral: true
+    });
+}
 
             // ---------------------------------------------
             // LOAD CODE
