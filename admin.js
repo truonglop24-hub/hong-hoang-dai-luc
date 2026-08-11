@@ -663,12 +663,12 @@ module.exports = {
             if (!allowed.includes(stat)) {
                 return interaction.reply({
                     content:
-                        "❌ Chỉ số không hợp lệ!\n\n" +
-                        "`linhLuc`\n" +
-                        "`hp`\n" +
-                        "`maxHp`\n" +
-                        "`cong`\n" +
-                        "`thu`",
+    "❌ Chỉ số không hợp lệ!\n\n" +
+    "linhLuc\n" +
+    "hp\n" +
+    "maxHp\n" +
+    "cong\n" +
+    "thu",
                     ephemeral: true
                 });
             }
