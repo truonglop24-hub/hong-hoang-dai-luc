@@ -3,153 +3,377 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
-const {
-    getPlayer
-} = require("./database");
+const db =
+    require("./database");
+
+// =====================================================
+// /TUVI
+// =====================================================
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName("tuvi")
-        .setDescription("Xem thông tin tu vi của bản thân"),
 
-    async execute(interaction) {
+    data:
+        new SlashCommandBuilder()
 
-        // ==============================
-        // LẤY DỮ LIỆU NGƯỜI CHƠI
-        // ==============================
+            .setName("tuvi")
 
-        const p = getPlayer(
-            interaction.user.id
-        );
+            .setDescription(
+                "📜 Xem thông tin tu vi và linh căn"
+            ),
 
-        // ==============================
+    async execute(
+        interaction
+    ) {
+
+        const p =
+            db.getPlayer(
+                interaction.user.id
+            );
+
+        // =================================================
         // CHƯA CÓ NHÂN VẬT
-        // ==============================
+        // =================================================
 
         if (!p) {
+
             return interaction.reply({
+
                 content:
-                    "⚠️ Hãy dùng `/batdau` trước.",
-                ephemeral: true
+                    "⚠️ Hãy dùng `/batdau` trước để bước vào Hồng Hoang.",
+
+                ephemeral:
+                    true
             });
         }
 
-        // ==============================
+        // =================================================
         // TU VI
-        // ==============================
+        // =================================================
 
         const tuvi =
-            Number(p.tuvi) || 0;
+            Number(
+                p.tuvi
+            ) || 0;
 
-        // ==============================
-        // LINH THẠCH
-        // ==============================
+        // =================================================
+        // LINH CĂN
+        // =================================================
 
-        const linhThach =
-            Number(p.linhThach) || 0;
+        const linhCan =
+            p.linhCan;
 
-        // ==============================
-        // TẠO BẢNG TU VI
-        // ==============================
+        let linhCanName =
+            "❓ Chưa thức tỉnh";
+
+        let phamCap =
+            "Chưa xác định";
+
+        let thuocTinh =
+            "Chưa xác định";
+
+        let moTa =
+            "Chưa có linh căn.";
+
+        let buff = {
+
+            tuLuyen: 0,
+
+            hp: 0,
+
+            linhLuc: 0,
+
+            cong: 0,
+
+            thu: 0,
+
+            dotPha: 0
+        };
+
+        if (
+            linhCan &&
+            typeof linhCan ===
+                "object"
+        ) {
+
+            linhCanName =
+                linhCan.ten ||
+                linhCanName;
+
+            phamCap =
+                linhCan.phamCap ||
+                phamCap;
+
+            thuocTinh =
+                linhCan.thuocTinh ||
+                thuocTinh;
+
+            moTa =
+                linhCan.moTa ||
+                moTa;
+
+            if (
+                linhCan.buff
+            ) {
+
+                buff = {
+
+                    ...buff,
+
+                    ...linhCan.buff
+                };
+            }
+
+        } else if (
+            typeof linhCan ===
+            "string"
+        ) {
+
+            // =================================================
+            // HỖ TRỢ DỮ LIỆU CŨ
+            // =================================================
+
+            linhCanName =
+                linhCan;
+
+        }
+
+        // =================================================
+        // FORMAT SỐ
+        // =================================================
+
+        const format =
+            value =>
+                Number(
+                    value || 0
+                ).toLocaleString();
+
+        // =================================================
+        // EMBED
+        // =================================================
 
         const embed =
+
             new EmbedBuilder()
+
+                .setColor(
+                    0x8e44ad
+                )
+
                 .setTitle(
+
                     `📜 TU VI • ${interaction.user.username}`
                 )
+
                 .setDescription(
-                    "━━━━━━━━━━━━━━━━━━━━"
+
+                    `🌌 **HỒNG HOANG ĐẠI LỤC**\n\n` +
+
+                    `🧬 **${linhCanName}**`
                 )
+
+                // =================================================
+                // LINH CĂN
+                // =================================================
+
                 .addFields(
 
-                    // TU VI
                     {
-                        name: "⚔️ Tu Vi",
+                        name:
+                            "💠 Phẩm cấp",
+
                         value:
-                            `**${tuvi.toLocaleString()}**`,
-                        inline: true
+                            `${phamCap}`,
+
+                        inline:
+                            true
                     },
 
+                    {
+                        name:
+                            "🌈 Thuộc tính",
+
+                        value:
+                            `${thuocTinh}`,
+
+                        inline:
+                            true
+                    },
+
+                    {
+                        name:
+                            "📜 Thiên phú",
+
+                        value:
+                            `${moTa}`,
+
+                        inline:
+                            false
+                    },
+
+                    // =================================================
                     // CẢNH GIỚI
+                    // =================================================
+
                     {
-                        name: "🌱 Cảnh giới",
+                        name:
+                            "🌱 Cảnh giới",
+
                         value:
-                            `${p.canhGioi} tầng ${p.tang}`,
-                        inline: true
+                            `**${p.canhGioi || "Luyện Khí"} tầng ${p.tang || 1}**`,
+
+                        inline:
+                            true
                     },
 
-                    // LINH LỰC
                     {
-                        name: "🔥 Linh lực",
+                        name:
+                            "⚔️ Tu Vi",
+
                         value:
-                            `${Number(p.linhLuc || 0).toLocaleString()}`,
-                        inline: true
+                            `**${format(tuvi)}**`,
+
+                        inline:
+                            true
                     },
 
-                    // LINH THẠCH
                     {
-                        name: "💎 Linh thạch",
+                        name:
+                            "✨ Kinh nghiệm",
+
                         value:
-                            `${linhThach.toLocaleString()}`,
-                        inline: true
+                            `${format(p.kinhNghiem)}`,
+
+                        inline:
+                            true
                     },
 
-                    // HP
+                    // =================================================
+                    // TÀI NGUYÊN
+                    // =================================================
+
                     {
-                        name: "❤️ HP",
+                        name:
+                            "🔥 Linh lực",
+
                         value:
-                            `${p.hp}/${p.maxHp}`,
-                        inline: true
+                            `${format(p.linhLuc)}`,
+
+                        inline:
+                            true
                     },
 
-                    // CÔNG
                     {
-                        name: "⚔️ Công",
+                        name:
+                            "💎 Linh thạch",
+
                         value:
-                            `${Number(p.cong || 0).toLocaleString()}`,
-                        inline: true
+                            `${format(p.linhThach)}`,
+
+                        inline:
+                            true
                     },
 
-                    // THỦ
+                    // =================================================
+                    // CHỈ SỐ
+                    // =================================================
+
                     {
-                        name: "🛡️ Thủ",
+                        name:
+                            "❤️ HP",
+
                         value:
-                            `${Number(p.thu || 0).toLocaleString()}`,
-                        inline: true
+                            `${format(p.hp)} / ${format(p.maxHp)}`,
+
+                        inline:
+                            true
                     },
 
-                    // KINH NGHIỆM
                     {
-                        name: "✨ Kinh nghiệm",
+                        name:
+                            "⚔️ Công",
+
                         value:
-                            `${Number(p.kinhNghiem || 0).toLocaleString()}`,
-                        inline: true
+                            `${format(p.cong)}`,
+
+                        inline:
+                            true
                     },
 
-                    // BOSS
                     {
-                        name: "🐉 Boss đã hạ",
+                        name:
+                            "🛡️ Thủ",
+
                         value:
-                            `${Number(p.bossDaGiet || 0).toLocaleString()}`,
-                        inline: true
+                            `${format(p.thu)}`,
+
+                        inline:
+                            true
                     },
 
-                    // PHÓ BẢN
+                    // =================================================
+                    // THIÊN PHÚ
+                    // =================================================
+
                     {
-                        name: "🏯 Phó bản",
+                        name:
+                            "🌟 Thiên Phú Linh Căn",
+
                         value:
-                            `${Number(p.phoBanDaHoanThanh || 0).toLocaleString()}`,
-                        inline: true
+
+                            `⚔️ Tu luyện: **+${buff.tuLuyen}%**\n` +
+
+                            `❤️ Sinh lực: **+${buff.hp}%**\n` +
+
+                            `🔥 Linh lực: **+${buff.linhLuc}%**\n` +
+
+                            `🗡️ Công: **+${buff.cong}%**\n` +
+
+                            `🛡️ Thủ: **+${buff.thu}%**\n` +
+
+                            `🌟 Đột phá: **+${buff.dotPha}%**`,
+
+                        inline:
+                            false
+                    },
+
+                    // =================================================
+                    // THỐNG KÊ
+                    // =================================================
+
+                    {
+                        name:
+                            "🐉 Boss đã hạ",
+
+                        value:
+                            `${format(p.bossDaGiet)}`,
+
+                        inline:
+                            true
+                    },
+
+                    {
+                        name:
+                            "🏯 Phó bản",
+
+                        value:
+                            `${format(p.phoBanDaHoanThanh)}`,
+
+                        inline:
+                            true
                     }
                 )
-                .setTimestamp();
 
-        // ==============================
-        // GỬI BẢNG
-        // ==============================
+                .setFooter({
+
+                    text:
+                        "Hồng Hoang Đại Lục • Con đường chứng đạo"
+                });
 
         return interaction.reply({
-            embeds: [embed]
+
+            embeds: [
+                embed
+            ]
         });
     }
 };
