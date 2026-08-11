@@ -58,8 +58,8 @@ const congPhap = [
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("congphap")
-        .setDescription("Xem danh sách công pháp"),
+        .setName("hoccongphap")
+        .setDescription("Học công pháp"),
 
     async execute(interaction) {
         const text = congPhap

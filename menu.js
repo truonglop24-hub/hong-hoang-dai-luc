@@ -164,8 +164,10 @@ function getMainMenu(player, username) {
             .setCustomId("menu_khac")
             .setLabel("Khác")
             .setEmoji("📦")
-            .setStyle(ButtonStyle.Secondary),
+            .setStyle(ButtonStyle.Secondary)
+    );
 
+    const row4 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId("menu_dong")
             .setLabel("Đóng")
