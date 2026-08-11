@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getPlayer, updatePlayer } = require("./database");
 
-const COOLDOWN Cooldo000;
+const COOLDOWN = 15000;
 
 module.exports = {
     data: new SlashCommandBuilder()
