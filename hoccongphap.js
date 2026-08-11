@@ -3,83 +3,163 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
-const fs = require("fs");
-const path = require("path");
+const {
+    getPlayer,
+    updatePlayer
+} = require("./database");
 
-const dataPath = path.join(__dirname, "../data/data.json");
-
-function loadData() {
-    if (!fs.existsSync(dataPath)) {
-        return {
-            users: {},
-            relationships: {}
-        };
-    }
-
-    return JSON.parse(fs.readFileSync(dataPath, "utf8"));
-}
-
-function saveData(data) {
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-}
-
-const congPhap = [
-    {
-        id: "1",
-        name: "🔥 Hỏa Vân Quyết",
-        requiredRealm: 1,
-        bonus: 10
-    },
-    {
-        id: "2",
-        name: "❄️ Băng Tâm Quyết",
-        requiredRealm: 2,
-        bonus: 15
-    },
-    {
-        id: "3",
-        name: "⚡ Cửu Thiên Lôi Quyết",
-        requiredRealm: 5,
-        bonus: 30
-    },
-    {
-        id: "4",
-        name: "🌌 Hồng Hoang Đạo Kinh",
-        requiredRealm: 10,
-        bonus: 50
-    },
-    {
-        id: "5",
-        name: "☯️ Đại Đạo Kinh",
-        requiredRealm: 16,
-        bonus: 100
-    }
-];
+const { congPhap } =
+    require("./congphap");
 
 module.exports = {
+
     data: new SlashCommandBuilder()
+
         .setName("hoccongphap")
-        .setDescription("Học công pháp"),
+
+        .setDescription(
+            "📜 Học một công pháp"
+        )
+
+        .addStringOption(option =>
+            option
+                .setName("congphap")
+                .setDescription(
+                    "ID công pháp, xem bằng /congphap"
+                )
+                .setRequired(true)
+        ),
 
     async execute(interaction) {
-        const text = congPhap
-            .map(
-                cp =>
-                    `**${cp.id}. ${cp.name}**\n` +
-                    `> Cảnh giới yêu cầu: ${cp.requiredRealm}\n` +
-                    `> Tăng hiệu quả tu luyện: +${cp.bonus}%`
-            )
-            .join("\n\n");
 
-        const embed = new EmbedBuilder()
-            .setColor(0x9b59b6)
-            .setTitle("📜 CÔNG PHÁP HỒNG HOANG")
-            .setDescription(text)
-            .setFooter({
-                text: "Dùng /hoccongphap để học công pháp"
+        const p =
+            getPlayer(
+                interaction.user.id
+            );
+
+        if (!p) {
+            return interaction.reply({
+                content:
+                    "⚠️ Hãy dùng `/batdau` trước.",
+                ephemeral: true
             });
+        }
 
-        await interaction.reply({
+        const id =
+            interaction.options
+                .getString("congphap");
+
+        const cp =
+            congPhap.find(
+                x => x.id === id
+            );
+
+        if (!cp) {
+            return interaction.reply({
+                content:
+                    "❌ Không tìm thấy công pháp này.",
+                ephemeral: true
+            });
+        }
+
+        const currentRealm =
+            Number(p.realm) ||
+            Number(p.canhGioiId) ||
+            1;
+
+        if (
+            currentRealm <
+            cp.requiredRealm
+        ) {
+            return interaction.reply({
+                content:
+                    `❌ Cảnh giới chưa đủ.\n\n` +
+                    `📜 Công pháp: **${cp.name}**\n` +
+                    `🔓 Yêu cầu: **Cảnh giới ${cp.requiredRealm}**\n` +
+                    `⚔️ Hiện tại: **Cảnh giới ${currentRealm}**`,
+                ephemeral: true
+            });
+        }
+
+        const tuiDo =
+            p.tuiDo || {};
+
+        const owned =
+            tuiDo.congPhap || [];
+
+        const already =
+            owned.some(item =>
+                typeof item === "string"
+                    ? item === cp.id
+                    : item.id === cp.id
+            );
+
+        if (already) {
+            return interaction.reply({
+                content:
+                    `📜 Bạn đã học **${cp.name}** rồi.`,
+                ephemeral: true
+            });
+        }
+
+        const newList = [
+            ...owned,
+            {
+                id: cp.id,
+                name: cp.name,
+                requiredRealm:
+                    cp.requiredRealm,
+                bonus: cp.bonus
+            }
+        ];
+
+        updatePlayer(
+            interaction.user.id,
+            {
+                tuiDo: {
+                    ...tuiDo,
+                    congPhap: newList
+                },
+
+                // Buff cộng dồn
+                congPhapBuff:
+                    (Number(p.congPhapBuff) || 0) +
+                    cp.bonus
+            }
+        );
+
+        const embed =
+            new EmbedBuilder()
+
+                .setColor(0x9b59b6)
+
+                .setTitle(
+                    "📜 HỌC CÔNG PHÁP THÀNH CÔNG"
+                )
+
+                .setDescription(
+                    `Đạo hữu đã lĩnh ngộ **${cp.name}**!`
+                )
+
+                .addFields(
+                    {
+                        name:
+                            "✨ Tăng tu luyện",
+                        value:
+                            `+${cp.bonus}%`,
+                        inline: true
+                    },
+
+                    {
+                        name:
+                            "🔓 Cảnh giới yêu cầu",
+                        value:
+                            `${cp.requiredRealm}`,
+                        inline: true
+                    }
+                );
+
+        return interaction.reply({
             embeds: [embed]
         });
     }
