@@ -239,68 +239,166 @@ module.exports = {
         const action =
             interaction.values[0];
 
-        // =============================================
-        // TU VI / LINH THẠCH
-        // =============================================
-
-        if (
-            action === "add_tuvi" ||
-            action === "remove_tuvi" ||
-            action === "add_linhthach" ||
-            action === "remove_linhthach"
-        ) {
-
-            const modal =
-                new ModalBuilder()
-                .setCustomId(
-    "admin_modal_" + action
-)
-                    
-                    .setTitle(
-                        action.includes("tuvi")
-                            ? action === "add_tuvi"
-                                ? "⚔️ TĂNG TU VI"
-                                : "📉 GIẢM TU VI"
-                            : action === "add_linhthach"
-                                ? "💎 TĂNG LINH THẠCH"
-                                : "💸 GIẢM LINH THẠCH"
-                    );
-
-            const user =
-                new TextInputBuilder()
-                    .setCustomId("user_id")
-                    .setLabel("ID người chơi")
-                    .setPlaceholder(
-                        "Nhập ID Discord"
-                    )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
-                    .setRequired(true);
-
-            const amount =
-                new TextInputBuilder()
-                    .setCustomId("amount")
+        ")
                     .setLabel("Số lượng")
                     .setPlaceholder(
-                        "Ví dụ: 10000"
-                    )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
-                    .setRequired(true);
+                        "Ví dụ: 10000
+               // =================================================
+// TĂNG / GIẢM TU VI + LINH THẠCH
+// =================================================
 
-            modal.addComponents(
-                new ActionRowBuilder()
-                    .addComponents(user),
+if (
+    action === "admin_modal_add_tuvi" ||
+    action === "admin_modal_remove_tuvi" ||
+    action === "admin_modal_add_linhthach" ||
+    action === "admin_modal_remove_linhthach"
+) {
 
-                new ActionRowBuilder()
-                    .addComponents(amount)
+    // ==============================
+    // LẤY DỮ LIỆU FORM
+    // ==============================
+
+    const id = cleanId(
+        interaction.fields.getTextInputValue("user_id")
+    );
+
+    const amount = positiveInteger(
+        interaction.fields.getTextInputValue("amount")
+    );
+
+    // ==============================
+    // KIỂM TRA ID
+    // ==============================
+
+    if (!validId(id)) {
+        return interaction.reply({
+            content: "❌ ID Discord không hợp lệ!",
+            ephemeral: true
+        });
+    }
+
+    // ==============================
+    // KIỂM TRA SỐ LƯỢNG
+    // ==============================
+
+    if (!amount) {
+        return interaction.reply({
+            content: "❌ Số lượng phải là số nguyên dương!",
+            ephemeral: true
+        });
+    }
+
+    // ==============================
+    // LẤY NGƯỜI CHƠI
+    // ==============================
+
+    const player = await getOrCreatePlayer(
+        interaction,
+        id
+    );
+
+    if (!player) {
+        return interaction.reply({
+            content: "❌ Không tìm thấy người chơi!",
+            ephemeral: true
+        });
+    }
+
+    // ==============================
+    // XÁC ĐỊNH LOẠI DỮ LIỆU
+    // ==============================
+
+    const isTuVi =
+        action.includes("tuvi");
+
+    const isAdd =
+        action.startsWith("admin_modal_add_");
+
+    // ==============================
+    // TU VI
+    // ==============================
+
+    if (isTuVi) {
+
+        const oldValue =
+            Number(player.tuvi) || 0;
+
+        const newValue =
+            isAdd
+                ? oldValue + amount
+                : Math.max(
+                    0,
+                    oldValue - amount
+                );
+
+        db.updatePlayer(id, {
+            tuvi: newValue
+        });
+
+        return interaction.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setColor(
+                        isAdd
+                            ? 0x2ecc71
+                            : 0xe74c3c
+                    )
+                    .setTitle(
+                        isAdd
+                            ? "⚔️ TĂNG TU VI THÀNH CÔNG"
+                            : "📉 GIẢM TU VI THÀNH CÔNG"
+                    )
+                    .setDescription(
+                        `👤 **Người chơi:** <@${id}>\n` +
+                        `🔢 **Thay đổi:** ${isAdd ? "+" : "-"}${amount.toLocaleString()}\n` +
+                        `⚔️ **Tu vi:** ${oldValue.toLocaleString()} → **${newValue.toLocaleString()}**`
+                    )
+            ],
+            ephemeral: true
+        });
+    }
+
+    // ==============================
+    // LINH THẠCH
+    // ==============================
+
+    const oldValue =
+        Number(player.linhThach) || 0;
+
+    const newValue =
+        isAdd
+            ? oldValue + amount
+            : Math.max(
+                0,
+                oldValue - amount
             );
 
-            return interaction.showModal(modal);
-        }
+    db.updatePlayer(id, {
+        linhThach: newValue
+    });
 
+    return interaction.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setColor(
+                    isAdd
+                        ? 0x2ecc71
+                        : 0xe74c3c
+                )
+                .setTitle(
+                    isAdd
+                        ? "💎 TĂNG LINH THẠCH THÀNH CÔNG"
+                        : "💸 GIẢM LINH THẠCH THÀNH CÔNG"
+                )
+                .setDescription(
+                    `👤 **Người chơi:** <@${id}>\n` +
+                    `🔢 **Thay đổi:** ${isAdd ? "+" : "-"}${amount.toLocaleString()}\n` +
+                    `💎 **Linh thạch:** ${oldValue.toLocaleString()} → **${newValue.toLocaleString()}**`
+                )
+        ],
+        ephemeral: true
+    });
+}         
         // =============================================
         // CHỈ SỐ
         // =============================================
@@ -355,7 +453,8 @@ module.exports = {
                     .setStyle(
                         TextInputStyle.Short
                     )
-                    .setRequired(true);
+                    .setRequired(tr
+                                 ue);
 
             modal.addComponents(
                 new ActionRowBuilder()
