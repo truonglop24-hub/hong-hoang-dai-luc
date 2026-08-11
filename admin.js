@@ -238,9 +238,11 @@ module.exports = {
 
         const action =
             interaction.values[0];
-                  .setLabel("Số lượng")
-                    .setPlaceholder(
-                        "Ví dụ: 10000
+
+        
+              .setLabel("Số lượng")
+              .setPlaceholder(
+             "Ví dụ: 10000
                // =================================================
 // TĂNG / GIẢM TU VI + LINH THẠCH
 // =================================================
