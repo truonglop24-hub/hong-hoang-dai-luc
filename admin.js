@@ -790,8 +790,7 @@ module.exports = {
             if (codes[code]) {
                 return interaction.reply({
                     content:
-                        `❌ Code \`${code}\` đã tồn tại!`,
-                    ephemeral: true
+                    "❌ Code " + code + " đã tồn tại!",
                 });
             }
 
