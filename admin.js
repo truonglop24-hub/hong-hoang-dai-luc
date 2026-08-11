@@ -254,9 +254,10 @@ module.exports = {
 
             const modal =
                 new ModalBuilder()
-                    .setCustomId(
-                        `admin_modal_${action}`
-                    )
+                .setCustomId(
+    "admin_modal_" + action
+)
+                    
                     .setTitle(
                         action.includes("tuvi")
                             ? action === "add_tuvi"
