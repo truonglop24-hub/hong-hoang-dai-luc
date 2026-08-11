@@ -767,48 +767,43 @@ module.exports = {
                     .setRequired(true);
 
             const reward =
-                new TextInputBuilder()
-                    .setCustomId(
-                        "reward"
-                    )
-                    .setLabel(
-                        "Phần thưởng"
-                    )
-                    .setPlaceholder(
-                        "tuvi hoặc linhthach"
-                    )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
-                    .setRequired(true);
+    new TextInputBuilder()
+        .setCustomId("reward")
+        .setLabel("Phần thưởng")
+        .setPlaceholder("tuvi / linhthach / danduoc")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
 
-            const amount =
-                new TextInputBuilder()
-                    .setCustomId(
-                        "amount"
-                    )
-                    .setLabel(
-                        "Số lượng"
-                    )
-                    .setPlaceholder(
-                        "Ví dụ: 50000"
-                    )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
-                    .setRequired(true);
+const itemCode =
+    new TextInputBuilder()
+        .setCustomId("item_code")
+        .setLabel("Code đan dược")
+        .setPlaceholder("Ví dụ: TUDAN001")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(false);
+
+const amount =
+    new TextInputBuilder()
+        .setCustomId("amount")
+        .setLabel("Số lượng")
+        .setPlaceholder("Ví dụ: 50000")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
 
             modal.addComponents(
 
-                new ActionRowBuilder()
-                    .addComponents(code),
+    new ActionRowBuilder()
+        .addComponents(code),
 
-                new ActionRowBuilder()
-                    .addComponents(reward),
+    new ActionRowBuilder()
+        .addComponents(reward),
 
-                new ActionRowBuilder()
-                    .addComponents(amount)
-            );
+    new ActionRowBuilder()
+        .addComponents(itemCode),
+
+    new ActionRowBuilder()
+        .addComponents(amount)
+);
 
             return interaction.showModal(
                 modal
