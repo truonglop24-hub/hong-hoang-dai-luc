@@ -314,9 +314,9 @@ module.exports = {
 
             const modal =
                 new ModalBuilder()
-                    .setCustomId(
-                        `admin_modal_${action}`
-                    )
+                .setCustomId("admin_modal_" + action)
+                        
+                
                     .setTitle(
                         action === "add_stat"
                             ? "📈 TĂNG CHỈ SỐ"
