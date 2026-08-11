@@ -808,10 +808,10 @@ module.exports = {
 
             return interaction.reply({
                 content:
-                    `🔑 **Tạo code thành công!**\n\n" +
-                    `Code: \`${code}\`\n` +
-                    `Phần thưởng: **${reward}**\n` +
-                    `Số lượng: **${amount.toLocaleString()}**`,
+    `🔑 **Tạo code thành công!**\n\n` +
+    `Code: \`${code}\`\n` +
+    `Phần thưởng: **${reward}**\n` +
+    `Số lượng: **${amount.toLocaleString()}**`,
                 ephemeral: true
             });
         }
