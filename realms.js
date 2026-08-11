@@ -39,7 +39,7 @@ const realms = [
     {
         id: 7,
         name: "Hợp Thể",
-        maxCultivation: 5000000
+        maxCultivation: 3000000
     },
     {
         id: 8,
@@ -49,11 +49,11 @@ const realms = [
     {
         id: 9,
         name: "Độ Kiếp",
-        maxCultivation: 50000000
+        maxCultivation: 30000000
     },
     {
         id: 10,
-        name: "Tán Tiên",
+        name: "Tiên Nhân",
         maxCultivation: 100000000
     },
     {
@@ -63,18 +63,18 @@ const realms = [
     },
     {
         id: 12,
-        name: "Kim Tiên",
+        name: "Thiên Tiên",
         maxCultivation: 1000000000
     },
     {
         id: 13,
-        name: "Tiên Vương",
+        name: "Huyền Tiên",
         maxCultivation: 5000000000
     },
     {
         id: 14,
-        name: "Tiên Đế",
-        maxCultivation: 10000000000
+        name: "Kim Tiên",
+        maxCultivation: 30000000000
     },
     {
         id: 15,
@@ -93,28 +93,29 @@ const realms = [
     }
 ];
 
-const command = {
-    data: new SlashCommandBuilder()
-        .setName("realms")
-        .setDescription("Xem danh sách cảnh giới tu tiên"),
+const data = new SlashCommandBuilder()
+    .setName("realms")
+    .setDescription("Xem danh sách cảnh giới tu tiên");
 
-    async execute(interaction) {
-        const text = realms
-            .map(
-                r =>
-                    `**${r.id}. ${r.name}** — Tối đa: ${r.maxCultivation.toLocaleString()} tu vi`
-            )
-            .join("\n");
+async function execute(interaction) {
+    const text = realms
+        .map(r =>
+            `**${r.id}. ${r.name}** — Tối đa: ${r.maxCultivation.toLocaleString()}`
+        )
+        .join("\n");
 
-        const embed = new EmbedBuilder()
-            .setTitle("🌌 HỒNG HOANG ĐẠI LỤC – CẢNH GIỚI")
-            .setDescription(text)
-            .setFooter({ text: "Con đường tu tiên" });
+    const embed = new EmbedBuilder()
+        .setTitle("🌌 HỒNG HOANG ĐẠI LỤC – CẢNH GIỚI")
+        .setDescription(text)
+        .setFooter({ text: "Con đường tu tiên" });
 
-        await interaction.reply({
-            embeds: [embed]
-        });
-    }
+    await interaction.reply({
+        embeds: [embed]
+    });
+}
+
+module.exports = {
+    data,
+    execute,
+    realms
 };
-
-module.exports = command;
