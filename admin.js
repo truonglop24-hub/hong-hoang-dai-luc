@@ -1242,6 +1242,11 @@ const amount =
                     )
                     .trim()
                     .toUpperCase();
+            const itemCode =
+    interaction.fields
+        .getTextInputValue("item_code")
+        .trim()
+        .toUpperCase();
 
             const reward =
                 interaction.fields
@@ -1281,28 +1286,27 @@ const amount =
             // ---------------------------------------------
 
             if (
-                ![
-                    "tuvi",
-                    "linhthach"
-                ].includes(
-                    reward
-                )
-            ) {
+    ![
+        "tuvi",
+        "linhthach",
+        "danduoc"
+    ].includes(
+        reward
+    )
+) {
+    return interaction.reply({
+        content:
+            "❌ Phần thưởng phải là tuvi, linhthach hoặc danduoc.",
+        ephemeral: true
+    });
+}
 
-                return interaction.reply({
-                    content:
-                        "❌ Phần thưởng phải là tuvi hoặc linhthach.",
-                    ephemeral: true
-                });
-            }
-
-            // ---------------------------------------------
-            // KIỂM TRA SỐ LƯỢNG
-            // ---------------------------------------------
-
-            if (!amount) {
-
-                return interaction.reply({
+if (reward === "danduoc" && !itemCode) {
+    return interaction.reply({
+        content: "❌ Bạn chưa nhập Code đan dược!",
+        ephemeral: true
+    });
+}
                     content:
                         "❌ Số lượng không hợp lệ!",
                     ephemeral: true
