@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getPlayer, updatePlayer } = require("./database");
 
-const COOLDOWN = 15000;
+const COOLDOWN = 15 * 1000;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,7 +12,10 @@ module.exports = {
         const p = getPlayer(interaction.user.id);
 
         if (!p) {
-            return interaction.reply({ content: "⚠️ Hãy dùng `/batdau` trước.", ephemeral: true });
+            return interaction.reply({
+                content: "⚠️ Hãy dùng `/batdau` trước.",
+                ephemeral: true
+            });
         }
 
         if (p.beQuan) {
@@ -46,11 +49,23 @@ module.exports = {
                 `**${interaction.user.username}** vận chuyển linh khí trong kinh mạch.`
             )
             .addFields(
-                { name: "🔥 Linh lực", value: `+${linhLuc}`, inline: true },
-                { name: "✨ Kinh nghiệm", value: `+${exp}`, inline: true }
+                {
+                    name: "🔥 Linh lực",
+                    value: `+${linhLuc}`,
+                    inline: true
+                },
+                {
+                    name: "✨ Kinh nghiệm",
+                    value: `+${exp}`,
+                    inline: true
+                }
             )
-            .setFooter({ text: "Cooldown: 15 giây" });
+            .setFooter({
+                text: "Cooldown: 15 giây"
+            });
 
-        return interaction.reply({ embeds: [embed] });
+        return interaction.reply({
+            embeds: [embed]
+        });
     }
 };
