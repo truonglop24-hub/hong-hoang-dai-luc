@@ -1242,6 +1242,7 @@ const amount =
                     )
                     .trim()
                     .toUpperCase();
+            
             const itemCode =
     interaction.fields
         .getTextInputValue("item_code")
@@ -1336,21 +1337,23 @@ if (reward === "danduoc" && !itemCode) {
             // ---------------------------------------------
             // TẠO CODE
             // ---------------------------------------------
+       codes[code] = {
 
-            codes[code] = {
+       reward,
 
-                reward,
+       amount,
 
-                amount,
+     itemCode: reward === "danduoc" ? itemCode : null,
 
-                usedBy: [],
+     usedBy: [],
 
-                createdBy:
-                    interaction.user.id,
+     createdBy:
+        interaction.user.id,
 
-                createdAt:
-                    Date.now()
-            };
+     createdAt:
+        Date.now()
+};
+            
 
             // ---------------------------------------------
             // SAVE
