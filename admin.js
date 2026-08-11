@@ -237,12 +237,76 @@ module.exports = {
         }
 
         const action =
-            interaction.values[0];
+            interaction.values[0];  const userIdInput =
+        new TextInputBuilder()
+            .setCustomId("user_id")
+            .setLabel("ID người chơi")
+            .setPlaceholder("Nhập ID Discord")
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true);
+
+    const amountInput =
+        new TextInputBuilder()
+            .setCustomId("amount")
+            .setLabel("Số lượng")
+            .setPlaceholder("Ví dụ: 10000")
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true);
+
+    // =================================================
+    // TĂNG / GIẢM TU VI + LINH THẠCH
+    // =================================================
+
+    if (
+        action === "add_tuvi" ||
+        action === "remove_tuvi"
+    ) {
+        const modal =
+            new ModalBuilder()
+                .setCustomId(`admin_modal_${action}`)
+                .setTitle(
+                    action === "add_tuvi"
+                        ? "⚔️ TĂNG TU VI"
+                        : "📉 GIẢM TU VI"
+                );
+
+        modal.addComponents(
+            new ActionRowBuilder()
+                .addComponents(userIdInput),
+
+            new ActionRowBuilder()
+                .addComponents(amountInput)
+        );
+
+        return interaction.showModal(modal);
+    }
+
+    if (
+        action === "add_linhthach" ||
+        action === "remove_linhthach"
+    ) {
+        const modal =
+            new ModalBuilder()
+                .setCustomId(`admin_modal_${action}`)
+                .setTitle(
+                    action === "add_linhthach"
+                        ? "💎 TĂNG LINH THẠCH"
+                        : "💸 GIẢM LINH THẠCH"
+                );
+
+        modal.addComponents(
+            new ActionRowBuilder()
+                .addComponents(userIdInput),
+
+            new ActionRowBuilder()
+                .addComponents(amountInput)
+        );
+
+        return interaction.showModal(modal);
+    }
 
         
-              .setLabel("Số lượng")
-              .setPlaceholder(
-             "Ví dụ: 10000
+              
                // =================================================
 // TĂNG / GIẢM TU VI + LINH THẠCH
 // =================================================
