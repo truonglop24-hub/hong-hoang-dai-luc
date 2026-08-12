@@ -29,7 +29,7 @@ const CULTIVATION_SPEED = {
 };
 
 // =====================================================
-// LẤY TỐC ĐỘ
+// LẤY TỐC ĐỘ TU LUYỆN
 // =====================================================
 
 function getCultivationSpeed(canhGioi) {
@@ -44,7 +44,7 @@ module.exports = {
 
     data: new SlashCommandBuilder()
         .setName("tuluyen")
-        .setDescription("🧘 Tu luyện để nhận linh lực và kinh nghiệm"),
+        .setDescription("🧘 Tu luyện để nhận linh lực và tu vi"),
 
     async execute(interaction) {
 
@@ -149,20 +149,37 @@ module.exports = {
             );
 
         // =================================================
-        // TÍNH KINH NGHIỆM
+        // TÍNH TU VI
+        // =================================================
+        //
+        // Tu Vi được lưu trong:
+        // p.kinhNghiem
+        //
+        // Tốc độ tăng theo cảnh giới.
+        // Linh căn vẫn được áp dụng buff.
         // =================================================
 
-        const baseExp =
+        const baseTuVi =
             Math.floor(
                 Math.random() * 21
             ) + 10;
 
-        const exp =
+        const tuVi =
             Math.floor(
-                baseExp *
+                baseTuVi *
                 speed *
                 buffMultiplier
             );
+
+        // =================================================
+        // TU VI HIỆN TẠI
+        // =================================================
+
+        const oldTuVi =
+            Number(p.kinhNghiem) || 0;
+
+        const newTuVi =
+            oldTuVi + tuVi;
 
         // =================================================
         // CẬP NHẬT DATA
@@ -175,9 +192,9 @@ module.exports = {
                     (Number(p.linhLuc) || 0)
                     + linhLuc,
 
+                // TU VI
                 kinhNghiem:
-                    (Number(p.kinhNghiem) || 0)
-                    + exp,
+                    newTuVi,
 
                 lastTrain:
                     Date.now()
@@ -227,9 +244,16 @@ module.exports = {
                     },
 
                     {
-                        name: "✨ Kinh nghiệm",
+                        name: "✨ Tu Vi",
                         value:
-                            `+**${format(exp)}**`,
+                            `+**${format(tuVi)}**`,
+                        inline: true
+                    },
+
+                    {
+                        name: "📊 Tu Vi hiện tại",
+                        value:
+                            `**${format(newTuVi)}**`,
                         inline: true
                     },
 
