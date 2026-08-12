@@ -113,8 +113,7 @@ async function deployCommands() {
         console.log(`🤖 Client ID: ${CLIENT_ID}`);
 
         console.log("");
-        console.log("📤 Đang gửi ${commands.length} command lên Discord...");
-
+        console.log(`📤 Đang gửi ${commands.length} command lên Discord...`);
         const result = await rest.put(
             Routes.applicationGuildCommands(
                 CLIENT_ID,
