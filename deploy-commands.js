@@ -2,10 +2,13 @@ require("dotenv").config();
 
 const fs = require("fs");
 const path = require("path");
-const { REST, Routes } = require("discord.js");
+const {
+    Client,
+    GatewayIntentBits
+} = require("discord.js");
 
 // ==========================================
-// KIỂM TRA ENV
+// ENV
 // ==========================================
 
 const TOKEN = process.env.TOKEN;
@@ -13,26 +16,22 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 
 if (!TOKEN) {
-    console.error("❌ Không tìm thấy TOKEN trong Variables.");
+    console.error("❌ Thiếu TOKEN trong Variables.");
     process.exit(1);
 }
 
 if (!CLIENT_ID) {
-    console.error("❌ Không tìm thấy CLIENT_ID trong Variables.");
+    console.error("❌ Thiếu CLIENT_ID trong Variables.");
     process.exit(1);
 }
 
 if (!GUILD_ID) {
-    console.error("❌ Không tìm thấy GUILD_ID trong Variables.");
+    console.error("❌ Thiếu GUILD_ID trong Variables.");
     process.exit(1);
 }
 
-console.log("✅ TOKEN: OK");
-console.log("✅ CLIENT_ID:", CLIENT_ID);
-console.log("✅ GUILD_ID:", GUILD_ID);
-
 // ==========================================
-// ĐỌC COMMAND
+// LOAD COMMAND
 // ==========================================
 
 const commandFiles = fs
@@ -54,7 +53,9 @@ for (const file of commandFiles) {
 
         const filePath = path.join(__dirname, file);
 
-        delete require.cache[require.resolve(filePath)];
+        delete require.cache[
+            require.resolve(filePath)
+        ];
 
         const command = require(filePath);
 
@@ -75,7 +76,7 @@ for (const file of commandFiles) {
         } else {
 
             console.log(
-                `⚠️ Bỏ qua ${file} - không có data/execute`
+                `⚠️ Bỏ qua ${file}`
             );
         }
 
@@ -89,67 +90,53 @@ for (const file of commandFiles) {
     }
 }
 
-// ==========================================
-// KIỂM TRA COMMAND
-// ==========================================
-
 console.log("");
 console.log(
     `📦 Tổng số command: ${commands.length}`
 );
 
-if (commands.length === 0) {
-
-    console.error(
-        "❌ Không có command nào để đăng ký."
-    );
-
-    process.exit(1);
-}
-
 // ==========================================
-// REST DISCORD
+// DISCORD CLIENT
 // ==========================================
 
-const rest = new REST({
-    version: "10",
-    timeout: 20000
-}).setToken(TOKEN);
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds
+    ]
+});
 
 // ==========================================
-// ĐĂNG KÝ
+// KHI BOT READY
 // ==========================================
 
-(async () => {
+client.once("ready", async () => {
 
     try {
 
         console.log("");
-        console.log("📜 Đang đăng ký lệnh...");
+        console.log("🟢 Bot đã kết nối Discord.");
+        console.log("📜 Đang đăng ký slash commands...");
+
+        const guild =
+            await client.guilds.fetch(GUILD_ID);
+
         console.log(
-            `🌐 Guild: ${GUILD_ID}`
+            `🏠 Server: ${guild.name}`
         );
 
-        const result = await rest.put(
-
-            Routes.applicationGuildCommands(
-                CLIENT_ID,
-                GUILD_ID
-            ),
-
-            {
-                body: commands
-            }
-        );
+        // Đăng ký trực tiếp vào server
+        await guild.commands.set(commands);
 
         console.log("");
         console.log(
-            `✅ Đã đăng ký ${result.length} lệnh.`
+            `✅ Đã đăng ký ${commands.length} lệnh!`
         );
 
         console.log(
-            "🎉 Hoàn tất! Kiểm tra Discord."
+            "🎉 Hoàn tất. Có thể kiểm tra Discord."
         );
+
+        await client.destroy();
 
         process.exit(0);
 
@@ -157,7 +144,7 @@ const rest = new REST({
 
         console.error("");
         console.error(
-            "❌ LỖI ĐĂNG KÝ SLASH COMMAND"
+            "❌ LỖI KHI ĐĂNG KÝ COMMAND"
         );
 
         console.error(
@@ -166,30 +153,36 @@ const rest = new REST({
         );
 
         console.error(
+            "Mã lỗi:",
+            error.code
+        );
+
+        console.error(
             "Thông báo:",
             error.message
         );
 
-        if (error.status) {
-            console.error(
-                "HTTP Status:",
-                error.status
-            );
-        }
+        console.error(error);
 
-        if (error.code) {
-            console.error(
-                "Discord Error Code:",
-                error.code
-            );
-        }
-
-        console.error(
-            "Chi tiết:",
-            error
-        );
+        await client.destroy();
 
         process.exit(1);
     }
+});
 
-})();
+// ==========================================
+// LOGIN
+// ==========================================
+
+console.log("🔌 Đang kết nối Discord...");
+
+client.login(TOKEN).catch(error => {
+
+    console.error(
+        "❌ Không thể đăng nhập Discord:"
+    );
+
+    console.error(error);
+
+    process.exit(1);
+});
