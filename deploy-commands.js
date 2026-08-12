@@ -97,7 +97,8 @@ console.log("====================================");
 
 const rest = new REST({
     version: "10",
-    timeout: 30000
+    timeout: 30000,
+    userAgentAppendix: "HongHoangDaiLuc/1.0"
 }).setToken(TOKEN);
 
 // ==========================================
