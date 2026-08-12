@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getPlayer, updatePlayer } = require("./database");
 
 // =====================================================
-// 18 CẢNH GIỚI HỒNG HOANG
+// 18 CẢNH GIỚI
 // =====================================================
 
 const realms = [
@@ -10,151 +10,91 @@ const realms = [
         name: "Phàm Nhân",
         max: 9,
         needTuVi: 50,
-        stats: {
-            hp: 100,
-            cong: 20,
-            thu: 15
-        }
+        stats: { hp: 100, cong: 20, thu: 15 }
     },
     {
         name: "Luyện Khí",
         max: 9,
         needTuVi: 100,
-        stats: {
-            hp: 300,
-            cong: 60,
-            thu: 40
-        }
+        stats: { hp: 300, cong: 60, thu: 40 }
     },
     {
         name: "Trúc Cơ",
         max: 9,
         needTuVi: 250,
-        stats: {
-            hp: 1000,
-            cong: 200,
-            thu: 140
-        }
+        stats: { hp: 1000, cong: 200, thu: 140 }
     },
     {
         name: "Kim Đan",
         max: 9,
         needTuVi: 500,
-        stats: {
-            hp: 3000,
-            cong: 600,
-            thu: 400
-        }
+        stats: { hp: 3000, cong: 600, thu: 400 }
     },
     {
         name: "Nguyên Anh",
         max: 9,
         needTuVi: 1000,
-        stats: {
-            hp: 10000,
-            cong: 2000,
-            thu: 1400
-        }
+        stats: { hp: 10000, cong: 2000, thu: 1400 }
     },
     {
         name: "Hóa Thần",
         max: 9,
         needTuVi: 2000,
-        stats: {
-            hp: 30000,
-            cong: 6000,
-            thu: 4000
-        }
+        stats: { hp: 30000, cong: 6000, thu: 4000 }
     },
     {
         name: "Luyện Hư",
         max: 9,
         needTuVi: 4000,
-        stats: {
-            hp: 100000,
-            cong: 20000,
-            thu: 14000
-        }
+        stats: { hp: 100000, cong: 20000, thu: 14000 }
     },
     {
         name: "Hợp Thể",
         max: 9,
         needTuVi: 8000,
-        stats: {
-            hp: 300000,
-            cong: 60000,
-            thu: 40000
-        }
+        stats: { hp: 300000, cong: 60000, thu: 40000 }
     },
     {
         name: "Đại Thừa",
         max: 9,
         needTuVi: 16000,
-        stats: {
-            hp: 1000000,
-            cong: 200000,
-            thu: 140000
-        }
+        stats: { hp: 1000000, cong: 200000, thu: 140000 }
     },
     {
         name: "Độ Kiếp",
         max: 9,
         needTuVi: 32000,
-        stats: {
-            hp: 3000000,
-            cong: 600000,
-            thu: 400000
-        }
+        stats: { hp: 3000000, cong: 600000, thu: 400000 }
     },
     {
         name: "Tiên Nhân",
         max: 9,
         needTuVi: 64000,
-        stats: {
-            hp: 10000000,
-            cong: 2000000,
-            thu: 1400000
-        }
+        stats: { hp: 10000000, cong: 2000000, thu: 1400000 }
     },
     {
         name: "Chân Tiên",
         max: 9,
         needTuVi: 128000,
-        stats: {
-            hp: 30000000,
-            cong: 6000000,
-            thu: 4000000
-        }
+        stats: { hp: 30000000, cong: 6000000, thu: 4000000 }
     },
     {
         name: "Thiên Tiên",
         max: 9,
         needTuVi: 256000,
-        stats: {
-            hp: 100000000,
-            cong: 20000000,
-            thu: 14000000
-        }
+        stats: { hp: 100000000, cong: 20000000, thu: 14000000 }
     },
     {
         name: "Huyền Tiên",
         max: 9,
         needTuVi: 512000,
-        stats: {
-            hp: 300000000,
-            cong: 60000000,
-            thu: 40000000
-        }
+        stats: { hp: 300000000, cong: 60000000, thu: 40000000 }
     },
     {
         name: "Kim Tiên",
         max: 9,
         needTuVi: 1024000,
-        stats: {
-            hp: 1000000000,
-            cong: 200000000,
-            thu: 140000000
-        }
+        stats: { hp: 1000000000, cong: 200000000, thu: 140000000 }
     },
     {
         name: "Thánh Nhân",
@@ -202,10 +142,6 @@ module.exports = {
 
         const p = getPlayer(interaction.user.id);
 
-        // =================================================
-        // KIỂM TRA NHÂN VẬT
-        // =================================================
-
         if (!p) {
             return interaction.reply({
                 content: "⚠️ Hãy dùng `/batdau` trước.",
@@ -231,16 +167,13 @@ module.exports = {
         // TẦNG HIỆN TẠI
         // =================================================
 
-        const currentTier =
-            Math.max(
-                1,
-                Number(p.tang || 1)
-            );
+        const currentTier = Math.max(
+            1,
+            Number(p.tang || 1)
+        );
 
         // =================================================
         // TU VI HIỆN TẠI
-        // QUAN TRỌNG: DÙNG p.tuvi
-        // KHÔNG DÙNG p.kinhNghiem
         // =================================================
 
         const currentTuVi =
@@ -250,18 +183,8 @@ module.exports = {
         // TU VI YÊU CẦU
         // =================================================
 
-        /*
-         * Mỗi tầng yêu cầu Tu Vi tăng theo tầng.
-         *
-         * Tầng 1 = needTuVi
-         * Tầng 2 = needTuVi x 2
-         * ...
-         * Tầng 9 = needTuVi x 9
-         */
-
         const requiredTuVi =
-            realm.needTuVi *
-            currentTier;
+            realm.needTuVi * currentTier;
 
         // =================================================
         // KIỂM TRA ĐỦ TU VI
@@ -270,8 +193,7 @@ module.exports = {
         if (currentTuVi < requiredTuVi) {
 
             const missing =
-                requiredTuVi -
-                currentTuVi;
+                requiredTuVi - currentTuVi;
 
             return interaction.reply({
 
@@ -281,50 +203,30 @@ module.exports = {
 
                         .setColor(0xf1c40f)
 
-                        .setTitle(
-                            "⚠️ CHƯA ĐỦ TU VI"
-                        )
+                        .setTitle("⚠️ CHƯA ĐỦ TU VI")
 
                         .setDescription(
                             `🌱 **${realm.name} tầng ${currentTier}**`
                         )
 
                         .addFields(
-
                             {
-                                name:
-                                    "✨ Tu Vi hiện tại",
-
+                                name: "⚔️ Tu Vi hiện tại",
                                 value:
-                                    currentTuVi
-                                        .toLocaleString(),
-
-                                inline:
-                                    true
+                                    currentTuVi.toLocaleString(),
+                                inline: true
                             },
-
                             {
-                                name:
-                                    "🔓 Tu Vi yêu cầu",
-
+                                name: "🔓 Tu Vi yêu cầu",
                                 value:
-                                    requiredTuVi
-                                        .toLocaleString(),
-
-                                inline:
-                                    true
+                                    requiredTuVi.toLocaleString(),
+                                inline: true
                             },
-
                             {
-                                name:
-                                    "📉 Còn thiếu",
-
+                                name: "📉 Còn thiếu",
                                 value:
-                                    missing
-                                        .toLocaleString(),
-
-                                inline:
-                                    true
+                                    missing.toLocaleString(),
+                                inline: true
                             }
                         )
 
@@ -334,8 +236,7 @@ module.exports = {
                         })
                 ],
 
-                ephemeral:
-                    true
+                ephemeral: true
             });
         }
 
@@ -344,18 +245,10 @@ module.exports = {
         // =================================================
 
         const successRate =
-            Math.floor(
-                Math.random() * 100
-            ) + 1;
-
-        // =================================================
-        // RANDOM KẾT QUẢ
-        // =================================================
+            Math.floor(Math.random() * 100) + 1;
 
         const roll =
-            Math.floor(
-                Math.random() * 100
-            ) + 1;
+            Math.floor(Math.random() * 100) + 1;
 
         const success =
             roll <= successRate;
@@ -366,13 +259,10 @@ module.exports = {
 
         if (!success) {
 
-            // Mất 15% Tu Vi yêu cầu
             const lostTuVi =
                 Math.max(
                     1,
-                    Math.floor(
-                        requiredTuVi * 0.15
-                    )
+                    Math.floor(requiredTuVi * 0.15)
                 );
 
             const newTuVi =
@@ -381,13 +271,10 @@ module.exports = {
                     currentTuVi - lostTuVi
                 );
 
-            // Chỉ trừ TU VI
-            // Không đụng tới KINH NGHIỆM
             updatePlayer(
                 interaction.user.id,
                 {
-                    tuvi:
-                        newTuVi
+                    tuvi: newTuVi
                 }
             );
 
@@ -409,49 +296,33 @@ module.exports = {
                         )
 
                         .addFields(
-
                             {
                                 name:
                                     "🎲 Tỷ lệ thành công",
-
                                 value:
                                     `${successRate}%`,
-
-                                inline:
-                                    true
+                                inline: true
                             },
-
                             {
                                 name:
                                     "🎯 Kết quả",
-
                                 value:
                                     `${roll}`,
-
-                                inline:
-                                    true
+                                inline: true
                             },
-
                             {
                                 name:
                                     "💥 Tu Vi mất",
-
                                 value:
                                     `-${lostTuVi.toLocaleString()}`,
-
-                                inline:
-                                    true
+                                inline: true
                             },
-
                             {
                                 name:
                                     "⚔️ Tu Vi còn lại",
-
                                 value:
                                     `${newTuVi.toLocaleString()}`,
-
-                                inline:
-                                    true
+                                inline: true
                             }
                         )
 
@@ -464,11 +335,10 @@ module.exports = {
         }
 
         // =================================================
-        // XÁC ĐỊNH CẢNH GIỚI / TẦNG MỚI
+        // CẢNH GIỚI / TẦNG MỚI
         // =================================================
 
-        let newRealmIndex =
-            index;
+        let newRealmIndex = index;
 
         let newTier =
             currentTier + 1;
@@ -479,10 +349,10 @@ module.exports = {
 
         if (newTier > realm.max) {
 
-            // ĐẠI ĐẠO TẦNG 9
             if (!realms[index + 1]) {
 
                 return interaction.reply({
+
                     content:
                         "🌌 **ĐẠI ĐẠO TỐI CAO!**\n\n" +
                         "Bạn đã đạt **Đại Đạo tầng 9**.\n" +
@@ -493,31 +363,56 @@ module.exports = {
             newRealmIndex =
                 index + 1;
 
-            newTier =
-                1;
+            newTier = 1;
         }
 
         const newRealm =
             realms[newRealmIndex];
 
         // =================================================
-        // TÍNH CHỈ SỐ TĂNG
+        // TĂNG CHỈ SỐ KHI ĐỘT PHÁ THÀNH CÔNG
         // =================================================
+        //
+        // HỆ SỐ HIỆN TẠI: x9
+        // =================================================
+
+        const BREAKTHROUGH_MULTIPLIER = 9;
 
         const tierMultiplier =
             newTier;
 
+        // =================================================
+        // HP
+        // =================================================
+
         const hpIncrease =
-            newRealm.stats.hp *
-            tierMultiplier;
+            Math.floor(
+                newRealm.stats.hp *
+                tierMultiplier *
+                BREAKTHROUGH_MULTIPLIER
+            );
+
+        // =================================================
+        // CÔNG
+        // =================================================
 
         const congIncrease =
-            newRealm.stats.cong *
-            tierMultiplier;
+            Math.floor(
+                newRealm.stats.cong *
+                tierMultiplier *
+                BREAKTHROUGH_MULTIPLIER
+            );
+
+        // =================================================
+        // THỦ
+        // =================================================
 
         const thuIncrease =
-            newRealm.stats.thu *
-            tierMultiplier;
+            Math.floor(
+                newRealm.stats.thu *
+                tierMultiplier *
+                BREAKTHROUGH_MULTIPLIER
+            );
 
         // =================================================
         // CHỈ SỐ CŨ
@@ -540,33 +435,30 @@ module.exports = {
         // =================================================
 
         const newMaxHp =
-            oldMaxHp +
-            hpIncrease;
+            oldMaxHp + hpIncrease;
 
         const newHp =
-            oldHp +
-            hpIncrease;
+            oldHp + hpIncrease;
 
         const newCong =
-            oldCong +
-            congIncrease;
+            oldCong + congIncrease;
 
         const newThu =
-            oldThu +
-            thuIncrease;
+            oldThu + thuIncrease;
 
         // =================================================
-        // TU VI SAU KHI THÀNH CÔNG
+        // TU VI GIỮ NGUYÊN
         // =================================================
-
-        /*
-         * Thành công KHÔNG trừ Tu Vi.
-         *
-         * Tu Vi vẫn giữ nguyên.
-         */
 
         const remainingTuVi =
             currentTuVi;
+
+        // =================================================
+        // KINH NGHIỆM GIỮ NGUYÊN
+        // =================================================
+
+        const remainingKinhNghiem =
+            Number(p.kinhNghiem || 0);
 
         // =================================================
         // LƯU DATABASE
@@ -582,35 +474,28 @@ module.exports = {
                 tang:
                     newTier,
 
-                // ⚔️ TU VI
-                // GIỮ NGUYÊN
                 tuvi:
                     remainingTuVi,
 
-                // ✨ KINH NGHIỆM
-                // GIỮ NGUYÊN
                 kinhNghiem:
-                    Number(p.kinhNghiem || 0),
+                    remainingKinhNghiem,
 
-                // ❤️ HP
                 maxHp:
                     newMaxHp,
 
                 hp:
                     newHp,
 
-                // ⚔️ CÔNG
                 cong:
                     newCong,
 
-                // 🛡️ THỦ
                 thu:
                     newThu
             }
         );
 
         // =================================================
-        // EMBED THÀNH CÔNG
+        // THÔNG BÁO THÀNH CÔNG
         // =================================================
 
         const embed =
@@ -623,11 +508,8 @@ module.exports = {
                 )
 
                 .setDescription(
-
                     `🌌 **${realm.name} tầng ${currentTier}**\n` +
-
                     `⬇️\n` +
-
                     `✨ **${newRealm.name} tầng ${newTier}**`
                 )
 
@@ -636,87 +518,66 @@ module.exports = {
                     {
                         name:
                             "📈 Tỷ lệ thành công",
-
                         value:
                             `${successRate}%`,
-
-                        inline:
-                            true
+                        inline: true
                     },
 
                     {
                         name:
                             "🎯 Kết quả",
-
                         value:
                             `${roll}`,
-
-                        inline:
-                            true
+                        inline: true
                     },
 
                     {
                         name:
                             "⚔️ Tu Vi",
-
                         value:
                             `${remainingTuVi.toLocaleString()}`,
-
-                        inline:
-                            true
+                        inline: true
                     },
 
                     {
                         name:
                             "🌱 Cảnh giới",
-
                         value:
                             `**${newRealm.name} tầng ${newTier}**`,
-
-                        inline:
-                            true
+                        inline: true
                     },
 
                     {
                         name:
                             "❤️ HP",
-
                         value:
                             `+${hpIncrease.toLocaleString()}\n` +
                             `Tổng: **${newMaxHp.toLocaleString()}**`,
-
-                        inline:
-                            true
+                        inline: true
                     },
 
                     {
                         name:
                             "⚔️ Công",
-
                         value:
                             `+${congIncrease.toLocaleString()}\n` +
                             `Tổng: **${newCong.toLocaleString()}**`,
-
-                        inline:
-                            true
+                        inline: true
                     },
 
                     {
                         name:
                             "🛡️ Thủ",
-
                         value:
                             `+${thuIncrease.toLocaleString()}\n` +
                             `Tổng: **${newThu.toLocaleString()}**`,
-
-                        inline:
-                            true
+                        inline: true
                     }
                 )
 
                 .setFooter({
                     text:
-                        "Hồng Hoang Đại Lục • Đột phá bằng Tu Vi"
+                        "Hồng Hoang Đại Lục • Đột phá bằng Tu Vi • Chỉ số x9"
                 });
 
         return interaction.reply({
