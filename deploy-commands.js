@@ -2,9 +2,10 @@ require("dotenv").config();
 
 const fs = require("fs");
 const path = require("path");
+
 const {
-    Client,
-    GatewayIntentBits
+    REST,
+    Routes
 } = require("discord.js");
 
 // ==========================================
@@ -31,7 +32,7 @@ if (!GUILD_ID) {
 }
 
 // ==========================================
-// LOAD COMMAND
+// LOAD COMMANDS
 // ==========================================
 
 const commandFiles = fs
@@ -46,11 +47,11 @@ const commandFiles = fs
     );
 
 const commands = [];
+const commandNames = new Set();
 
 for (const file of commandFiles) {
 
     try {
-
         const filePath = path.join(__dirname, file);
 
         delete require.cache[
@@ -60,129 +61,100 @@ for (const file of commandFiles) {
         const command = require(filePath);
 
         if (
-            command &&
-            command.data &&
-            command.execute
+            !command ||
+            !command.data ||
+            !command.execute
         ) {
-
-            commands.push(
-                command.data.toJSON()
-            );
-
             console.log(
-                `✅ Đã tải /${command.data.name}`
+                `⚠️ Bỏ qua ${file}: không phải Slash Command.`
             );
-
-        } else {
-
-            console.log(
-                `⚠️ Bỏ qua ${file}`
-            );
+            continue;
         }
+
+        const name = command.data.name;
+
+        // Kiểm tra command trùng tên
+        if (commandNames.has(name)) {
+            console.warn(
+                `⚠️ Trùng tên /${name}: bỏ qua file ${file}`
+            );
+            continue;
+        }
+
+        commandNames.add(name);
+
+        commands.push(
+            command.data.toJSON()
+        );
+
+        console.log(`✅ Đã tải /${name}`);
 
     } catch (error) {
 
-        console.error(
-            `❌ Lỗi tải ${file}:`
-        );
-
+        console.error(`❌ Lỗi tải ${file}:`);
         console.error(error);
     }
 }
 
+// ==========================================
+// THỐNG KÊ
+// ==========================================
+
 console.log("");
-console.log(
-    `📦 Tổng số command: ${commands.length}`
-);
+console.log("====================================");
+console.log(`📦 Tổng số command: ${commands.length}`);
+console.log("====================================");
 
 // ==========================================
-// DISCORD CLIENT
+// REGISTER COMMANDS
 // ==========================================
 
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds
-    ]
-});
+const rest = new REST({
+    version: "10"
+}).setToken(TOKEN);
 
-// ==========================================
-// KHI BOT READY
-// ==========================================
-
-client.once("ready", async () => {
+async function deployCommands() {
 
     try {
 
         console.log("");
-        console.log("🟢 Bot đã kết nối Discord.");
-        console.log("📜 Đang đăng ký slash commands...");
+        console.log("🔄 Đang đăng ký Slash Commands...");
+        console.log(`🏠 Guild ID: ${GUILD_ID}`);
+        console.log(`🤖 Client ID: ${CLIENT_ID}`);
 
-        const guild =
-            await client.guilds.fetch(GUILD_ID);
-
-        console.log(
-            `🏠 Server: ${guild.name}`
+        await rest.put(
+            Routes.applicationGuildCommands(
+                CLIENT_ID,
+                GUILD_ID
+            ),
+            {
+                body: commands
+            }
         );
-
-        // Đăng ký trực tiếp vào server
-        await guild.commands.set(commands);
 
         console.log("");
-        console.log(
-            `✅ Đã đăng ký ${commands.length} lệnh!`
-        );
-
-        console.log(
-            "🎉 Hoàn tất. Có thể kiểm tra Discord."
-        );
-
-        await client.destroy();
-
-        process.exit(0);
+        console.log("====================================");
+        console.log("✅ ĐĂNG KÝ COMMAND THÀNH CÔNG");
+        console.log(`📜 Đã đăng ký: ${commands.length} lệnh`);
+        console.log("====================================");
+        console.log("🎉 Có thể mở Discord kiểm tra lệnh.");
 
     } catch (error) {
 
         console.error("");
-        console.error(
-            "❌ LỖI KHI ĐĂNG KÝ COMMAND"
-        );
+        console.error("====================================");
+        console.error("❌ ĐĂNG KÝ COMMAND THẤT BẠI");
+        console.error("====================================");
 
-        console.error(
-            "Tên lỗi:",
-            error.name
-        );
+        console.error("Tên lỗi:", error.name);
+        console.error("Mã lỗi:", error.code);
+        console.error("Thông báo:", error.message);
 
-        console.error(
-            "Mã lỗi:",
-            error.code
-        );
-
-        console.error(
-            "Thông báo:",
-            error.message
-        );
-
+        console.error("");
         console.error(error);
-
-        await client.destroy();
 
         process.exit(1);
     }
-});
+}
 
-// ==========================================
-// LOGIN
-// ==========================================
-
-console.log("🔌 Đang kết nối Discord...");
-
-client.login(TOKEN).catch(error => {
-
-    console.error(
-        "❌ Không thể đăng nhập Discord:"
-    );
-
-    console.error(error);
-
-    process.exit(1);
-});
+deployCommands();
