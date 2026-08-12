@@ -13,7 +13,7 @@ if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
 }
 
 // ==========================================
-// QUÉT TẤT CẢ FILE COMMAND
+// QUÉT COMMAND
 // ==========================================
 
 const commands = [];
@@ -43,7 +43,7 @@ for (const file of files) {
 
         const command = require(filePath);
 
-        // Không phải Slash Command
+        // Không phải slash command
         if (
             !command ||
             !command.data ||
@@ -61,7 +61,7 @@ for (const file of files) {
             continue;
         }
 
-        // Chống trùng tên command
+        // Chống trùng tên
         if (commands.some(cmd => cmd.name === json.name)) {
             console.log(`⚠️ ${file} → trùng /${json.name}, bỏ qua`);
             failedFiles.push(file);
@@ -81,7 +81,7 @@ for (const file of files) {
 }
 
 // ==========================================
-// HIỂN THỊ COMMAND TÌM ĐƯỢC
+// KIỂM TRA
 // ==========================================
 
 console.log("");
@@ -100,7 +100,7 @@ if (commands.length === 0) {
 }
 
 // ==========================================
-// GỌI DISCORD API
+// DISCORD REQUEST
 // ==========================================
 
 async function discordRequest(method, url, body = null) {
@@ -114,7 +114,7 @@ async function discordRequest(method, url, body = null) {
     try {
 
         const options = {
-            method: method,
+            method,
 
             headers: {
                 "Authorization": `Bot ${TOKEN}`,
@@ -158,10 +158,47 @@ async function discordRequest(method, url, body = null) {
         return data;
 
     } finally {
-
         clearTimeout(timeout);
-
     }
+}
+
+// ==========================================
+// SO SÁNH COMMAND
+// ==========================================
+
+function normalizeCommand(command) {
+
+    return {
+        name: command.name,
+        description: command.description || "",
+        options: command.options || [],
+        type: command.type || 1,
+        default_member_permissions:
+            command.default_member_permissions ?? null,
+        dm_permission:
+            command.dm_permission ?? true,
+        nsfw:
+            command.nsfw ?? false
+    };
+
+}
+
+function commandsAreSame(oldCommands, newCommands) {
+
+    if (oldCommands.length !== newCommands.length) {
+        return false;
+    }
+
+    const oldNormalized = oldCommands
+        .map(normalizeCommand)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+    const newNormalized = newCommands
+        .map(normalizeCommand)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+    return JSON.stringify(oldNormalized) ===
+           JSON.stringify(newNormalized);
 }
 
 // ==========================================
@@ -175,21 +212,23 @@ async function deploy() {
 
     try {
 
+        // ==================================
+        // LẤY COMMAND HIỆN TẠI
+        // ==================================
+
         console.log("");
         console.log("=================================");
-        console.log("📡 KIỂM TRA COMMAND TRÊN DISCORD");
+        console.log("🔎 KIỂM TRA COMMAND TRÊN DISCORD");
         console.log("=================================");
 
         const oldCommands =
             await discordRequest("GET", route);
 
         console.log(
-            `📋 Discord hiện có: ${oldCommands.length}`
+            `📋 Discord hiện có: ${oldCommands.length} command`
         );
 
         if (oldCommands.length > 0) {
-
-            console.log("📜 Command hiện tại:");
 
             for (const command of oldCommands) {
                 console.log(`   /${command.name}`);
@@ -198,17 +237,50 @@ async function deploy() {
         }
 
         // ==================================
-        // GHI COMMAND
+        // KIỂM TRA CÓ CẦN DEPLOY KHÔNG
+        // ==================================
+
+        if (commandsAreSame(oldCommands, commands)) {
+
+            console.log("");
+            console.log("=================================");
+            console.log("✅ COMMAND ĐÃ ĐỒNG BỘ");
+            console.log("=================================");
+
+            console.log(
+                `📦 Discord đã có đủ ${commands.length} command.`
+            );
+
+            console.log(
+                "⏭️ Không gửi PUT → không tốn quota tạo command."
+            );
+
+            console.log("");
+            console.log("🎉 KHÔNG CẦN DEPLOY LẠI!");
+
+            process.exit(0);
+        }
+
+        // ==================================
+        // COMMAND KHÁC → ĐỒNG BỘ
         // ==================================
 
         console.log("");
         console.log("=================================");
-        console.log("📤 ĐANG GHI COMMAND MỚI");
+        console.log("🔄 PHÁT HIỆN COMMAND KHÁC");
         console.log("=================================");
 
         console.log(
-            `📦 Đang gửi ${commands.length} command lên Discord...`
+            `📦 Code có: ${commands.length}`
         );
+
+        console.log(
+            `📋 Discord có: ${oldCommands.length}`
+        );
+
+        console.log("");
+        console.log("📤 ĐANG ĐỒNG BỘ COMMAND...");
+        console.log("⚠️ Chỉ thực hiện 1 lần PUT.");
 
         const result =
             await discordRequest(
@@ -223,10 +295,12 @@ async function deploy() {
 
         console.log("");
         console.log("=================================");
-        console.log(
-            `✅ DISCORD ĐÃ NHẬN: ${result.length} COMMAND`
-        );
+        console.log("✅ DEPLOY THÀNH CÔNG");
         console.log("=================================");
+
+        console.log(
+            `📦 Discord đã nhận ${result.length} command`
+        );
 
         for (const command of result) {
             console.log(`   ✅ /${command.name}`);
@@ -243,12 +317,13 @@ async function deploy() {
         if (failedFiles.length > 0) {
 
             console.log("");
-            console.log("⚠️ FILE BỊ BỎ QUA / LỖI:");
+            console.log("=================================");
+            console.log("⚠️ FILE BỊ BỎ QUA / LỖI");
+            console.log("=================================");
 
             for (const file of failedFiles) {
                 console.log(`   ${file}`);
             }
-
         }
 
         process.exit(0);
@@ -266,13 +341,42 @@ async function deploy() {
             console.error(`HTTP: ${error.status}`);
         }
 
-        console.error("");
+        // ==================================
+        // 429
+        // ==================================
 
-        if (error.name === "AbortError") {
+        if (error.status === 429) {
+
+            console.error("");
             console.error(
-                "⏱️ Discord API không phản hồi trong 30 giây."
+                "⛔ Discord đang giới hạn tạo Application Commands."
+            );
+
+            if (error.data && error.data.retry_after) {
+
+                const seconds =
+                    Number(error.data.retry_after);
+
+                const hours =
+                    Math.floor(seconds / 3600);
+
+                const minutes =
+                    Math.floor((seconds % 3600) / 60);
+
+                console.error(
+                    `⏳ Retry sau khoảng ${hours} giờ ${minutes} phút.`
+                );
+            }
+
+            console.error("");
+            console.error(
+                "❗ KHÔNG chạy deploy-commands.js liên tục."
             );
         }
+
+        // ==================================
+        // 401
+        // ==================================
 
         if (error.status === 401) {
             console.error(
@@ -280,15 +384,33 @@ async function deploy() {
             );
         }
 
+        // ==================================
+        // 403
+        // ==================================
+
         if (error.status === 403) {
             console.error(
                 "🚫 Bot không có quyền phù hợp."
             );
         }
 
+        // ==================================
+        // 400
+        // ==================================
+
         if (error.status === 400) {
             console.error(
-                "⚠️ Có ít nhất một command bị sai cấu trúc."
+                "⚠️ Có command bị sai cấu trúc."
+            );
+        }
+
+        // ==================================
+        // TIMEOUT
+        // ==================================
+
+        if (error.name === "AbortError") {
+            console.error(
+                "⏱️ Discord API không phản hồi trong 30 giây."
             );
         }
 
