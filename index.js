@@ -4,75 +4,100 @@ const fs = require("fs");
 const {
     Client,
     Collection,
-    GatewayIntentBits,
-    REST,
-    Routes
+    GatewayIntentBits
 } = require("discord.js");
 
+// ==========================================
+// KIỂM TRA ENV
+// ==========================================
+
+const TOKEN = process.env.TOKEN;
+
+if (!TOKEN) {
+    console.error("❌ Thiếu TOKEN trong Variables.");
+    process.exit(1);
+}
+
+// ==========================================
+// CLIENT
+// ==========================================
+
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds]
+    intents: [
+        GatewayIntentBits.Guilds
+    ]
 });
 
 client.commands = new Collection();
 
-const commandFiles = fs.readdirSync(__dirname)
+// ==========================================
+// LOAD COMMANDS
+// ==========================================
+
+const commandFiles = fs
+    .readdirSync(__dirname)
     .filter(file => file.endsWith(".js"))
-    .filter(file => !["index.js", "deploy-commands.js", "database.js"].includes(file));
+    .filter(file =>
+        ![
+            "index.js",
+            "deploy-commands.js",
+            "database.js"
+        ].includes(file)
+    );
 
 for (const file of commandFiles) {
     try {
         const command = require(`./${file}`);
 
-        if (command.data && command.execute) {
-            const name = command.data.name;
-
-            // Không cho 2 file dùng trùng tên slash command.
-            if (client.commands.has(name)) {
-                console.warn(`⚠️ Trùng tên /${name}: bỏ qua ${file}`);
-                continue;
-            }
-
-            client.commands.set(name, command);
-            console.log(`✅ Đã tải /${name}`);
+        if (!command.data || !command.execute) {
+            console.warn(`⚠️ Bỏ qua ${file}: không phải Slash Command.`);
+            continue;
         }
+
+        const name = command.data.name;
+
+        // Không cho 2 file trùng tên command
+        if (client.commands.has(name)) {
+            console.warn(
+                `⚠️ Trùng tên /${name}: bỏ qua ${file}`
+            );
+            continue;
+        }
+
+        client.commands.set(name, command);
+
+        console.log(`✅ Đã tải /${name}`);
     } catch (error) {
-        console.error(`❌ Lỗi tải ${file}:`, error);
+        console.error(`❌ Lỗi tải ${file}:`);
+        console.error(error);
     }
 }
 
-client.once("ready", async () => {
+// ==========================================
+// READY
+// ==========================================
+
+client.once("ready", () => {
+    console.log("");
     console.log("====================================");
     console.log("🌌 HỒNG HOANG ĐẠI LỤC");
     console.log(`🤖 Bot: ${client.user.tag}`);
     console.log(`📜 Số lệnh: ${client.commands.size}`);
     console.log("====================================");
-
-    try {
-        const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
-
-        await rest.put(
-            Routes.applicationGuildCommands(
-                process.env.CLIENT_ID,
-                process.env.GUILD_ID
-            ),
-            {
-                body: [...client.commands.values()].map(command =>
-                    command.data.toJSON()
-                )
-            }
-        );
-
-        console.log("✅ Đã đồng bộ slash commands.");
-    } catch (error) {
-        console.error("❌ Không thể đăng ký slash commands:", error);
-    }
+    console.log("🟢 Bot đang hoạt động.");
 });
+
+// ==========================================
+// INTERACTION
+// ==========================================
 
 client.on("interactionCreate", async interaction => {
     try {
-        // =========================
-        // MENU / BUTTON / SELECT
-        // =========================
+
+        // ==================================
+        // BUTTON / SELECT MENU
+        // ==================================
+
         if (
             interaction.isButton() ||
             interaction.isStringSelectMenu() ||
@@ -80,7 +105,10 @@ client.on("interactionCreate", async interaction => {
         ) {
             const customId = interaction.customId;
 
-            // Menu Hồng Hoang xử lý toàn bộ button/select của menu.
+            // -------------------------------
+            // MENU HỒNG HOANG / PVP
+            // -------------------------------
+
             if (
                 customId.startsWith("menu_") ||
                 customId.startsWith("pvp_")
@@ -97,8 +125,14 @@ client.on("interactionCreate", async interaction => {
                 });
             }
 
-            // Admin dùng String Select Menu riêng.
-            if (customId === "admin_user_select" || customId === "admin_select") {
+            // -------------------------------
+            // ADMIN SELECT MENU
+            // -------------------------------
+
+            if (
+                customId === "admin_user_select" ||
+                customId === "admin_select"
+            ) {
                 const admin = client.commands.get("admin");
 
                 if (admin?.handleSelect) {
@@ -112,9 +146,10 @@ client.on("interactionCreate", async interaction => {
             }
         }
 
-        // =========================
+        // ==================================
         // MODAL
-        // =========================
+        // ==================================
+
         if (interaction.isModalSubmit()) {
             const admin = client.commands.get("admin");
 
@@ -131,12 +166,17 @@ client.on("interactionCreate", async interaction => {
             });
         }
 
-        // =========================
+        // ==================================
         // SLASH COMMAND
-        // =========================
-        if (!interaction.isChatInputCommand()) return;
+        // ==================================
 
-        const command = client.commands.get(interaction.commandName);
+        if (!interaction.isChatInputCommand()) {
+            return;
+        }
+
+        const command = client.commands.get(
+            interaction.commandName
+        );
 
         if (!command) {
             return interaction.reply({
@@ -148,8 +188,13 @@ client.on("interactionCreate", async interaction => {
         await command.execute(interaction);
 
     } catch (error) {
+
         console.error(
-            `❌ Lỗi interaction ${interaction.commandName || interaction.customId || ""}:`,
+            `❌ Lỗi interaction ${
+                interaction.commandName ||
+                interaction.customId ||
+                ""
+            }:`,
             error
         );
 
@@ -168,4 +213,11 @@ client.on("interactionCreate", async interaction => {
     }
 });
 
-client.login(process.env.TOKEN);
+// ==========================================
+// LOGIN
+// ==========================================
+
+client.login(TOKEN).catch(error => {
+    console.error("❌ Không thể đăng nhập Discord:");
+    console.error(error);
+});
