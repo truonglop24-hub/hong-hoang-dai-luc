@@ -2,194 +2,146 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getPlayer, updatePlayer } = require("./database");
 
 // =====================================================
-// 18 CẢNH GIỚI HỒNG HOANG
+// 18 CẢNH GIỚI
 // =====================================================
 
 const realms = [
-    {
-        name: "Phàm Nhân",
-        max: 9,
-        needExp: 50,
-        stats: {
-            hp: 100,
-            cong: 20,
-            thu: 15
-        }
-    },
-    {
-        name: "Luyện Khí",
-        max: 9,
-        needExp: 100,
-        stats: {
-            hp: 300,
-            cong: 60,
-            thu: 40
-        }
-    },
-    {
-        name: "Trúc Cơ",
-        max: 9,
-        needExp: 250,
-        stats: {
-            hp: 1000,
-            cong: 200,
-            thu: 140
-        }
-    },
-    {
-        name: "Kim Đan",
-        max: 9,
-        needExp: 500,
-        stats: {
-            hp: 3000,
-            cong: 600,
-            thu: 400
-        }
-    },
-    {
-        name: "Nguyên Anh",
-        max: 9,
-        needExp: 1000,
-        stats: {
-            hp: 10000,
-            cong: 2000,
-            thu: 1400
-        }
-    },
-    {
-        name: "Hóa Thần",
-        max: 9,
-        needExp: 2000,
-        stats: {
-            hp: 30000,
-            cong: 6000,
-            thu: 4000
-        }
-    },
-    {
-        name: "Luyện Hư",
-        max: 9,
-        needExp: 4000,
-        stats: {
-            hp: 100000,
-            cong: 20000,
-            thu: 14000
-        }
-    },
-    {
-        name: "Hợp Thể",
-        max: 9,
-        needExp: 8000,
-        stats: {
-            hp: 300000,
-            cong: 60000,
-            thu: 40000
-        }
-    },
-    {
-        name: "Đại Thừa",
-        max: 9,
-        needExp: 16000,
-        stats: {
-            hp: 1000000,
-            cong: 200000,
-            thu: 140000
-        }
-    },
-    {
-        name: "Độ Kiếp",
-        max: 9,
-        needExp: 32000,
-        stats: {
-            hp: 3000000,
-            cong: 600000,
-            thu: 400000
-        }
-    },
-    {
-        name: "Tiên Nhân",
-        max: 9,
-        needExp: 64000,
-        stats: {
-            hp: 10000000,
-            cong: 2000000,
-            thu: 1400000
-        }
-    },
-    {
-        name: "Chân Tiên",
-        max: 9,
-        needExp: 128000,
-        stats: {
-            hp: 30000000,
-            cong: 6000000,
-            thu: 4000000
-        }
-    },
-    {
-        name: "Thiên Tiên",
-        max: 9,
-        needExp: 256000,
-        stats: {
-            hp: 100000000,
-            cong: 20000000,
-            thu: 14000000
-        }
-    },
-    {
-        name: "Huyền Tiên",
-        max: 9,
-        needExp: 512000,
-        stats: {
-            hp: 300000000,
-            cong: 60000000,
-            thu: 40000000
-        }
-    },
-    {
-        name: "Kim Tiên",
-        max: 9,
-        needExp: 1024000,
-        stats: {
-            hp: 1000000000,
-            cong: 200000000,
-            thu: 140000000
-        }
-    },
-    {
-        name: "Thánh Nhân",
-        max: 9,
-        needExp: 2048000,
-        stats: {
-            hp: 5000000000,
-            cong: 1000000000,
-            thu: 700000000
-        }
-    },
-    {
-        name: "Thiên Đạo",
-        max: 9,
-        needExp: 4096000,
-        stats: {
-            hp: 20000000000,
-            cong: 4000000000,
-            thu: 2800000000
-        }
-    },
-    {
-        name: "Đại Đạo",
-        max: 9,
-        needExp: 8192000,
-        stats: {
-            hp: 100000000000,
-            cong: 20000000000,
-            thu: 14000000000
-        }
-    }
+    { name: "Phàm Nhân", maxCultivation: 1000 },
+    { name: "Luyện Khí", maxCultivation: 10000 },
+    { name: "Trúc Cơ", maxCultivation: 30000 },
+    { name: "Kim Đan", maxCultivation: 80000 },
+    { name: "Nguyên Anh", maxCultivation: 200000 },
+    { name: "Hóa Thần", maxCultivation: 500000 },
+    { name: "Luyện Hư", maxCultivation: 1000000 },
+    { name: "Hợp Thể", maxCultivation: 3000000 },
+    { name: "Đại Thừa", maxCultivation: 10000000 },
+    { name: "Độ Kiếp", maxCultivation: 30000000 },
+    { name: "Tiên Nhân", maxCultivation: 100000000 },
+    { name: "Chân Tiên", maxCultivation: 500000000 },
+    { name: "Thiên Tiên", maxCultivation: 1000000000 },
+    { name: "Huyền Tiên", maxCultivation: 5000000000 },
+    { name: "Kim Tiên", maxCultivation: 30000000000 },
+    { name: "Thánh Nhân", maxCultivation: 100000000000 },
+    { name: "Thiên Đạo", maxCultivation: 10000000000000 },
+    { name: "Đại Đạo", maxCultivation: 99999999999999 }
 ];
 
 // =====================================================
-// /DOTPHA
+// CHỈ SỐ CỘNG THEO CẢNH GIỚI
+// =====================================================
+
+const stats = {
+    "Phàm Nhân": {
+        hp: 100,
+        cong: 20,
+        thu: 15
+    },
+
+    "Luyện Khí": {
+        hp: 300,
+        cong: 60,
+        thu: 40
+    },
+
+    "Trúc Cơ": {
+        hp: 1000,
+        cong: 200,
+        thu: 140
+    },
+
+    "Kim Đan": {
+        hp: 3000,
+        cong: 600,
+        thu: 400
+    },
+
+    "Nguyên Anh": {
+        hp: 10000,
+        cong: 2000,
+        thu: 1400
+    },
+
+    "Hóa Thần": {
+        hp: 30000,
+        cong: 6000,
+        thu: 4000
+    },
+
+    "Luyện Hư": {
+        hp: 100000,
+        cong: 20000,
+        thu: 14000
+    },
+
+    "Hợp Thể": {
+        hp: 300000,
+        cong: 60000,
+        thu: 40000
+    },
+
+    "Đại Thừa": {
+        hp: 1000000,
+        cong: 200000,
+        thu: 140000
+    },
+
+    "Độ Kiếp": {
+        hp: 3000000,
+        cong: 600000,
+        thu: 400000
+    },
+
+    "Tiên Nhân": {
+        hp: 10000000,
+        cong: 2000000,
+        thu: 1400000
+    },
+
+    "Chân Tiên": {
+        hp: 30000000,
+        cong: 6000000,
+        thu: 4000000
+    },
+
+    "Thiên Tiên": {
+        hp: 100000000,
+        cong: 20000000,
+        thu: 14000000
+    },
+
+    "Huyền Tiên": {
+        hp: 300000000,
+        cong: 60000000,
+        thu: 40000000
+    },
+
+    "Kim Tiên": {
+        hp: 1000000000,
+        cong: 200000000,
+        thu: 140000000
+    },
+
+    "Thánh Nhân": {
+        hp: 5000000000,
+        cong: 1000000000,
+        thu: 700000000
+    },
+
+    "Thiên Đạo": {
+        hp: 20000000000,
+        cong: 4000000000,
+        thu: 2800000000
+    },
+
+    "Đại Đạo": {
+        hp: 100000000000,
+        cong: 20000000000,
+        thu: 14000000000
+    }
+};
+
+// =====================================================
+// LỆNH /DOTPHA
 // =====================================================
 
 module.exports = {
@@ -214,146 +166,311 @@ module.exports = {
         }
 
         // =================================================
-        // TÌM CẢNH GIỚI HIỆN TẠI
+        // TÌM CẢNH GIỚI
         // =================================================
 
-        let index = realms.findIndex(
+        let realmIndex = realms.findIndex(
             r => r.name === p.canhGioi
         );
 
-        // Hỗ trợ dữ liệu cũ
-        if (index === -1) {
-            index = 1;
+        if (realmIndex === -1) {
+            realmIndex = 0;
         }
 
-        const realm = realms[index];
-
-        const currentTier =
-            Math.max(1, Number(p.tang || 1));
-
-        const currentExp =
-            Number(p.kinhNghiem || 0);
+        const currentRealm = realms[realmIndex];
 
         // =================================================
-        // KIỂM TRA EXP
+        // TẦNG HIỆN TẠI
         // =================================================
 
-        if (currentExp < realm.needExp) {
-
-            return interaction.reply({
-                content:
-                    `❌ **Chưa đủ kinh nghiệm để đột phá!**\n\n` +
-                    `🌱 Cảnh giới: **${realm.name} tầng ${currentTier}**\n` +
-                    `✨ Cần: **${realm.needExp.toLocaleString()} EXP**\n` +
-                    `📖 Hiện có: **${currentExp.toLocaleString()} EXP**`,
-                ephemeral: true
-            });
-        }
-
-        // =================================================
-        // TỶ LỆ THÀNH CÔNG
-        // =================================================
-
-        const successRate = Math.min(
-            95,
-            55 + currentTier * 4
+        const currentTier = Math.max(
+            1,
+            Number(p.tang || 1)
         );
 
-        const success =
-            Math.random() * 100 < successRate;
-
         // =================================================
-        // ĐỘT PHÁ THẤT BẠI
+        // TU VI HIỆN TẠI
         // =================================================
 
-        if (!success) {
-
-            const lostExp =
-                Math.floor(realm.needExp * 0.15);
-
-            updatePlayer(
-                interaction.user.id,
-                {
-                    kinhNghiem:
-                        Math.max(
-                            0,
-                            currentExp - lostExp
-                        )
-                }
-            );
-
-            return interaction.reply({
-                content:
-                    `⚡ **ĐỘT PHÁ THẤT BẠI!**\n\n` +
-                    `🌱 Cảnh giới: **${realm.name} tầng ${currentTier}**\n` +
-                    `📈 Tỷ lệ thành công: **${successRate}%**\n` +
-                    `💥 Mất: **${lostExp.toLocaleString()} EXP**`
-            });
-        }
+        const currentCultivation = Math.max(
+            0,
+            Number(p.kinhNghiem || 0)
+        );
 
         // =================================================
-        // XÁC ĐỊNH CẢNH GIỚI / TẦNG MỚI
+        // CẢNH GIỚI / TẦNG TIẾP THEO
         // =================================================
 
-        let newRealmIndex = index;
-        let newTier = currentTier + 1;
+        let nextRealmIndex = realmIndex;
+        let nextTier = currentTier + 1;
 
-        // Tầng 9 → cảnh giới tiếp theo
-        if (newTier > realm.max) {
+        // Tầng 10 → cảnh giới kế tiếp tầng 1
+        if (nextTier > 9) {
 
-            // Đã đạt Đại Đạo tầng 9
-            if (!realms[index + 1]) {
+            if (!realms[realmIndex + 1]) {
 
                 return interaction.reply({
                     content:
                         "🌌 **ĐẠI ĐẠO TỐI CAO!**\n\n" +
                         "Bạn đã đạt **Đại Đạo tầng 9**.\n" +
-                        "Không còn cảnh giới nào cao hơn."
+                        "Đây là cảnh giới cao nhất.",
+                    ephemeral: true
                 });
             }
 
-            newRealmIndex = index + 1;
-            newTier = 1;
+            nextRealmIndex = realmIndex + 1;
+            nextTier = 1;
         }
 
-        const newRealm =
-            realms[newRealmIndex];
+        const nextRealm =
+            realms[nextRealmIndex];
 
         // =================================================
-        // TÍNH CHỈ SỐ TĂNG
+        // TÍNH TU VI YÊU CẦU
+        // =================================================
+        //
+        // Cảnh giới hiện tại có maxCultivation.
+        //
+        // Chia thành 9 tầng.
+        //
+        // Ví dụ Luyện Khí:
+        //
+        // max = 10.000
+        //
+        // Tầng 1 ≈ 1.112
+        // Tầng 2 ≈ 2.223
+        // ...
+        // Tầng 9 = 10.000
+        //
         // =================================================
 
-        /*
-         * Cảnh giới càng cao:
-         * HP / Công / Thủ càng lớn.
-         *
-         * Tầng càng cao:
-         * lượng chỉ số nhận được càng lớn.
-         */
+        const cultivationPerTier =
+            currentRealm.maxCultivation / 9;
 
-        const tierMultiplier = newTier;
+        const requiredCultivation =
+            Math.ceil(
+                cultivationPerTier * currentTier
+            );
+
+        // =================================================
+        // CHƯA ĐỦ TU VI
+        // =================================================
+
+        if (currentCultivation < requiredCultivation) {
+
+            const missing =
+                requiredCultivation -
+                currentCultivation;
+
+            return interaction.reply({
+
+                embeds: [
+
+                    new EmbedBuilder()
+
+                        .setColor(0xf1c40f)
+
+                        .setTitle(
+                            "⚠️ CHƯA ĐỦ TU VI"
+                        )
+
+                        .setDescription(
+                            `🌱 **${currentRealm.name} tầng ${currentTier}**`
+                        )
+
+                        .addFields(
+
+                            {
+                                name: "✨ Tu vi hiện tại",
+                                value:
+                                    currentCultivation
+                                        .toLocaleString(),
+                                inline: true
+                            },
+
+                            {
+                                name: "🔓 Tu vi yêu cầu",
+                                value:
+                                    requiredCultivation
+                                        .toLocaleString(),
+                                inline: true
+                            },
+
+                            {
+                                name: "📉 Còn thiếu",
+                                value:
+                                    missing
+                                        .toLocaleString(),
+                                inline: true
+                            }
+                        )
+                ],
+
+                ephemeral: true
+            });
+        }
+
+        // =================================================
+        // RANDOM TỶ LỆ 1% → 100%
+        // =================================================
+
+        const successRate =
+            Math.floor(
+                Math.random() * 100
+            ) + 1;
+
+        // =================================================
+        // RANDOM KẾT QUẢ
+        // =================================================
+
+        const roll =
+            Math.floor(
+                Math.random() * 100
+            ) + 1;
+
+        const success =
+            roll <= successRate;
+
+        // =================================================
+        // THẤT BẠI
+        // =================================================
+
+        if (!success) {
+
+            // Mất 10% lượng tu vi yêu cầu
+            const lostCultivation =
+                Math.max(
+                    1,
+                    Math.floor(
+                        requiredCultivation * 0.10
+                    )
+                );
+
+            const newCultivation =
+                Math.max(
+                    0,
+                    currentCultivation -
+                    lostCultivation
+                );
+
+            // Lưu tu vi mới
+            updatePlayer(
+                interaction.user.id,
+                {
+                    kinhNghiem:
+                        newCultivation
+                }
+            );
+
+            return interaction.reply({
+
+                embeds: [
+
+                    new EmbedBuilder()
+
+                        .setColor(0xe74c3c)
+
+                        .setTitle(
+                            "💥 ĐỘT PHÁ THẤT BẠI"
+                        )
+
+                        .setDescription(
+                            `⚡ Ngươi đã thất bại khi đột phá!\n\n` +
+                            `🌱 **${currentRealm.name} tầng ${currentTier}**`
+                        )
+
+                        .addFields(
+
+                            {
+                                name:
+                                    "🎲 Tỷ lệ thành công",
+
+                                value:
+                                    `${successRate}%`,
+
+                                inline:
+                                    true
+                            },
+
+                            {
+                                name:
+                                    "🎯 Kết quả",
+
+                                value:
+                                    `${roll}`,
+
+                                inline:
+                                    true
+                            },
+
+                            {
+                                name:
+                                    "💥 Tu vi mất",
+
+                                value:
+                                    `-${lostCultivation.toLocaleString()}`,
+
+                                inline:
+                                    true
+                            },
+
+                            {
+                                name:
+                                    "✨ Tu vi còn lại",
+
+                                value:
+                                    newCultivation
+                                        .toLocaleString(),
+
+                                inline:
+                                    true
+                            }
+                        )
+
+                        .setFooter({
+                            text:
+                                "Đột phá thất bại • Tu vi bị phản phệ"
+                        })
+                ]
+            });
+        }
+
+        // =================================================
+        // ĐỘT PHÁ THÀNH CÔNG
+        // =================================================
+
+        const realmStats =
+            stats[nextRealm.name] || {
+                hp: 100,
+                cong: 20,
+                thu: 15
+            };
+
+        // =================================================
+        // CHỈ SỐ TĂNG
+        // =================================================
 
         const hpIncrease =
-            newRealm.stats.hp *
-            tierMultiplier;
+            realmStats.hp *
+            nextTier;
 
         const congIncrease =
-            newRealm.stats.cong *
-            tierMultiplier;
+            realmStats.cong *
+            nextTier;
 
         const thuIncrease =
-            newRealm.stats.thu *
-            tierMultiplier;
+            realmStats.thu *
+            nextTier;
 
         // =================================================
         // CHỈ SỐ CŨ
         // =================================================
 
-        const oldMaxHp =
-            Number(p.maxHp || 0);
-
         const oldHp =
             Number(p.hp || 0);
+
+        const oldMaxHp =
+            Number(p.maxHp || 0);
 
         const oldCong =
             Number(p.cong || 0);
@@ -365,27 +482,21 @@ module.exports = {
         // CHỈ SỐ MỚI
         // =================================================
 
-        const newMaxHp =
-            oldMaxHp + hpIncrease;
-
         const newHp =
-            oldHp + hpIncrease;
+            oldHp +
+            hpIncrease;
+
+        const newMaxHp =
+            oldMaxHp +
+            hpIncrease;
 
         const newCong =
-            oldCong + congIncrease;
+            oldCong +
+            congIncrease;
 
         const newThu =
-            oldThu + thuIncrease;
-
-        // =================================================
-        // EXP CÒN LẠI
-        // =================================================
-
-        const remainingExp =
-            Math.max(
-                0,
-                currentExp - realm.needExp
-            );
+            oldThu +
+            thuIncrease;
 
         // =================================================
         // LƯU DATABASE
@@ -396,19 +507,20 @@ module.exports = {
             {
 
                 canhGioi:
-                    newRealm.name,
+                    nextRealm.name,
 
                 tang:
-                    newTier,
+                    nextTier,
 
+                // Thành công không mất tu vi
                 kinhNghiem:
-                    remainingExp,
-
-                maxHp:
-                    newMaxHp,
+                    currentCultivation,
 
                 hp:
                     newHp,
+
+                maxHp:
+                    newMaxHp,
 
                 cong:
                     newCong,
@@ -419,29 +531,32 @@ module.exports = {
         );
 
         // =================================================
-        // EMBED
+        // THÔNG BÁO THÀNH CÔNG
         // =================================================
 
         const embed =
             new EmbedBuilder()
 
-                .setColor(0x8e44ad)
+                .setColor(0x2ecc71)
 
                 .setTitle(
-                    "⚡ ĐỘT PHÁ THÀNH CÔNG"
+                    "🌌 ĐỘT PHÁ THÀNH CÔNG!"
                 )
 
                 .setDescription(
-                    `🌌 **${realm.name} tầng ${currentTier}**\n` +
+
+                    `⚡ **${currentRealm.name} tầng ${currentTier}**\n` +
+
                     `⬇️\n` +
-                    `✨ **${newRealm.name} tầng ${newTier}**`
+
+                    `✨ **${nextRealm.name} tầng ${nextTier}**`
                 )
 
                 .addFields(
 
                     {
                         name:
-                            "📈 Tỷ lệ thành công",
+                            "🎲 Tỷ lệ thành công",
 
                         value:
                             `${successRate}%`,
@@ -452,10 +567,10 @@ module.exports = {
 
                     {
                         name:
-                            "🌱 Cảnh giới",
+                            "🎯 Kết quả",
 
                         value:
-                            `**${newRealm.name} tầng ${newTier}**`,
+                            `${roll}`,
 
                         inline:
                             true
@@ -463,10 +578,11 @@ module.exports = {
 
                     {
                         name:
-                            "✨ EXP còn lại",
+                            "✨ Tu vi",
 
                         value:
-                            `${remainingExp.toLocaleString()}`,
+                            currentCultivation
+                                .toLocaleString(),
 
                         inline:
                             true
@@ -511,7 +627,7 @@ module.exports = {
 
                 .setFooter({
                     text:
-                        "Hồng Hoang Đại Lục • Con đường chứng đạo"
+                        "Hồng Hoang Đại Lục • Đột phá cảnh giới"
                 });
 
         return interaction.reply({
