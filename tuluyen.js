@@ -44,7 +44,7 @@ module.exports = {
 
     data: new SlashCommandBuilder()
         .setName("tuluyen")
-        .setDescription("🧘 Tu luyện để nhận linh lực và tu vi"),
+        .setDescription("🧘 Tu luyện để nhận linh lực, tu vi và kinh nghiệm"),
 
     async execute(interaction) {
 
@@ -62,7 +62,7 @@ module.exports = {
         }
 
         // =================================================
-        // BẾ QUAN
+        // ĐANG BẾ QUAN
         // =================================================
 
         if (p.beQuan) {
@@ -101,7 +101,7 @@ module.exports = {
             Number(p.tang) || 1;
 
         // =================================================
-        // TỐC ĐỘ CƠ BẢN
+        // TỐC ĐỘ TU LUYỆN
         // =================================================
 
         const speed =
@@ -126,7 +126,6 @@ module.exports = {
 
         // =================================================
         // BUFF LINH CĂN
-        // Ví dụ +20% = x1.2
         // =================================================
 
         const buffMultiplier =
@@ -149,14 +148,32 @@ module.exports = {
             );
 
         // =================================================
+        // TÍNH KINH NGHIỆM
+        // =================================================
+
+        const baseExp =
+            Math.floor(
+                Math.random() * 21
+            ) + 10;
+
+        const exp =
+            Math.floor(
+                baseExp *
+                speed *
+                buffMultiplier
+            );
+
+        // =================================================
         // TÍNH TU VI
         // =================================================
         //
-        // Tu Vi được lưu trong:
+        // TU VI là dữ liệu riêng:
+        // p.tuvi
+        //
+        // KINH NGHIỆM là:
         // p.kinhNghiem
         //
-        // Tốc độ tăng theo cảnh giới.
-        // Linh căn vẫn được áp dụng buff.
+        // Hai giá trị hoàn toàn độc lập.
         // =================================================
 
         const baseTuVi =
@@ -172,30 +189,52 @@ module.exports = {
             );
 
         // =================================================
-        // TU VI HIỆN TẠI
+        // GIÁ TRỊ CŨ
         // =================================================
 
         const oldTuVi =
+            Number(p.tuvi) || 0;
+
+        const oldKinhNghiem =
             Number(p.kinhNghiem) || 0;
+
+        const oldLinhLuc =
+            Number(p.linhLuc) || 0;
+
+        // =================================================
+        // GIÁ TRỊ MỚI
+        // =================================================
 
         const newTuVi =
             oldTuVi + tuVi;
 
+        const newKinhNghiem =
+            oldKinhNghiem + exp;
+
+        const newLinhLuc =
+            oldLinhLuc + linhLuc;
+
         // =================================================
-        // CẬP NHẬT DATA
+        // CẬP NHẬT DATABASE
         // =================================================
 
         updatePlayer(
             interaction.user.id,
             {
-                linhLuc:
-                    (Number(p.linhLuc) || 0)
-                    + linhLuc,
 
-                // TU VI
-                kinhNghiem:
+                // 🔥 LINH LỰC
+                linhLuc:
+                    newLinhLuc,
+
+                // ⚔️ TU VI
+                tuvi:
                     newTuVi,
 
+                // ✨ KINH NGHIỆM
+                kinhNghiem:
+                    newKinhNghiem,
+
+                // ⏳ COOLDOWN
                 lastTrain:
                     Date.now()
             }
@@ -224,6 +263,7 @@ module.exports = {
                 )
 
                 .setDescription(
+
                     `**${interaction.user.username}** ` +
                     `vận chuyển linh khí trong kinh mạch.\n\n` +
 
@@ -236,34 +276,80 @@ module.exports = {
 
                 .addFields(
 
+                    // -------------------------------
+                    // LINH LỰC
+                    // -------------------------------
+
                     {
-                        name: "🔥 Linh lực",
+                        name:
+                            "🔥 Linh lực",
+
                         value:
                             `+**${format(linhLuc)}**`,
-                        inline: true
+
+                        inline:
+                            true
                     },
 
+                    // -------------------------------
+                    // TU VI
+                    // -------------------------------
+
                     {
-                        name: "✨ Tu Vi",
+                        name:
+                            "⚔️ Tu Vi",
+
                         value:
                             `+**${format(tuVi)}**`,
-                        inline: true
+
+                        inline:
+                            true
                     },
 
+                    // -------------------------------
+                    // KINH NGHIỆM
+                    // -------------------------------
+
                     {
-                        name: "📊 Tu Vi hiện tại",
+                        name:
+                            "✨ Kinh nghiệm",
+
+                        value:
+                            `+**${format(exp)}**`,
+
+                        inline:
+                            true
+                    },
+
+                    // -------------------------------
+                    // TỔNG TU VI
+                    // -------------------------------
+
+                    {
+                        name:
+                            "📈 Tu Vi hiện tại",
+
                         value:
                             `**${format(newTuVi)}**`,
-                        inline: true
+
+                        inline:
+                            true
                     },
 
+                    // -------------------------------
+                    // LINH CĂN
+                    // -------------------------------
+
                     {
-                        name: "🧬 Linh căn",
+                        name:
+                            "🧬 Linh căn",
+
                         value:
                             `+${linhCanBuff}% tốc độ`,
-                        inline: true
-                    }
 
+                        inline:
+                            true
+                    }
                 )
 
                 .setFooter({
