@@ -1,214 +1,167 @@
 require("dotenv").config();
 
-const {
-    REST,
-    Routes
-} = require("discord.js");
-
 const fs = require("fs");
 const path = require("path");
+const { REST, Routes } = require("discord.js");
 
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 
 if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
-    console.error("❌ Thiếu TOKEN / CLIENT_ID / GUILD_ID trong Variables!");
+    console.error("❌ Thiếu TOKEN / CLIENT_ID / GUILD_ID!");
     process.exit(1);
 }
 
-// ===============================
-// LOAD COMMANDS
-// ===============================
-
 const commands = [];
+const loadedNames = [];
+const failedFiles = [];
 
 const files = fs
     .readdirSync(__dirname)
     .filter(file =>
         file.endsWith(".js") &&
-        file !== "deploy-commands.js"
+        ![
+            "index.js",
+            "deploy-commands.js",
+            "database.js"
+        ].includes(file)
     );
+
+console.log("=================================");
+console.log("🔎 ĐANG QUÉT COMMAND");
+console.log("=================================");
 
 for (const file of files) {
     try {
         const filePath = path.join(__dirname, file);
+        delete require.cache[require.resolve(filePath)];
+
         const command = require(filePath);
 
-        if (!command?.data) continue;
-
-        if (typeof command.data.toJSON === "function") {
-            commands.push(command.data.toJSON());
-        } else {
-            commands.push(command.data);
+        if (!command || !command.data) {
+            console.log(`⚪ ${file} → không có data`);
+            continue;
         }
 
-        console.log(`✅ Đã tải /${command.data.name}`);
-    } catch (err) {
-        console.log(`⚠️ Bỏ qua ${file}: ${err.message}`);
+        if (typeof command.data.toJSON !== "function") {
+            console.log(`❌ ${file} → data không hợp lệ`);
+            failedFiles.push(file);
+            continue;
+        }
+
+        const json = command.data.toJSON();
+
+        if (!json.name) {
+            console.log(`❌ ${file} → không có tên command`);
+            failedFiles.push(file);
+            continue;
+        }
+
+        commands.push(json);
+        loadedNames.push(json.name);
+
+        console.log(`✅ /${json.name} ← ${file}`);
+
+    } catch (error) {
+        console.error(`❌ LỖI ${file}:`);
+        console.error(error.message);
+        failedFiles.push(file);
     }
 }
 
 console.log("");
 console.log("=================================");
-console.log(`📦 Tổng số command: ${commands.length}`);
+console.log(`📦 COMMAND TRONG CODE: ${commands.length}`);
 console.log("=================================");
 
-// ===============================
-// REST
-// ===============================
+console.log("📜 Danh sách:");
+for (const name of loadedNames) {
+    console.log(`   /${name}`);
+}
+
+if (failedFiles.length > 0) {
+    console.log("");
+    console.log("⚠️ FILE BỊ LỖI:");
+    for (const file of failedFiles) {
+        console.log(`   ${file}`);
+    }
+}
 
 const rest = new REST({
     version: "10",
-    timeout: 30000,
-    userAgentAppendix: "HongHoangDaiLuc/1.0"
+    timeout: 30000
 }).setToken(TOKEN);
 
-// ===============================
-// SO SÁNH COMMAND
-// ===============================
-
-function normalizeCommand(command) {
-    return {
-        name: command.name,
-        description: command.description || "",
-        options: command.options || [],
-        type: command.type || 1,
-        default_member_permissions:
-            command.default_member_permissions ?? null,
-        dm_permission:
-            command.dm_permission ?? true,
-        nsfw:
-            command.nsfw ?? false
-    };
-}
-
-function commandsAreSame(oldCommands, newCommands) {
-
-    if (oldCommands.length !== newCommands.length) {
-        return false;
-    }
-
-    const oldMap = new Map(
-        oldCommands.map(c => [
-            c.name,
-            JSON.stringify(normalizeCommand(c))
-        ])
-    );
-
-    for (const command of newCommands) {
-
-        const oldCommand = oldMap.get(command.name);
-
-        if (!oldCommand) {
-            return false;
-        }
-
-        const newCommand = JSON.stringify(
-            normalizeCommand(command)
-        );
-
-        if (oldCommand !== newCommand) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-// ===============================
-// DEPLOY
-// ===============================
-
-async function deployCommands() {
-
+async function deploy() {
     try {
-
-        console.log("");
-        console.log("📡 Đang kết nối Discord API...");
-        console.log(`🏠 Guild ID: ${GUILD_ID}`);
-        console.log(`🤖 Client ID: ${CLIENT_ID}`);
-
         const route = Routes.applicationGuildCommands(
             CLIENT_ID,
             GUILD_ID
         );
 
-        // ===============================
-        // LẤY COMMAND HIỆN TẠI
-        // ===============================
-
         console.log("");
-        console.log("🔍 Đang kiểm tra command hiện tại...");
+        console.log("=================================");
+        console.log("📡 ĐANG LẤY COMMAND TỪ DISCORD");
+        console.log("=================================");
 
-        const currentCommands = await rest.get(route);
+        const oldCommands = await rest.get(route);
 
-        console.log(
-            `📋 Discord đang có ${currentCommands.length} command`
-        );
+        console.log(`📋 Discord hiện có: ${oldCommands.length}`);
 
-        // ===============================
-        // KHÔNG CÓ THAY ĐỔI
-        // ===============================
+        if (oldCommands.length > 0) {
+            console.log("📜 Command hiện tại trên Discord:");
 
-        if (commandsAreSame(currentCommands, commands)) {
-
-            console.log("");
-            console.log("✅ Command đã giống với code hiện tại.");
-            console.log("⏭️ Không cần deploy lại.");
-            console.log("🎉 Hoàn tất!");
-
-            return;
+            for (const command of oldCommands) {
+                console.log(`   /${command.name}`);
+            }
         }
 
-        // ===============================
-        // CÓ THAY ĐỔI
-        // ===============================
-
         console.log("");
-        console.log("🔄 Phát hiện command thay đổi.");
-        console.log("📤 Đang cập nhật command lên Discord...");
+        console.log("=================================");
+        console.log("📤 ĐANG GHI COMMAND MỚI");
+        console.log("=================================");
 
-        const result = await rest.put(
-            route,
-            {
-                body: commands
-            }
-        );
+        const result = await rest.put(route, {
+            body: commands
+        });
 
         console.log("");
         console.log("=================================");
-        console.log(`✅ Deploy thành công: ${result.length} command`);
+        console.log(`✅ DISCORD ĐÃ NHẬN: ${result.length} COMMAND`);
         console.log("=================================");
+
+        console.log("📜 Command sau khi cập nhật:");
+
+        for (const command of result) {
+            console.log(`   ✅ /${command.name}`);
+        }
+
+        console.log("");
+        console.log("🎉 ĐĂNG KÝ COMMAND HOÀN TẤT!");
 
     } catch (error) {
-
-        console.log("");
-        console.log("❌ DEPLOY COMMAND THẤT BẠI");
+        console.error("");
+        console.error("❌ DEPLOY COMMAND THẤT BẠI");
 
         if (error.status) {
-            console.log(`HTTP: ${error.status}`);
+            console.error("HTTP:", error.status);
         }
 
         if (error.code) {
-            console.log(`Discord Code: ${error.code}`);
+            console.error("Discord Code:", error.code);
         }
 
+        console.error(error.message);
+
         if (error.rawError) {
-            console.log(
-                "Discord Response:",
+            console.error(
                 JSON.stringify(error.rawError, null, 2)
             );
         }
 
-        console.log("Chi tiết:", error.message);
-
-        if (error.rawError?.retry_after) {
-            console.log(
-                `⏳ Hãy chờ khoảng ${Math.ceil(error.rawError.retry_after)} giây rồi thử lại.`
-            );
-        }
+        process.exit(1);
     }
 }
 
-deployCommands();
+deploy();
