@@ -1,206 +1,214 @@
 require("dotenv").config();
 
+const {
+    REST,
+    Routes
+} = require("discord.js");
+
 const fs = require("fs");
 const path = require("path");
-
-const commandFiles = fs
-    .readdirSync(__dirname)
-    .filter(file => file.endsWith(".js"))
-    .filter(file =>
-        ![
-            "index.js",
-            "deploy-commands.js",
-            "database.js"
-        ].includes(file)
-    );
-
-const commands = [];
-
-// ==========================================
-// LOAD COMMANDS
-// ==========================================
-
-for (const file of commandFiles) {
-    try {
-        delete require.cache[
-            require.resolve(`./${file}`)
-        ];
-
-        const command = require(`./${file}`);
-
-        if (
-            command.data &&
-            command.execute
-        ) {
-            commands.push(
-                command.data.toJSON()
-            );
-
-            console.log(
-                `✅ Đã tải /${command.data.name}`
-            );
-        }
-    } catch (error) {
-        console.error(
-            `❌ Lỗi tải ${file}:`,
-            error.message
-        );
-    }
-}
-
-// ==========================================
-// KIỂM TRA ENV
-// ==========================================
 
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 
-if (!TOKEN) {
-    console.error("❌ Không tìm thấy TOKEN!");
+if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
+    console.error("❌ Thiếu TOKEN / CLIENT_ID / GUILD_ID trong Variables!");
     process.exit(1);
 }
 
-if (!CLIENT_ID) {
-    console.error("❌ Không tìm thấy CLIENT_ID!");
-    process.exit(1);
-}
+// ===============================
+// LOAD COMMANDS
+// ===============================
 
-if (!GUILD_ID) {
-    console.error("❌ Không tìm thấy GUILD_ID!");
-    process.exit(1);
-}
+const commands = [];
 
-// ==========================================
-// THÔNG TIN
-// ==========================================
-
-console.log("");
-console.log("======================================");
-console.log(`📦 Tổng số command: ${commands.length}`);
-console.log("======================================");
-
-console.log(`🏠 Guild ID: ${GUILD_ID}`);
-console.log(`🤖 Client ID: ${CLIENT_ID}`);
-
-console.log("");
-console.log("📡 Đang kết nối Discord API...");
-
-// ==========================================
-// DEPLOY COMMANDS
-// ==========================================
-
-async function deployCommands() {
-    const url =
-        `https://discord.com/api/v10` +
-        `/applications/${CLIENT_ID}` +
-        `/guilds/${GUILD_ID}/commands`;
-
-    console.log("");
-    console.log(
-        "📤 Đang gửi command lên Discord..."
+const files = fs
+    .readdirSync(__dirname)
+    .filter(file =>
+        file.endsWith(".js") &&
+        file !== "deploy-commands.js"
     );
 
-    console.log(
-        `🔗 URL: ${url}`
-    );
-
-    const controller =
-        new AbortController();
-
-    const timeout =
-        setTimeout(
-            () => controller.abort(),
-            30000
-        );
-
+for (const file of files) {
     try {
-        const response = await fetch(
-            url,
-            {
-                method: "PUT",
+        const filePath = path.join(__dirname, file);
+        const command = require(filePath);
 
-                headers: {
-                    "Authorization":
-                        `Bot ${TOKEN}`,
+        if (!command?.data) continue;
 
-                    "Content-Type":
-                        "application/json",
-
-                    "User-Agent":
-                        "HongHoangDaiLuc/1.0"
-                },
-
-                body:
-                    JSON.stringify(commands),
-
-                signal:
-                    controller.signal
-            }
-        );
-
-        clearTimeout(timeout);
-
-        const body =
-            await response.text();
-
-        console.log("");
-        console.log(
-            `📡 Discord HTTP: ${response.status}`
-        );
-
-        console.log(
-            "📄 Discord Response:"
-        );
-
-        console.log(body);
-
-        if (!response.ok) {
-            console.error("");
-            console.error(
-                `❌ Đăng command thất bại! HTTP ${response.status}`
-            );
-
-            process.exit(1);
+        if (typeof command.data.toJSON === "function") {
+            commands.push(command.data.toJSON());
+        } else {
+            commands.push(command.data);
         }
 
-        console.log("");
-        console.log(
-            `✅ ĐÃ ĐĂNG THÀNH CÔNG ${commands.length} COMMAND!`
-        );
-
-        console.log(
-            "🎉 Hoàn tất!"
-        );
-
-    } catch (error) {
-
-        clearTimeout(timeout);
-
-        console.error("");
-        console.error(
-            "❌ LỖI KẾT NỐI DISCORD:"
-        );
-
-        console.error(
-            error.message
-        );
-
-        if (
-            error.name ===
-            "AbortError"
-        ) {
-            console.error(
-                "⏰ Discord API phản hồi quá 30 giây."
-            );
-        }
-
-        process.exit(1);
+        console.log(`✅ Đã tải /${command.data.name}`);
+    } catch (err) {
+        console.log(`⚠️ Bỏ qua ${file}: ${err.message}`);
     }
 }
 
-// ==========================================
-// START
-// ==========================================
+console.log("");
+console.log("=================================");
+console.log(`📦 Tổng số command: ${commands.length}`);
+console.log("=================================");
+
+// ===============================
+// REST
+// ===============================
+
+const rest = new REST({
+    version: "10",
+    timeout: 30000,
+    userAgentAppendix: "HongHoangDaiLuc/1.0"
+}).setToken(TOKEN);
+
+// ===============================
+// SO SÁNH COMMAND
+// ===============================
+
+function normalizeCommand(command) {
+    return {
+        name: command.name,
+        description: command.description || "",
+        options: command.options || [],
+        type: command.type || 1,
+        default_member_permissions:
+            command.default_member_permissions ?? null,
+        dm_permission:
+            command.dm_permission ?? true,
+        nsfw:
+            command.nsfw ?? false
+    };
+}
+
+function commandsAreSame(oldCommands, newCommands) {
+
+    if (oldCommands.length !== newCommands.length) {
+        return false;
+    }
+
+    const oldMap = new Map(
+        oldCommands.map(c => [
+            c.name,
+            JSON.stringify(normalizeCommand(c))
+        ])
+    );
+
+    for (const command of newCommands) {
+
+        const oldCommand = oldMap.get(command.name);
+
+        if (!oldCommand) {
+            return false;
+        }
+
+        const newCommand = JSON.stringify(
+            normalizeCommand(command)
+        );
+
+        if (oldCommand !== newCommand) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// ===============================
+// DEPLOY
+// ===============================
+
+async function deployCommands() {
+
+    try {
+
+        console.log("");
+        console.log("📡 Đang kết nối Discord API...");
+        console.log(`🏠 Guild ID: ${GUILD_ID}`);
+        console.log(`🤖 Client ID: ${CLIENT_ID}`);
+
+        const route = Routes.applicationGuildCommands(
+            CLIENT_ID,
+            GUILD_ID
+        );
+
+        // ===============================
+        // LẤY COMMAND HIỆN TẠI
+        // ===============================
+
+        console.log("");
+        console.log("🔍 Đang kiểm tra command hiện tại...");
+
+        const currentCommands = await rest.get(route);
+
+        console.log(
+            `📋 Discord đang có ${currentCommands.length} command`
+        );
+
+        // ===============================
+        // KHÔNG CÓ THAY ĐỔI
+        // ===============================
+
+        if (commandsAreSame(currentCommands, commands)) {
+
+            console.log("");
+            console.log("✅ Command đã giống với code hiện tại.");
+            console.log("⏭️ Không cần deploy lại.");
+            console.log("🎉 Hoàn tất!");
+
+            return;
+        }
+
+        // ===============================
+        // CÓ THAY ĐỔI
+        // ===============================
+
+        console.log("");
+        console.log("🔄 Phát hiện command thay đổi.");
+        console.log("📤 Đang cập nhật command lên Discord...");
+
+        const result = await rest.put(
+            route,
+            {
+                body: commands
+            }
+        );
+
+        console.log("");
+        console.log("=================================");
+        console.log(`✅ Deploy thành công: ${result.length} command`);
+        console.log("=================================");
+
+    } catch (error) {
+
+        console.log("");
+        console.log("❌ DEPLOY COMMAND THẤT BẠI");
+
+        if (error.status) {
+            console.log(`HTTP: ${error.status}`);
+        }
+
+        if (error.code) {
+            console.log(`Discord Code: ${error.code}`);
+        }
+
+        if (error.rawError) {
+            console.log(
+                "Discord Response:",
+                JSON.stringify(error.rawError, null, 2)
+            );
+        }
+
+        console.log("Chi tiết:", error.message);
+
+        if (error.rawError?.retry_after) {
+            console.log(
+                `⏳ Hãy chờ khoảng ${Math.ceil(error.rawError.retry_after)} giây rồi thử lại.`
+            );
+        }
+    }
+}
 
 deployCommands();
