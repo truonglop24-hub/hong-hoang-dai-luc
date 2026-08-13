@@ -1,4 +1,3 @@
-```javascript
 const {
     SlashCommandBuilder,
     EmbedBuilder,
@@ -13,14 +12,19 @@ const {
 } = require("./database");
 
 // =====================================================
-// COOLDOWN ĐỘT PHÁ: 20 GIÂY
+// CẤU HÌNH
 // =====================================================
 
+// Cooldown 20 giây sau khi người chơi bấm
+// ĐỒNG Ý hoặc TỪ CHỐI
 const dotPhaCooldown = new Map();
 const DOTPHA_COOLDOWN = 20_000;
 
+// Thời gian chờ nút xác nhận
+const CONFIRM_TIMEOUT = 30_000;
+
 // =====================================================
-// 18 CẢNH GIỚI
+// 12 CẢNH GIỚI
 // MỖI CẢNH GIỚI 12 TẦNG
 //
 // TẦNG 1 - 3  : SƠ KỲ
@@ -40,6 +44,7 @@ const realms = [
             thu: 15
         }
     },
+
     {
         name: "Luyện Khí",
         max: 12,
@@ -50,6 +55,7 @@ const realms = [
             thu: 40
         }
     },
+
     {
         name: "Trúc Cơ",
         max: 12,
@@ -60,6 +66,7 @@ const realms = [
             thu: 140
         }
     },
+
     {
         name: "Kim Đan",
         max: 12,
@@ -70,6 +77,7 @@ const realms = [
             thu: 400
         }
     },
+
     {
         name: "Nguyên Anh",
         max: 12,
@@ -80,6 +88,7 @@ const realms = [
             thu: 1400
         }
     },
+
     {
         name: "Hóa Thần",
         max: 12,
@@ -90,6 +99,7 @@ const realms = [
             thu: 4000
         }
     },
+
     {
         name: "Luyện Hư",
         max: 12,
@@ -100,6 +110,7 @@ const realms = [
             thu: 14000
         }
     },
+
     {
         name: "Hợp Thể",
         max: 12,
@@ -110,6 +121,7 @@ const realms = [
             thu: 40000
         }
     },
+
     {
         name: "Đại Thừa",
         max: 12,
@@ -120,6 +132,7 @@ const realms = [
             thu: 140000
         }
     },
+
     {
         name: "Độ Kiếp",
         max: 12,
@@ -130,8 +143,9 @@ const realms = [
             thu: 400000
         }
     },
+
     {
-        name: "Tiên Nhân",
+        name: "Tán Tiên",
         max: 12,
         needTuVi: 64000,
         stats: {
@@ -140,6 +154,7 @@ const realms = [
             thu: 1400000
         }
     },
+
     {
         name: "Chân Tiên",
         max: 12,
@@ -149,75 +164,14 @@ const realms = [
             cong: 6000000,
             thu: 4000000
         }
-    },
-    {
-        name: "Thiên Tiên",
-        max: 12,
-        needTuVi: 256000,
-        stats: {
-            hp: 100000000,
-            cong: 20000000,
-            thu: 14000000
-        }
-    },
-    {
-        name: "Huyền Tiên",
-        max: 12,
-        needTuVi: 512000,
-        stats: {
-            hp: 300000000,
-            cong: 60000000,
-            thu: 40000000
-        }
-    },
-    {
-        name: "Kim Tiên",
-        max: 12,
-        needTuVi: 1024000,
-        stats: {
-            hp: 1000000000,
-            cong: 200000000,
-            thu: 140000000
-        }
-    },
-    {
-        name: "Thánh Nhân",
-        max: 12,
-        needTuVi: 2048000,
-        stats: {
-            hp: 5000000000,
-            cong: 1000000000,
-            thu: 700000000
-        }
-    },
-    {
-        name: "Thiên Đạo",
-        max: 12,
-        needTuVi: 4096000,
-        stats: {
-            hp: 20000000000,
-            cong: 4000000000,
-            thu: 2800000000
-        }
-    },
-    {
-        name: "Đại Đạo",
-        max: 12,
-        needTuVi: 8192000,
-        stats: {
-            hp: 100000000000,
-            cong: 20000000000,
-            thu: 14000000000
-        }
     }
 ];
 
 // =====================================================
-// GIAI ĐOẠN
+// GIAI ĐOẠN CẢNH GIỚI
 // =====================================================
 
 function getStage(tier) {
-
     tier = Number(tier || 1);
 
     if (tier <= 3) {
@@ -238,51 +192,43 @@ function getStage(tier) {
 // =====================================================
 // VẬT PHẨM YÊU CẦU
 //
-// 3 -> 4  : Trung Kỳ Đan
-// 6 -> 7  : Hậu Kỳ Đan
-// 9 -> 10 : Viên Mãn Đan
-// 12 -> cảnh giới tiếp theo : Phá Cảnh Đan
+// Tầng 3  -> Trung Kỳ Đan
+// Tầng 6  -> Hậu Kỳ Đan
+// Tầng 9  -> Viên Mãn Đan
+// Tầng 12 -> Phá Cảnh Đan
 // =====================================================
 
 function getRequiredItem(realmName, tier) {
 
     if (tier === 3) {
-
         return {
             type: "danDuoc",
-            name: realmName + " Trung Kỳ Đan",
-            description:
-                "Đột phá Sơ Kỳ → Trung Kỳ"
+            name: `${realmName} Trung Kỳ Đan`,
+            description: "Đột phá Sơ Kỳ → Trung Kỳ"
         };
     }
 
     if (tier === 6) {
-
         return {
             type: "danDuoc",
-            name: realmName + " Hậu Kỳ Đan",
-            description:
-                "Đột phá Trung Kỳ → Hậu Kỳ"
+            name: `${realmName} Hậu Kỳ Đan`,
+            description: "Đột phá Trung Kỳ → Hậu Kỳ"
         };
     }
 
     if (tier === 9) {
-
         return {
             type: "danDuoc",
-            name: realmName + " Viên Mãn Đan",
-            description:
-                "Đột phá Hậu Kỳ → Viên Mãn"
+            name: `${realmName} Viên Mãn Đan`,
+            description: "Đột phá Hậu Kỳ → Viên Mãn"
         };
     }
 
     if (tier === 12) {
-
         return {
             type: "vatPham",
-            name: realmName + " Phá Cảnh Đan",
-            description:
-                "Đột phá Viên Mãn → cảnh giới tiếp theo"
+            name: `${realmName} Phá Cảnh Đan`,
+            description: "Đột phá Viên Mãn → cảnh giới tiếp theo"
         };
     }
 
@@ -290,40 +236,69 @@ function getRequiredItem(realmName, tier) {
 }
 
 // =====================================================
-// TÌM VẬT PHẨM
+// SO SÁNH TÊN VẬT PHẨM
 // =====================================================
 
-function findItem(player, requiredItem) {
+function sameItemName(item, requiredName) {
 
-    if (!player || !player.tuiDo) {
-        return -1;
+    if (typeof item === "string") {
+        return (
+            item.trim().toLowerCase() ===
+            requiredName.trim().toLowerCase()
+        );
     }
 
-    if (!Array.isArray(
-        player.tuiDo[requiredItem.type]
-    )) {
-        return -1;
+    if (item && typeof item === "object") {
+
+        const name =
+            item.name ||
+            item.ten ||
+            item.itemName;
+
+        if (!name) {
+            return false;
+        }
+
+        return (
+            String(name)
+                .trim()
+                .toLowerCase() ===
+            requiredName
+                .trim()
+                .toLowerCase()
+        );
+    }
+
+    return false;
+}
+
+// =====================================================
+// KIỂM TRA VẬT PHẨM
+// =====================================================
+
+function hasRequiredItem(player, requiredItem) {
+
+    if (!player || !player.tuiDo) {
+        return false;
     }
 
     const list =
         player.tuiDo[requiredItem.type];
 
-    const target =
-        String(requiredItem.name)
-            .trim()
-            .toLowerCase();
+    if (!Array.isArray(list)) {
+        return false;
+    }
 
-    return list.findIndex(function(item) {
-
-        return String(item)
-            .trim()
-            .toLowerCase() === target;
-
-    });
+    return list.some(item =>
+        sameItemName(
+            item,
+            requiredItem.name
+        )
+    );
 }
 
 // =====================================================
-// XÓA 1 VẬT PHẨM
+// TRỪ 1 VẬT PHẨM
 // =====================================================
 
 function consumeItem(player, requiredItem) {
@@ -332,43 +307,129 @@ function consumeItem(player, requiredItem) {
         return false;
     }
 
-    if (!Array.isArray(
-        player.tuiDo[requiredItem.type]
-    )) {
+    const list =
+        player.tuiDo[requiredItem.type];
+
+    if (!Array.isArray(list)) {
         return false;
     }
 
-    const list =
-        [...player.tuiDo[requiredItem.type]];
-
-    const target =
-        String(requiredItem.name)
-            .trim()
-            .toLowerCase();
-
     const index =
-        list.findIndex(function(item) {
-
-            return String(item)
-                .trim()
-                .toLowerCase() === target;
-
-        });
+        list.findIndex(item =>
+            sameItemName(
+                item,
+                requiredItem.name
+            )
+        );
 
     if (index === -1) {
         return false;
     }
 
-    list.splice(index, 1);
+    const item = list[index];
 
-    player.tuiDo[requiredItem.type] =
-        list;
+    // -------------------------------------------------
+    // Trường hợp túi đồ lưu chuỗi
+    // -------------------------------------------------
+
+    if (typeof item === "string") {
+        list.splice(index, 1);
+        return true;
+    }
+
+    // -------------------------------------------------
+    // Trường hợp túi đồ lưu object có quantity
+    // -------------------------------------------------
+
+    if (
+        item &&
+        typeof item === "object" &&
+        typeof item.quantity === "number"
+    ) {
+
+        if (item.quantity > 1) {
+            item.quantity -= 1;
+        } else {
+            list.splice(index, 1);
+        }
+
+        return true;
+    }
+
+    // -------------------------------------------------
+    // Trường hợp object có soLuong
+    // -------------------------------------------------
+
+    if (
+        item &&
+        typeof item === "object" &&
+        typeof item.soLuong === "number"
+    ) {
+
+        if (item.soLuong > 1) {
+            item.soLuong -= 1;
+        } else {
+            list.splice(index, 1);
+        }
+
+        return true;
+    }
+
+    // Nếu là object nhưng không có số lượng
+    list.splice(index, 1);
 
     return true;
 }
 
 // =====================================================
-// MODULE
+// TẠO EMBED THIẾU TU VI
+// =====================================================
+
+function createMissingTuViEmbed(
+    realm,
+    stage,
+    tier,
+    currentTuVi,
+    requiredTuVi
+) {
+
+    const missing =
+        requiredTuVi - currentTuVi;
+
+    return new EmbedBuilder()
+        .setColor(0xf1c40f)
+        .setTitle("⚠️ CHƯA ĐỦ TU VI")
+        .setDescription(
+            `🌱 **${realm.name} ${stage} tầng ${tier}**`
+        )
+        .addFields(
+            {
+                name: "⚔️ Tu Vi hiện tại",
+                value:
+                    currentTuVi.toLocaleString(),
+                inline: true
+            },
+            {
+                name: "🔓 Tu Vi yêu cầu",
+                value:
+                    requiredTuVi.toLocaleString(),
+                inline: true
+            },
+            {
+                name: "📉 Còn thiếu",
+                value:
+                    missing.toLocaleString(),
+                inline: true
+            }
+        )
+        .setFooter({
+            text:
+                "Cần đủ Tu Vi mới có thể đột phá."
+        });
+}
+
+// =====================================================
+// /DOTPHA
 // =====================================================
 
 module.exports = {
@@ -395,12 +456,9 @@ module.exports = {
         if (!p) {
 
             return interaction.reply({
-
                 content:
                     "⚠️ Hãy dùng `/batdau` trước.",
-
                 ephemeral: true
-
             });
         }
 
@@ -426,15 +484,10 @@ module.exports = {
                 );
 
             return interaction.reply({
-
                 content:
-                    "⏳ **Thiên kiếp đang hồi phục!**\n" +
-                    "Bạn phải chờ **" +
-                    seconds +
-                    " giây** nữa mới có thể đột phá tiếp.",
-
+                    `⏳ **Thiên kiếp đang hồi phục!**\n` +
+                    `Bạn phải chờ **${seconds} giây** nữa mới có thể dùng \`/dotpha\`.`,
                 ephemeral: true
-
             });
         }
 
@@ -443,15 +496,25 @@ module.exports = {
         // =================================================
 
         let index =
-            realms.findIndex(function(realm) {
+            realms.findIndex(
+                realm =>
+                    realm.name === p.canhGioi
+            );
 
-                return realm.name ===
-                    p.canhGioi;
-
-            });
+        // Nếu dữ liệu cũ không còn nằm trong 12 cảnh giới
+        // thì đưa về cảnh giới cuối cùng thay vì làm bot crash.
 
         if (index === -1) {
-            index = 0;
+
+            index =
+                realms.findIndex(
+                    realm =>
+                        realm.name === "Chân Tiên"
+                );
+
+            if (index === -1) {
+                index = 0;
+            }
         }
 
         const realm =
@@ -489,89 +552,25 @@ module.exports = {
             currentTier;
 
         // =================================================
-        // KIỂM TRA TU VI
+        // KIỂM TRA ĐỦ TU VI
         // =================================================
 
-        if (currentTuVi < requiredTuVi) {
-
-            const missing =
-                requiredTuVi -
-                currentTuVi;
+        if (
+            currentTuVi <
+            requiredTuVi
+        ) {
 
             return interaction.reply({
-
                 embeds: [
-
-                    new EmbedBuilder()
-
-                        .setColor(
-                            0xf1c40f
-                        )
-
-                        .setTitle(
-                            "⚠️ CHƯA ĐỦ TU VI"
-                        )
-
-                        .setDescription(
-
-                            "🌱 **" +
-                            realm.name +
-                            " " +
-                            currentStage +
-                            " tầng " +
-                            currentTier +
-                            "**"
-
-                        )
-
-                        .addFields(
-
-                            {
-                                name:
-                                    "⚔️ Tu Vi hiện tại",
-
-                                value:
-                                    currentTuVi
-                                        .toLocaleString(),
-
-                                inline: true
-                            },
-
-                            {
-                                name:
-                                    "🔓 Tu Vi yêu cầu",
-
-                                value:
-                                    requiredTuVi
-                                        .toLocaleString(),
-
-                                inline: true
-                            },
-
-                            {
-                                name:
-                                    "📉 Còn thiếu",
-
-                                value:
-                                    missing
-                                        .toLocaleString(),
-
-                                inline: true
-                            }
-
-                        )
-
-                        .setFooter({
-
-                            text:
-                                "Cần đủ Tu Vi mới có thể đột phá."
-
-                        })
-
+                    createMissingTuViEmbed(
+                        realm,
+                        currentStage,
+                        currentTier,
+                        currentTuVi,
+                        requiredTuVi
+                    )
                 ],
-
                 ephemeral: true
-
             });
         }
 
@@ -585,121 +584,85 @@ module.exports = {
                 currentTier
             );
 
-        if (requiredItem) {
+        if (
+            requiredItem &&
+            !hasRequiredItem(
+                p,
+                requiredItem
+            )
+        ) {
 
-            const itemIndex =
-                findItem(
-                    p,
-                    requiredItem
-                );
+            return interaction.reply({
 
-            if (itemIndex === -1) {
+                embeds: [
 
-                return interaction.reply({
+                    new EmbedBuilder()
+                        .setColor(0xe67e22)
+                        .setTitle(
+                            "❌ THIẾU VẬT PHẨM ĐỘT PHÁ"
+                        )
+                        .setDescription(
+                            `🌱 **${realm.name} ${currentStage} tầng ${currentTier}**\n\n` +
+                            `${requiredItem.description}`
+                        )
+                        .addFields(
+                            {
+                                name:
+                                    "💊 Vật phẩm yêu cầu",
+                                value:
+                                    `**${requiredItem.name}**`,
+                                inline: false
+                            },
+                            {
+                                name:
+                                    "🏪 Cách kiếm",
+                                value:
+                                    "• Cửa hàng\n" +
+                                    "• Phó bản",
+                                inline: false
+                            }
+                        )
+                        .setFooter({
+                            text:
+                                "Vật phẩm chỉ mất khi đột phá thành công."
+                        })
 
-                    embeds: [
+                ],
 
-                        new EmbedBuilder()
-
-                            .setColor(
-                                0xe67e22
-                            )
-
-                            .setTitle(
-                                "❌ THIẾU VẬT PHẨM ĐỘT PHÁ"
-                            )
-
-                            .setDescription(
-
-                                "🌱 **" +
-                                realm.name +
-                                " " +
-                                currentStage +
-                                " tầng " +
-                                currentTier +
-                                "**\n\n" +
-                                requiredItem.description
-
-                            )
-
-                            .addFields(
-
-                                {
-                                    name:
-                                        "💊 Vật phẩm yêu cầu",
-
-                                    value:
-                                        "**" +
-                                        requiredItem.name +
-                                        "**",
-
-                                    inline: false
-                                },
-
-                                {
-                                    name:
-                                        "🏪 Cách kiếm",
-
-                                    value:
-                                        "• Cửa hàng\n" +
-                                        "• Phó bản",
-
-                                    inline: false
-                                }
-
-                            )
-
-                            .setFooter({
-
-                                text:
-                                    "Vật phẩm chỉ mất khi đột phá thành công."
-
-                            })
-
-                    ],
-
-                    ephemeral: true
-
-                });
-            }
+                ephemeral: true
+            });
         }
 
         // =================================================
-        // NÚT XÁC NHẬN
+        // NÚT ĐỒNG Ý
         // =================================================
 
         const confirmButton =
             new ButtonBuilder()
-
                 .setCustomId(
-                    "dotpha_confirm_" +
-                    userId
+                    `dotpha_confirm_${userId}`
                 )
-
                 .setLabel(
                     "Đồng ý đột phá"
                 )
-
                 .setEmoji("⚡")
-
                 .setStyle(
                     ButtonStyle.Success
                 );
 
+        // =================================================
+        // NÚT TỪ CHỐI
+        // =================================================
+
         const cancelButton =
             new ButtonBuilder()
-
                 .setCustomId(
-                    "dotpha_cancel_" +
-                    userId
+                    `dotpha_cancel_${userId}`
                 )
-
                 .setLabel(
                     "Từ chối đột phá"
                 )
-
                 .setEmoji("❌")
-
                 .setStyle(
                     ButtonStyle.Danger
                 );
@@ -715,59 +678,42 @@ module.exports = {
         // EMBED XÁC NHẬN
         // =================================================
 
+        let itemText =
+            "Không yêu cầu";
+
+        if (requiredItem) {
+            itemText =
+                `**${requiredItem.name}**`;
+        }
+
         const confirmEmbed =
             new EmbedBuilder()
-
-                .setColor(
-                    0x9b59b6
-                )
-
+                .setColor(0x9b59b6)
                 .setTitle(
                     "⚡ XÁC NHẬN ĐỘT PHÁ"
                 )
-
                 .setDescription(
+                    `Bạn có chắc chắn muốn đột phá không?\n\n` +
 
-                    "Bạn có chắc chắn muốn đột phá không?\n\n" +
+                    `🌱 **Cảnh giới hiện tại:**\n` +
+                    `**${realm.name} ${currentStage} tầng ${currentTier}**\n\n` +
 
-                    "🌱 **Cảnh giới hiện tại:**\n" +
-                    "**" +
-                    realm.name +
-                    " " +
-                    currentStage +
-                    " tầng " +
-                    currentTier +
-                    "**\n\n" +
+                    `⚔️ **Tu Vi:** ` +
+                    `${currentTuVi.toLocaleString()}\n` +
 
-                    "⚔️ **Tu Vi:** " +
-                    currentTuVi
-                        .toLocaleString() +
-                    "\n" +
+                    `🔓 **Tu Vi yêu cầu:** ` +
+                    `${requiredTuVi.toLocaleString()}\n\n` +
 
-                    "🔓 **Tu Vi yêu cầu:** " +
-                    requiredTuVi
-                        .toLocaleString() +
+                    `💊 **Vật phẩm:**\n` +
+                    `${itemText}\n\n` +
 
-                    (
+                    `🎲 **Tỷ lệ thành công:** ngẫu nhiên 1 - 100%\n` +
 
-                        requiredItem
-                            ? "\n\n💊 **Vật phẩm:**\n**" +
-                              requiredItem.name +
-                              "**"
-                            : ""
-
-                    ) +
-
-                    "\n\n" +
-                    "⚠️ **Thất bại có thể mất từ 1 - 10.000 Tu Vi.**"
-
+                    `⚠️ **Nếu thất bại có thể mất 1 - 10.000 Tu Vi.**`
                 )
-
                 .setFooter({
-
                     text:
                         "Chọn Đồng ý hoặc Từ chối bên dưới."
-
                 });
 
         // =================================================
@@ -786,7 +732,6 @@ module.exports = {
                 ],
 
                 fetchReply: true
-
             });
 
         // =================================================
@@ -802,44 +747,36 @@ module.exports = {
                     .awaitMessageComponent({
 
                         filter:
-                            function(button) {
+                            button => {
 
                                 return (
                                     button.user.id ===
-                                        userId
+                                    userId
                                 );
-
                             },
 
                         time:
-                            30_000
-
+                            CONFIRM_TIMEOUT
                     });
 
         } catch (error) {
 
-            // Hết 30 giây không bấm
-            // Không kích hoạt cooldown
+            // Không bấm trong 30 giây
+            // Không tính cooldown
 
             const expiredEmbed =
                 new EmbedBuilder()
-
-                    .setColor(
-                        0x7f8c8d
-                    )
-
+                    .setColor(0x7f8c8d)
                     .setTitle(
                         "⌛ HẾT THỜI GIAN XÁC NHẬN"
                     )
-
                     .setDescription(
-                        "Bạn không lựa chọn trong 30 giây.\n" +
+                        "Bạn không lựa chọn trong 30 giây.\n\n" +
                         "Lượt đột phá đã được hủy."
                     )
-
                     .setFooter({
                         text:
-                            "Không mất Tu Vi và không mất vật phẩm."
+                            "Không mất Tu Vi, không mất vật phẩm và không bị cooldown."
                     });
 
             return interaction.editReply({
@@ -849,15 +786,20 @@ module.exports = {
                 ],
 
                 components: []
-
             });
         }
 
         // =================================================
-        // BẤM NÚT → KÍCH HOẠT COOLDOWN 20 GIÂY
+        // QUAN TRỌNG
         //
-        // QUAN TRỌNG:
-        // TỪ CHỐI CŨNG BỊ COOLDOWN
+        // BẤM ĐỒNG Ý:
+        // → COOLDOWN 20 GIÂY
+        //
+        // BẤM TỪ CHỐI:
+        // → CŨNG COOLDOWN 20 GIÂY
+        //
+        // KHÔNG BẤM:
+        // → KHÔNG COOLDOWN
         // =================================================
 
         dotPhaCooldown.set(
@@ -866,40 +808,32 @@ module.exports = {
         );
 
         // =================================================
-        // TỪ CHỐI
+        // TỪ CHỐI ĐỘT PHÁ
         // =================================================
 
         if (
             buttonInteraction.customId ===
-            "dotpha_cancel_" + userId
+            `dotpha_cancel_${userId}`
         ) {
 
             const cancelEmbed =
                 new EmbedBuilder()
-
-                    .setColor(
-                        0xe74c3c
-                    )
-
+                    .setColor(0xe74c3c)
                     .setTitle(
                         "❌ ĐÃ TỪ CHỐI ĐỘT PHÁ"
                     )
-
                     .setDescription(
-
                         "Bạn đã hủy lần đột phá này.\n\n" +
 
                         "💎 Tu Vi: **Không mất**\n" +
+
                         "💊 Vật phẩm: **Không mất**\n" +
+
                         "⏳ Cooldown: **20 giây**"
-
                     )
-
                     .setFooter({
-
                         text:
                             "Bạn vẫn phải chờ 20 giây trước khi dùng /dotpha lại."
-
                     });
 
             await buttonInteraction.update({
@@ -909,19 +843,18 @@ module.exports = {
                 ],
 
                 components: []
-
             });
 
             return;
         }
 
         // =================================================
-        // ĐỒNG Ý
+        // ĐỒNG Ý ĐỘT PHÁ
         // =================================================
 
         if (
             buttonInteraction.customId ===
-            "dotpha_confirm_" + userId
+            `dotpha_confirm_${userId}`
         ) {
 
             await buttonInteraction.update({
@@ -929,40 +862,25 @@ module.exports = {
                 embeds: [
 
                     new EmbedBuilder()
-
-                        .setColor(
-                            0xf1c40f
-                        )
-
+                        .setColor(0xf1c40f)
                         .setTitle(
                             "⚡ ĐANG ĐỘT PHÁ..."
                         )
-
                         .setDescription(
-
                             "🌩️ Thiên kiếp đang giáng xuống...\n\n" +
 
-                            "**" +
-                            realm.name +
-                            " " +
-                            currentStage +
-                            " tầng " +
-                            currentTier +
-                            "**"
+                            `🌱 **${realm.name} ${currentStage} tầng ${currentTier}**\n\n` +
 
+                            "⚔️ Đang tính toán kết quả..."
                         )
-
                         .setFooter({
-
                             text:
                                 "Kết quả đang được tính..."
-
                         })
 
                 ],
 
                 components: []
-
             });
 
             // =================================================
@@ -983,21 +901,19 @@ module.exports = {
                 roll <= successRate;
 
             // =================================================
-            // THẤT BẠI
+            // ĐỘT PHÁ THẤT BẠI
             // =================================================
 
             if (!success) {
 
+                // Mất ngẫu nhiên 1 → 10.000 Tu Vi
                 const lostTuVi =
                     Math.min(
-
                         currentTuVi,
-
                         Math.floor(
                             Math.random() *
                             10000
                         ) + 1
-
                     );
 
                 const newTuVi =
@@ -1008,106 +924,71 @@ module.exports = {
                     );
 
                 updatePlayer(
-
                     userId,
-
                     {
                         tuvi:
                             newTuVi
                     }
-
                 );
 
                 const failEmbed =
                     new EmbedBuilder()
-
-                        .setColor(
-                            0xe74c3c
-                        )
-
+                        .setColor(0xe74c3c)
                         .setTitle(
                             "💥 ĐỘT PHÁ THẤT BẠI"
                         )
-
                         .setDescription(
-
-                            "🌱 **" +
-                            realm.name +
-                            " " +
-                            currentStage +
-                            " tầng " +
-                            currentTier +
-                            "**\n\n" +
+                            `🌱 **${realm.name} ${currentStage} tầng ${currentTier}**\n\n` +
 
                             "Thiên kiếp phản phệ, Tu Vi bị tổn hao!"
-
                         )
-
                         .addFields(
 
                             {
                                 name:
                                     "🎲 Tỷ lệ thành công",
-
                                 value:
-                                    successRate +
-                                    "%",
-
+                                    `${successRate}%`,
                                 inline: true
                             },
 
                             {
                                 name:
                                     "🎯 Kết quả",
-
                                 value:
-                                    String(roll),
-
+                                    `${roll}`,
                                 inline: true
                             },
 
                             {
                                 name:
                                     "💥 Tu Vi mất",
-
                                 value:
-                                    "-" +
-                                    lostTuVi
-                                        .toLocaleString(),
-
+                                    `-${lostTuVi.toLocaleString()}`,
                                 inline: true
                             },
 
                             {
                                 name:
                                     "⚔️ Tu Vi còn lại",
-
                                 value:
-                                    newTuVi
-                                        .toLocaleString(),
-
+                                    newTuVi.toLocaleString(),
                                 inline: true
                             },
 
                             {
                                 name:
                                     "💊 Vật phẩm",
-
                                 value:
                                     requiredItem
                                         ? "Không bị mất"
                                         : "Không yêu cầu",
-
                                 inline: true
                             }
-
                         )
-
                         .setFooter({
-
                             text:
-                                "Có thể đột phá lại sau 20 giây."
-
+                                "Có thể dùng /dotpha lại sau 20 giây."
                         });
 
                 return buttonInteraction.editReply({
@@ -1117,7 +998,6 @@ module.exports = {
                     ],
 
                     components: []
-
                 });
             }
 
@@ -1140,36 +1020,30 @@ module.exports = {
                 realm.max
             ) {
 
+                // -------------------------------------------------
+                // ĐÃ ĐẠT CẢNH GIỚI CUỐI
+                // -------------------------------------------------
+
                 if (
-                    !realms[
-                        index + 1
-                    ]
+                    !realms[index + 1]
                 ) {
 
                     const maxEmbed =
                         new EmbedBuilder()
-
-                            .setColor(
-                                0x9b59b6
-                            )
-
+                            .setColor(0x9b59b6)
                             .setTitle(
-                                "🌌 ĐẠI ĐẠO TỐI CAO"
+                                "🌌 CHÂN TIÊN VIÊN MÃN"
                             )
-
                             .setDescription(
-
                                 "Bạn đã đạt:\n\n" +
-                                "**Đại Đạo Viên Mãn tầng 12**\n\n" +
-                                "Không còn cảnh giới nào cao hơn."
 
+                                "**Chân Tiên Viên Mãn tầng 12**\n\n" +
+
+                                "Đây là cảnh giới cao nhất trong hệ thống 12 cảnh giới."
                             )
-
                             .setFooter({
-
                                 text:
                                     "Cooldown 20 giây vẫn được áp dụng."
-
                             });
 
                     return buttonInteraction.editReply({
@@ -1179,10 +1053,10 @@ module.exports = {
                         ],
 
                         components: []
-
                     });
                 }
 
+                // Sang cảnh giới tiếp theo
                 newRealmIndex =
                     index + 1;
 
@@ -1198,7 +1072,7 @@ module.exports = {
             // =================================================
             // TRỪ VẬT PHẨM
             //
-            // CHỈ TRỪ KHI ĐỘT PHÁ THÀNH CÔNG
+            // CHỈ TRỪ KHI THÀNH CÔNG
             // =================================================
 
             if (requiredItem) {
@@ -1216,39 +1090,31 @@ module.exports = {
                         embeds: [
 
                             new EmbedBuilder()
-
-                                .setColor(
-                                    0xe74c3c
-                                )
-
+                                .setColor(0xe74c3c)
                                 .setTitle(
                                     "❌ KHÔNG THỂ HOÀN TẤT ĐỘT PHÁ"
                                 )
-
                                 .setDescription(
-
                                     "Vật phẩm yêu cầu không còn trong túi đồ.\n\n" +
+
+                                    `💊 Vật phẩm: **${requiredItem.name}**\n\n` +
+
                                     "Đột phá chưa được lưu."
-
                                 )
-
                                 .setFooter({
-
                                     text:
                                         "Cooldown 20 giây vẫn được áp dụng."
-
                                 })
 
                         ],
 
                         components: []
-
                     });
                 }
             }
 
             // =================================================
-            // HỆ SỐ x9
+            // HỆ SỐ TĂNG CHỈ SỐ
             // =================================================
 
             const BREAKTHROUGH_MULTIPLIER =
@@ -1258,34 +1124,36 @@ module.exports = {
                 newTier;
 
             // =================================================
-            // CHỈ SỐ TĂNG
+            // TĂNG HP
             // =================================================
 
             const hpIncrease =
                 Math.floor(
-
                     newRealm.stats.hp *
                     tierMultiplier *
                     BREAKTHROUGH_MULTIPLIER
-
                 );
+
+            // =================================================
+            // TĂNG CÔNG
+            // =================================================
 
             const congIncrease =
                 Math.floor(
-
                     newRealm.stats.cong *
                     tierMultiplier *
                     BREAKTHROUGH_MULTIPLIER
-
                 );
+
+            // =================================================
+            // TĂNG THỦ
+            // =================================================
 
             const thuIncrease =
                 Math.floor(
-
                     newRealm.stats.thu *
                     tierMultiplier *
                     BREAKTHROUGH_MULTIPLIER
-
                 );
 
             // =================================================
@@ -1353,11 +1221,8 @@ module.exports = {
             // =================================================
 
             updatePlayer(
-
                 userId,
-
                 {
-
                     canhGioi:
                         newRealm.name,
 
@@ -1384,9 +1249,7 @@ module.exports = {
 
                     thu:
                         newThu
-
                 }
-
             );
 
             // =================================================
@@ -1399,154 +1262,93 @@ module.exports = {
             if (requiredItem) {
 
                 itemText =
-                    "\n💊 **Đã sử dụng:** " +
-                    requiredItem.name;
+                    `\n💊 **Đã sử dụng:** ${requiredItem.name}`;
             }
 
             // =================================================
-            // THÀNH CÔNG
+            // THÔNG BÁO THÀNH CÔNG
             // =================================================
 
             const successEmbed =
                 new EmbedBuilder()
-
-                    .setColor(
-                        0x2ecc71
-                    )
-
+                    .setColor(0x2ecc71)
                     .setTitle(
                         "⚡ ĐỘT PHÁ THÀNH CÔNG!"
                     )
-
                     .setDescription(
 
-                        "🌌 **" +
-                        realm.name +
-                        " " +
-                        currentStage +
-                        " tầng " +
-                        currentTier +
-                        "**\n" +
+                        `🌌 **${realm.name} ${currentStage} tầng ${currentTier}**\n` +
 
-                        "⬇️\n" +
+                        `⬇️\n` +
 
-                        "✨ **" +
-                        newRealm.name +
-                        " " +
-                        newStage +
-                        " tầng " +
-                        newTier +
-                        "**" +
+                        `✨ **${newRealm.name} ${newStage} tầng ${newTier}**` +
 
                         itemText
-
                     )
-
                     .addFields(
 
                         {
                             name:
                                 "📈 Tỷ lệ thành công",
-
                             value:
-                                successRate +
-                                "%",
-
+                                `${successRate}%`,
                             inline: true
                         },
 
                         {
                             name:
                                 "🎯 Kết quả",
-
                             value:
-                                String(roll),
-
+                                `${roll}`,
                             inline: true
                         },
 
                         {
                             name:
                                 "⚔️ Tu Vi",
-
                             value:
-                                remainingTuVi
-                                    .toLocaleString(),
-
+                                remainingTuVi.toLocaleString(),
                             inline: true
                         },
 
                         {
                             name:
                                 "🌱 Cảnh giới",
-
                             value:
-                                "**" +
-                                newRealm.name +
-                                " " +
-                                newStage +
-                                " tầng " +
-                                newTier +
-                                "**",
-
+                                `**${newRealm.name} ${newStage} tầng ${newTier}**`,
                             inline: false
                         },
 
                         {
                             name:
                                 "❤️ HP",
-
                             value:
-                                "+" +
-                                hpIncrease
-                                    .toLocaleString() +
-                                "\nTổng: **" +
-                                newMaxHp
-                                    .toLocaleString() +
-                                "**",
-
+                                `+${hpIncrease.toLocaleString()}\n` +
+                                `Tổng: **${newMaxHp.toLocaleString()}**`,
                             inline: true
                         },
 
                         {
                             name:
                                 "⚔️ Công",
-
                             value:
-                                "+" +
-                                congIncrease
-                                    .toLocaleString() +
-                                "\nTổng: **" +
-                                newCong
-                                    .toLocaleString() +
-                                "**",
-
+                                `+${congIncrease.toLocaleString()}\n` +
+                                `Tổng: **${newCong.toLocaleString()}**`,
                             inline: true
                         },
 
                         {
                             name:
                                 "🛡️ Thủ",
-
                             value:
-                                "+" +
-                                thuIncrease
-                                    .toLocaleString() +
-                                "\nTổng: **" +
-                                newThu
-                                    .toLocaleString() +
-                                "**",
-
+                                `+${thuIncrease.toLocaleString()}\n` +
+                                `Tổng: **${newThu.toLocaleString()}**`,
                             inline: true
                         }
-
                     )
-
                     .setFooter({
-
                         text:
-                            "Hồng Hoang Đại Lục • Cooldown 20 giây"
-
+                            "Hồng Hoang Đại Lục • 12 cảnh giới • 12 tầng • Cooldown 20 giây"
                     });
 
             return buttonInteraction.editReply({
@@ -1556,9 +1358,7 @@ module.exports = {
                 ],
 
                 components: []
-
             });
         }
     }
 };
-```
