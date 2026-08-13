@@ -11,111 +11,35 @@ const {
 
 const fs = require("fs");
 const path = require("path");
-
-const dataPath = path.join(__dirname, "data", "data.json");
-
-// =====================================================
-// DATABASE CODE
-// =====================================================
-
-const codePath = path.join(__dirname, "data", "admin_codes.json");
-
-function loadCodes() {
-    try {
-        if (!fs.existsSync(codePath)) {
-            return {};
-        }
-
-        return JSON.parse(
-            fs.readFileSync(codePath, "utf8")
-        );
-    } catch (error) {
-        console.error(
-            "❌ Lỗi đọc admin_codes.json:",
-            error
-        );
-        return {};
-    }
-}
-
-function saveCodes(codes) {
-    try {
-        fs.writeFileSync(
-            codePath,
-            JSON.stringify(codes, null, 2),
-            "utf8"
-        );
-
-        return true;
-    } catch (error) {
-        console.error(
-            "❌ Lỗi lưu admin_codes.json:",
-            error
-        );
-
-        return false;
-    }
-}
+const db = require("./database");
 
 // =====================================================
-// DATABASE
+// FILE PHỤ
 // =====================================================
 
-function loadData() {
-    if (!fs.existsSync(dataPath)) {
-        return {
-            users: {},
-            relationships: {}
-        };
-    }
+const DATA_DIR = "/app/data";
 
-    return JSON.parse(
-        fs.readFileSync(dataPath, "utf8")
-    );
-}
+const CODE_FILE =
+    path.join(DATA_DIR, "admin_codes.json");
 
-function saveData(data) {
-    fs.writeFileSync(
-        dataPath,
-        JSON.stringify(data, null, 2)
-    );
-}
+const REL_FILE =
+    path.join(DATA_DIR, "relationships.json");
 
-function createUser(data, id) {
+const OLD_CODE_FILE =
+    path.join(__dirname, "data", "admin_codes.json");
 
-    if (!data.users) {
-        data.users = {};
-    }
-
-    if (!data.users[id]) {
-        data.users[id] = {
-            tuvi: 0,
-            linhthach: 0,
-            realm: 0,
-            congphap: [],
-            dan: {},
-            trangbi: {}
-        };
-    }
-
-    if (!data.users[id].congphap) {
-        data.users[id].congphap = [];
-    }
-
-    if (!data.users[id].dan) {
-        data.users[id].dan = {};
-    }
-
-    if (!data.users[id].trangbi) {
-        data.users[id].trangbi = {};
-    }
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, {
+        recursive: true
+    });
 }
 
 // =====================================================
 // CẢNH GIỚI
+// KHỚP VỚI HỆ THỐNG HIỆN TẠI
 // =====================================================
 
-const realms = [
+const REALMS = [
     "Phàm Nhân",
     "Luyện Khí",
     "Trúc Cơ",
@@ -126,33 +50,299 @@ const realms = [
     "Hợp Thể",
     "Đại Thừa",
     "Độ Kiếp",
-    "Tán Tiên",
+    "Tiên Nhân",
     "Chân Tiên",
+    "Thiên Tiên",
+    "Huyền Tiên",
     "Kim Tiên",
-    "Tiên Vương",
-    "Tiên Đế",
     "Thánh Nhân",
     "Thiên Đạo",
     "Đại Đạo"
 ];
 
 // =====================================================
-// LỆNH /ADMIN
+// CODE
 // =====================================================
 
-const command = new SlashCommandBuilder()
-    .setName("admin")
-    .setDescription("🛡️ Bảng điều khiển quản trị")
-    .setDefaultMemberPermissions(
-        PermissionFlagsBits.Administrator
+function loadCodes() {
+
+    try {
+
+        if (fs.existsSync(CODE_FILE)) {
+
+            const data =
+                JSON.parse(
+                    fs.readFileSync(
+                        CODE_FILE,
+                        "utf8"
+                    )
+                );
+
+            return data &&
+                typeof data === "object"
+                ? data
+                : {};
+        }
+
+        // Hỗ trợ code cũ
+
+        if (fs.existsSync(OLD_CODE_FILE)) {
+
+            const data =
+                JSON.parse(
+                    fs.readFileSync(
+                        OLD_CODE_FILE,
+                        "utf8"
+                    )
+                );
+
+            return data &&
+                typeof data === "object"
+                ? data
+                : {};
+        }
+
+    } catch (error) {
+
+        console.error(
+            "❌ Lỗi đọc admin_codes.json:",
+            error
+        );
+    }
+
+    return {};
+}
+
+function saveCodes(codes) {
+
+    try {
+
+        fs.writeFileSync(
+            CODE_FILE,
+            JSON.stringify(
+                codes,
+                null,
+                2
+            ),
+            "utf8"
+        );
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "❌ Lỗi lưu admin_codes.json:",
+            error
+        );
+
+        return false;
+    }
+}
+
+// =====================================================
+// ĐẠO LỮ
+// =====================================================
+
+function loadRelationships() {
+
+    try {
+
+        if (!fs.existsSync(REL_FILE)) {
+            return {};
+        }
+
+        const data =
+            JSON.parse(
+                fs.readFileSync(
+                    REL_FILE,
+                    "utf8"
+                )
+            );
+
+        return data &&
+            typeof data === "object"
+            ? data
+            : {};
+
+    } catch (error) {
+
+        console.error(
+            "❌ Lỗi đọc relationships.json:",
+            error
+        );
+
+        return {};
+    }
+}
+
+function saveRelationships(data) {
+
+    try {
+
+        fs.writeFileSync(
+            REL_FILE,
+            JSON.stringify(
+                data,
+                null,
+                2
+            ),
+            "utf8"
+        );
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "❌ Lỗi lưu relationships.json:",
+            error
+        );
+
+        return false;
+    }
+}
+
+// =====================================================
+// PLAYER
+// =====================================================
+
+function getOrCreatePlayer(
+    id,
+    username = "Admin"
+) {
+
+    let player =
+        db.getPlayer(id);
+
+    if (!player) {
+
+        player =
+            db.createPlayer(
+                id,
+                username
+            );
+    }
+
+    if (!player) {
+
+        throw new Error(
+            "Không thể tạo player"
+        );
+    }
+
+    const tuiDo =
+        player.tuiDo || {};
+
+    if (
+        !Array.isArray(
+            tuiDo.danDuoc
+        )
+    ) {
+        tuiDo.danDuoc = [];
+    }
+
+    if (
+        !Array.isArray(
+            tuiDo.vatPham
+        )
+    ) {
+        tuiDo.vatPham = [];
+    }
+
+    if (
+        !Array.isArray(
+            tuiDo.linhThu
+        )
+    ) {
+        tuiDo.linhThu = [];
+    }
+
+    if (
+        !Array.isArray(
+            player.congphap
+        )
+    ) {
+        player.congphap = [];
+    }
+
+    db.updatePlayer(
+        id,
+        {
+            tuiDo,
+            congphap:
+                player.congphap
+        }
     );
+
+    return db.getPlayer(id);
+}
+
+// =====================================================
+// LẤY ID
+// =====================================================
+
+function getId(interaction) {
+
+    return interaction.fields
+        .getTextInputValue(
+            "user_id"
+        )
+        .replace(
+            /[<@!>]/g,
+            ""
+        )
+        .trim();
+}
+
+function validId(id) {
+
+    return /^\d{17,20}$/.test(id);
+}
+
+// =====================================================
+// INPUT
+// =====================================================
+
+function input(
+    customId,
+    label,
+    placeholder,
+    required = true
+) {
+
+    return new TextInputBuilder()
+        .setCustomId(customId)
+        .setLabel(label)
+        .setPlaceholder(
+            placeholder
+        )
+        .setStyle(
+            TextInputStyle.Short
+        )
+        .setRequired(required);
+}
+
+// =====================================================
+// /ADMIN
+// =====================================================
+
+const command =
+    new SlashCommandBuilder()
+        .setName("admin")
+        .setDescription(
+            "🛡️ Bảng điều khiển quản trị"
+        )
+        .setDefaultMemberPermissions(
+            PermissionFlagsBits.Administrator
+        );
 
 module.exports = {
 
     data: command,
 
     // =================================================
-    // /ADMIN
+    // MỞ ADMIN PANEL
     // =================================================
 
     async execute(interaction) {
@@ -162,6 +352,7 @@ module.exports = {
                 PermissionFlagsBits.Administrator
             )
         ) {
+
             return interaction.reply({
                 content:
                     "🚫 Bạn không có quyền sử dụng Admin Panel!",
@@ -169,137 +360,174 @@ module.exports = {
             });
         }
 
-        // =================================================
-        // MENU
-        // =================================================
-
         const menu =
             new StringSelectMenuBuilder()
-                .setCustomId("admin_menu")
+                .setCustomId(
+                    "admin_menu"
+                )
                 .setPlaceholder(
                     "🛡️ Chọn chức năng quản trị..."
                 )
                 .addOptions([
 
                     {
-                        label: "Cộng Tu Vi",
+                        label:
+                            "Cộng Tu Vi",
                         description:
-                            "Cộng tu vi cho người chơi",
-                        value: "add_tuvi",
-                        emoji: "✨"
+                            "Cộng tu vi",
+                        value:
+                            "add_tuvi",
+                        emoji:
+                            "✨"
                     },
 
                     {
-                        label: "Trừ Tu Vi",
+                        label:
+                            "Trừ Tu Vi",
                         description:
-                            "Trừ tu vi của người chơi",
-                        value: "remove_tuvi",
-                        emoji: "❌"
+                            "Trừ tu vi",
+                        value:
+                            "remove_tuvi",
+                        emoji:
+                            "❌"
                     },
 
                     {
-                        label: "Cộng Linh Thạch",
+                        label:
+                            "Cộng Linh Thạch",
                         description:
                             "Cộng linh thạch",
-                        value: "add_linhthach",
-                        emoji: "💰"
+                        value:
+                            "add_linhthach",
+                        emoji:
+                            "💰"
                     },
 
                     {
-                        label: "Trừ Linh Thạch",
+                        label:
+                            "Trừ Linh Thạch",
                         description:
                             "Trừ linh thạch",
-                        value: "remove_linhthach",
-                        emoji: "💸"
+                        value:
+                            "remove_linhthach",
+                        emoji:
+                            "💸"
                     },
 
                     {
-                        label: "Thiết Lập Cảnh Giới",
+                        label:
+                            "Thiết Lập Cảnh Giới",
                         description:
                             "Thiết lập cảnh giới",
-                        value: "set_realm",
-                        emoji: "🌟"
+                        value:
+                            "set_realm",
+                        emoji:
+                            "🌟"
                     },
 
                     {
-                        label: "Đạo Lữ",
+                        label:
+                            "Đạo Lữ",
                         description:
                             "Thêm hoặc xóa đạo lữ",
-                        value: "daolu",
-                        emoji: "💞"
+                        value:
+                            "daolu",
+                        emoji:
+                            "💞"
                     },
 
                     {
-                        label: "Công Pháp",
+                        label:
+                            "Công Pháp",
                         description:
                             "Thêm hoặc xóa công pháp",
-                        value: "congphap",
-                        emoji: "📖"
+                        value:
+                            "congphap",
+                        emoji:
+                            "📖"
                     },
 
                     {
-                        label: "Đan Dược",
+                        label:
+                            "Đan Dược",
                         description:
                             "Thêm hoặc xóa đan dược",
-                        value: "danduoc",
-                        emoji: "💊"
+                        value:
+                            "danduoc",
+                        emoji:
+                            "💊"
                     },
 
                     {
-                        label: "Luyện Khí",
+                        label:
+                            "Luyện Khí",
                         description:
-                            "Trao pháp bảo / trang bị",
-                        value: "luyenkhi",
-                        emoji: "⚔️"
+                            "Trao vật phẩm / pháp bảo",
+                        value:
+                            "luyenkhi",
+                        emoji:
+                            "⚔️"
                     },
 
                     {
-                        label: "🔑 Tạo Code",
+                        label:
+                            "🔑 Tạo Code",
                         description:
                             "Tạo code nhận phần thưởng",
-                        value: "create_code",
-                        emoji: "🎁"
+                        value:
+                            "create_code",
+                        emoji:
+                            "🎁"
                     },
 
                     {
-                        label: "Reset Nhân Vật",
+                        label:
+                            "Reset Nhân Vật",
                         description:
-                            "Xóa dữ liệu người chơi",
-                        value: "reset",
-                        emoji: "♻️"
+                            "Reset dữ liệu nhân vật",
+                        value:
+                            "reset",
+                        emoji:
+                            "♻️"
                     }
 
                 ]);
 
-        const row =
-            new ActionRowBuilder()
-                .addComponents(menu);
-
-        const embed =
-            new EmbedBuilder()
-                .setColor(0x8e44ad)
-                .setTitle("🛡️ HỒNG HOANG ĐẠI LỤC")
-                .setDescription(
-                    "## ⚡ ADMIN PANEL\n\n" +
-                    "Chào mừng đến với hệ thống quản trị.\n\n" +
-                    "🔽 **Hãy chọn chức năng bên dưới để tiếp tục.**\n\n" +
-                    "🔒 Chỉ thành viên có quyền **Administrator** mới có thể sử dụng."
-                )
-                .setFooter({
-                    text:
-                        `Admin: ${interaction.user.tag}`
-                });
-
         return interaction.reply({
-            embeds: [embed],
-            components: [row],
+
+            embeds: [
+
+                new EmbedBuilder()
+                    .setColor(0x8e44ad)
+                    .setTitle(
+                        "🛡️ HỒNG HOANG ĐẠI LỤC"
+                    )
+                    .setDescription(
+                        "## ⚡ ADMIN PANEL\n\n" +
+                        "🔽 **Chọn chức năng bên dưới.**\n\n" +
+                        "🔒 Chỉ Admin mới sử dụng được."
+                    )
+                    .setFooter({
+                        text:
+                            `Admin: ${interaction.user.tag}`
+                    })
+
+            ],
+
+            components: [
+
+                new ActionRowBuilder()
+                    .addComponents(menu)
+
+            ],
+
             ephemeral: true
         });
     },
 
-    // =====================================================
-    // XỬ LÝ SELECT MENU
-    // =====================================================
+    // =================================================
+    // SELECT MENU
+    // =================================================
 
     async handleSelect(interaction) {
 
@@ -308,6 +536,7 @@ module.exports = {
                 PermissionFlagsBits.Administrator
             )
         ) {
+
             return interaction.reply({
                 content:
                     "🚫 Bạn không có quyền Admin!",
@@ -316,30 +545,33 @@ module.exports = {
         }
 
         const action =
-            interaction.values[0];
+            interaction.values?.[0];
+
+        if (!action) {
+
+            return interaction.reply({
+                content:
+                    "❌ Không xác định chức năng.",
+                ephemeral: true
+            });
+        }
+
+        const uid =
+            input(
+                "user_id",
+                "ID người chơi",
+                "Nhập ID Discord người chơi"
+            );
+
+        const amount =
+            input(
+                "amount",
+                "Số lượng",
+                "Ví dụ: 10000"
+            );
 
         const modal =
             new ModalBuilder();
-
-        const userIdInput =
-            new TextInputBuilder()
-                .setCustomId("user_id")
-                .setLabel("ID người chơi")
-                .setPlaceholder(
-                    "Nhập ID Discord người chơi"
-                )
-                .setStyle(TextInputStyle.Short)
-                .setRequired(true);
-
-        const amountInput =
-            new TextInputBuilder()
-                .setCustomId("amount")
-                .setLabel("Số lượng")
-                .setPlaceholder(
-                    "Ví dụ: 10000"
-                )
-                .setStyle(TextInputStyle.Short)
-                .setRequired(true);
 
         // =================================================
         // TU VI
@@ -361,14 +593,18 @@ module.exports = {
                 );
 
             modal.addComponents(
-                new ActionRowBuilder()
-                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(amountInput)
+                    .addComponents(uid),
+
+                new ActionRowBuilder()
+                    .addComponents(amount)
+
             );
 
-            return interaction.showModal(modal);
+            return interaction.showModal(
+                modal
+            );
         }
 
         // =================================================
@@ -391,31 +627,27 @@ module.exports = {
                 );
 
             modal.addComponents(
-                new ActionRowBuilder()
-                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(amountInput)
+                    .addComponents(uid),
+
+                new ActionRowBuilder()
+                    .addComponents(amount)
+
             );
 
-            return interaction.showModal(modal);
+            return interaction.showModal(
+                modal
+            );
         }
 
         // =================================================
         // CẢNH GIỚI
         // =================================================
 
-        if (action === "set_realm") {
-
-            const realmInput =
-                new TextInputBuilder()
-                    .setCustomId("realm")
-                    .setLabel("Tên cảnh giới")
-                    .setPlaceholder(
-                        "Ví dụ: Kim Đan"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+        if (
+            action === "set_realm"
+        ) {
 
             modal
                 .setCustomId(
@@ -426,41 +658,33 @@ module.exports = {
                 );
 
             modal.addComponents(
-                new ActionRowBuilder()
-                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(realmInput)
+                    .addComponents(uid),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        input(
+                            "realm",
+                            "Tên cảnh giới",
+                            "Ví dụ: Kim Tiên"
+                        )
+                    )
+
             );
 
-            return interaction.showModal(modal);
+            return interaction.showModal(
+                modal
+            );
         }
 
         // =================================================
         // ĐẠO LỮ
         // =================================================
 
-        if (action === "daolu") {
-
-            const partnerInput =
-                new TextInputBuilder()
-                    .setCustomId("partner")
-                    .setLabel("ID người còn lại")
-                    .setPlaceholder(
-                        "Nhập ID Discord"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
-
-            const typeInput =
-                new TextInputBuilder()
-                    .setCustomId("type")
-                    .setLabel("add hoặc remove")
-                    .setPlaceholder(
-                        "add = thêm | remove = xóa"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+        if (
+            action === "daolu"
+        ) {
 
             modal
                 .setCustomId(
@@ -471,44 +695,42 @@ module.exports = {
                 );
 
             modal.addComponents(
-                new ActionRowBuilder()
-                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(partnerInput),
+                    .addComponents(uid),
 
                 new ActionRowBuilder()
-                    .addComponents(typeInput)
+                    .addComponents(
+                        input(
+                            "partner",
+                            "ID đạo lữ",
+                            "Nhập ID Discord"
+                        )
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        input(
+                            "type",
+                            "add hoặc remove",
+                            "add = thêm | remove = xóa"
+                        )
+                    )
+
             );
 
-            return interaction.showModal(modal);
+            return interaction.showModal(
+                modal
+            );
         }
 
         // =================================================
         // CÔNG PHÁP
         // =================================================
 
-        if (action === "congphap") {
-
-            const nameInput =
-                new TextInputBuilder()
-                    .setCustomId("name")
-                    .setLabel("Tên công pháp")
-                    .setPlaceholder(
-                        "Ví dụ: Cửu Chuyển Huyền Công"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
-
-            const typeInput =
-                new TextInputBuilder()
-                    .setCustomId("type")
-                    .setLabel("add hoặc remove")
-                    .setPlaceholder(
-                        "add = thêm | remove = xóa"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+        if (
+            action === "congphap"
+        ) {
 
             modal
                 .setCustomId(
@@ -519,44 +741,42 @@ module.exports = {
                 );
 
             modal.addComponents(
-                new ActionRowBuilder()
-                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(nameInput),
+                    .addComponents(uid),
 
                 new ActionRowBuilder()
-                    .addComponents(typeInput)
+                    .addComponents(
+                        input(
+                            "name",
+                            "Tên công pháp",
+                            "Ví dụ: Cửu Chuyển Huyền Công"
+                        )
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        input(
+                            "type",
+                            "add hoặc remove",
+                            "add = thêm | remove = xóa"
+                        )
+                    )
+
             );
 
-            return interaction.showModal(modal);
+            return interaction.showModal(
+                modal
+            );
         }
 
         // =================================================
         // ĐAN DƯỢC
         // =================================================
 
-        if (action === "danduoc") {
-
-            const danNameInput =
-                new TextInputBuilder()
-                    .setCustomId("dan_name")
-                    .setLabel("Tên đan dược")
-                    .setPlaceholder(
-                        "Ví dụ: Đan Đổi Linh Căn"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
-
-            const danTypeInput =
-                new TextInputBuilder()
-                    .setCustomId("dan_type")
-                    .setLabel("add hoặc remove")
-                    .setPlaceholder(
-                        "add = thêm | remove = xóa"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+        if (
+            action === "danduoc"
+        ) {
 
             modal
                 .setCustomId(
@@ -567,109 +787,85 @@ module.exports = {
                 );
 
             modal.addComponents(
-                new ActionRowBuilder()
-                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(danNameInput),
+                    .addComponents(uid),
 
                 new ActionRowBuilder()
-                    .addComponents(amountInput),
+                    .addComponents(
+                        input(
+                            "dan_name",
+                            "Tên đan dược",
+                            "Ví dụ: Đan Đổi Linh Căn"
+                        )
+                    ),
 
                 new ActionRowBuilder()
-                    .addComponents(danTypeInput)
+                    .addComponents(amount),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        input(
+                            "dan_type",
+                            "add hoặc remove",
+                            "add = thêm | remove = xóa"
+                        )
+                    )
+
             );
 
-            return interaction.showModal(modal);
+            return interaction.showModal(
+                modal
+            );
         }
 
         // =================================================
         // LUYỆN KHÍ
         // =================================================
 
-        if (action === "luyenkhi") {
-
-            const itemInput =
-                new TextInputBuilder()
-                    .setCustomId("item")
-                    .setLabel("Tên pháp bảo / trang bị")
-                    .setPlaceholder(
-                        "Ví dụ: Hỗn Độn Chung"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+        if (
+            action === "luyenkhi"
+        ) {
 
             modal
                 .setCustomId(
                     "admin_modal_luyenkhi"
                 )
                 .setTitle(
-                    "⚔️ TRAO PHÁP BẢO"
+                    "⚔️ TRAO PHÁP BẢO / VẬT PHẨM"
                 );
 
             modal.addComponents(
-                new ActionRowBuilder()
-                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(itemInput),
+                    .addComponents(uid),
 
                 new ActionRowBuilder()
-                    .addComponents(amountInput)
+                    .addComponents(
+                        input(
+                            "item",
+                            "Tên vật phẩm",
+                            "Ví dụ: Hỗn Độn Chung"
+                        )
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(amount)
+
             );
 
-            return interaction.showModal(modal);
+            return interaction.showModal(
+                modal
+            );
         }
 
         // =================================================
         // TẠO CODE
         // =================================================
 
-        if (action === "create_code") {
-
-            const codeInput =
-                new TextInputBuilder()
-                    .setCustomId("code")
-                    .setLabel("Mã Code")
-                    .setPlaceholder(
-                        "Ví dụ: HONGHOANG2026"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
-
-            const rewardInput =
-                new TextInputBuilder()
-                    .setCustomId("reward")
-                    .setLabel("Phần thưởng")
-                    .setPlaceholder(
-                        "tuvi | linhthach | danduoc"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
-
-            const danNameInput =
-                new TextInputBuilder()
-                    .setCustomId("dan_name")
-                    .setLabel(
-                        "Tên đan dược (nếu danduoc)"
-                    )
-                    .setPlaceholder(
-                        "Ví dụ: Đan Đổi Linh Căn"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(false);
-
-            const codeAmountInput =
-                new TextInputBuilder()
-                    .setCustomId("code_amount")
-                    .setLabel(
-                        "Số lượng phần thưởng"
-                    )
-                    .setPlaceholder(
-                        "Ví dụ: 50000"
-                    )
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+        if (
+            action === "create_code"
+        ) {
 
             modal
                 .setCustomId(
@@ -680,27 +876,58 @@ module.exports = {
                 );
 
             modal.addComponents(
-                new ActionRowBuilder()
-                    .addComponents(codeInput),
 
                 new ActionRowBuilder()
-                    .addComponents(rewardInput),
+                    .addComponents(
+                        input(
+                            "code",
+                            "Mã Code",
+                            "Ví dụ: HONGHOANG2026"
+                        )
+                    ),
 
                 new ActionRowBuilder()
-                    .addComponents(danNameInput),
+                    .addComponents(
+                        input(
+                            "reward",
+                            "Phần thưởng",
+                            "tuvi | linhthach | danduoc"
+                        )
+                    ),
 
                 new ActionRowBuilder()
-                    .addComponents(codeAmountInput)
+                    .addComponents(
+                        input(
+                            "dan_name",
+                            "Tên đan dược",
+                            "Chỉ nhập khi reward = danduoc",
+                            false
+                        )
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        input(
+                            "code_amount",
+                            "Số lượng",
+                            "Ví dụ: 1"
+                        )
+                    )
+
             );
 
-            return interaction.showModal(modal);
+            return interaction.showModal(
+                modal
+            );
         }
 
         // =================================================
         // RESET
         // =================================================
 
-        if (action === "reset") {
+        if (
+            action === "reset"
+        ) {
 
             modal
                 .setCustomId(
@@ -712,16 +939,24 @@ module.exports = {
 
             modal.addComponents(
                 new ActionRowBuilder()
-                    .addComponents(userIdInput)
+                    .addComponents(uid)
             );
 
-            return interaction.showModal(modal);
+            return interaction.showModal(
+                modal
+            );
         }
+
+        return interaction.reply({
+            content:
+                "❌ Chức năng chưa được hỗ trợ.",
+            ephemeral: true
+        });
     },
 
-    // =====================================================
-    // XỬ LÝ MODAL
-    // =====================================================
+    // =================================================
+    // HANDLE MODAL
+    // =================================================
 
     async handleModal(interaction) {
 
@@ -730,6 +965,7 @@ module.exports = {
                 PermissionFlagsBits.Administrator
             )
         ) {
+
             return interaction.reply({
                 content:
                     "🚫 Bạn không có quyền sử dụng chức năng này!",
@@ -737,927 +973,1070 @@ module.exports = {
             });
         }
 
-        // =================================================
-        // TẠO CODE
-        // ĐẶT TRƯỚC PHẦN LẤY user_id
-        // =================================================
+        try {
 
-        if (
-            interaction.customId ===
-            "admin_modal_create_code"
-        ) {
+            // =================================================
+            // TẠO CODE
+            // =================================================
 
-            const code =
-                interaction.fields
-                    .getTextInputValue("code")
-                    .trim()
-                    .toUpperCase();
+            if (
+                interaction.customId ===
+                "admin_modal_create_code"
+            ) {
 
-            const reward =
-                interaction.fields
-                    .getTextInputValue("reward")
-                    .trim()
-                    .toLowerCase();
-
-            const danName =
-                interaction.fields
-                    .getTextInputValue("dan_name")
-                    .trim();
-
-            const amount =
-                Number(
+                const code =
                     interaction.fields
                         .getTextInputValue(
-                            "code_amount"
+                            "code"
                         )
                         .trim()
-                );
+                        .toUpperCase();
 
-            // ---------------------------------------------
-            // KIỂM TRA CODE
-            // ---------------------------------------------
-
-            if (
-                !/^[A-Z0-9_-]{3,32}$/.test(code)
-            ) {
-                return interaction.reply({
-                    content:
-                        "❌ Code phải dài 3-32 ký tự, chỉ gồm A-Z, 0-9, _ hoặc -.",
-                    ephemeral: true
-                });
-            }
-
-            // ---------------------------------------------
-            // KIỂM TRA PHẦN THƯỞNG
-            // ---------------------------------------------
-
-            if (
-                ![
-                    "tuvi",
-                    "linhthach",
-                    "danduoc"
-                ].includes(reward)
-            ) {
-                return interaction.reply({
-                    content:
-                        "❌ Phần thưởng phải là `tuvi`, `linhthach` hoặc `danduoc`.",
-                    ephemeral: true
-                });
-            }
-
-            // ---------------------------------------------
-            // KIỂM TRA TÊN ĐAN
-            // ---------------------------------------------
-
-            if (
-                reward === "danduoc" &&
-                !danName
-            ) {
-                return interaction.reply({
-                    content:
-                        "❌ Khi chọn `danduoc`, phải nhập tên đan dược!",
-                    ephemeral: true
-                });
-            }
-
-            // ---------------------------------------------
-            // KIỂM TRA SỐ LƯỢNG
-            // ---------------------------------------------
-
-            if (
-                !Number.isSafeInteger(amount) ||
-                amount <= 0
-            ) {
-                return interaction.reply({
-                    content:
-                        "❌ Số lượng phải là số nguyên lớn hơn 0!",
-                    ephemeral: true
-                });
-            }
-
-            // ---------------------------------------------
-            // ĐỌC CODE
-            // ---------------------------------------------
-
-            const codes =
-                loadCodes();
-
-            // ---------------------------------------------
-            // CHỐNG TRÙNG CODE
-            // ---------------------------------------------
-
-            if (codes[code]) {
-                return interaction.reply({
-                    content:
-                        `❌ Code **${code}** đã tồn tại!`,
-                    ephemeral: true
-                });
-            }
-
-            // ---------------------------------------------
-            // TẠO CODE
-            // ---------------------------------------------
-
-            codes[code] = {
-                reward,
-                amount,
-
-                ...(reward === "danduoc"
-                    ? {
-                        danName
-                    }
-                    : {}),
-
-                usedBy: [],
-
-                createdBy:
-                    interaction.user.id,
-
-                createdAt:
-                    Date.now()
-            };
-
-            // ---------------------------------------------
-            // LƯU
-            // ---------------------------------------------
-
-            if (!saveCodes(codes)) {
-                return interaction.reply({
-                    content:
-                        "❌ Không thể lưu code!",
-                    ephemeral: true
-                });
-            }
-
-            // ---------------------------------------------
-            // THÔNG BÁO
-            // ---------------------------------------------
-
-            return interaction.reply({
-
-                embeds: [
-
-                    new EmbedBuilder()
-
-                        .setColor(
-                            0x2ecc71
-                        )
-
-                        .setTitle(
-                            "🔑 TẠO CODE THÀNH CÔNG"
-                        )
-
-                        .setDescription(
-
-                            `🔐 **Code:** \`${code}\`\n\n` +
-
-                            (
-                                reward === "danduoc"
-
-                                    ? `💊 **Đan Dược:** ${danName}\n`
-
-                                    : `🎁 **Phần thưởng:** ${reward}\n`
-                            ) +
-
-                            `📦 **Số lượng:** ${amount.toLocaleString()}\n\n` +
-
-                            "👤 Mỗi người chơi chỉ dùng được 1 lần."
-                        )
-                ],
-
-                ephemeral: true
-            });
-        }
-
-        // =================================================
-        // DATABASE
-        // =================================================
-
-        const data =
-            loadData();
-
-        const id =
-            interaction.fields
-                .getTextInputValue("user_id")
-                .replace(/[<@!>]/g, "")
-                .trim();
-
-        // =================================================
-        // KIỂM TRA ID
-        // =================================================
-
-        if (
-            !/^\d{17,20}$/.test(id)
-        ) {
-
-            return interaction.reply({
-                content:
-                    "❌ ID Discord không hợp lệ!",
-                ephemeral: true
-            });
-        }
-
-        createUser(
-            data,
-            id
-        );
-
-        // =================================================
-        // CỘNG TU VI
-        // =================================================
-
-        if (
-            interaction.customId ===
-            "admin_modal_add_tuvi"
-        ) {
-
-            const amount =
-                Number(
+                const reward =
                     interaction.fields
                         .getTextInputValue(
-                            "amount"
+                            "reward"
                         )
-                );
+                        .trim()
+                        .toLowerCase();
 
-            if (
-                !Number.isSafeInteger(amount) ||
-                amount <= 0
-            ) {
-                return interaction.reply({
-                    content:
-                        "❌ Số lượng tu vi không hợp lệ!",
-                    ephemeral: true
-                });
-            }
-
-            data.users[id].tuvi += amount;
-
-            saveData(data);
-
-            return interaction.reply({
-                content:
-                    `✨ Đã cộng **${amount.toLocaleString()} Tu Vi** cho <@${id}>.`,
-                ephemeral: true
-            });
-        }
-
-        // =================================================
-        // TRỪ TU VI
-        // =================================================
-
-        if (
-            interaction.customId ===
-            "admin_modal_remove_tuvi"
-        ) {
-
-            const amount =
-                Number(
+                const danName =
                     interaction.fields
                         .getTextInputValue(
-                            "amount"
+                            "dan_name"
                         )
-                );
+                        .trim();
 
-            if (
-                !Number.isSafeInteger(amount) ||
-                amount <= 0
-            ) {
-                return interaction.reply({
-                    content:
-                        "❌ Số lượng tu vi không hợp lệ!",
-                    ephemeral: true
-                });
-            }
-
-            data.users[id].tuvi =
-                Math.max(
-                    0,
-                    data.users[id].tuvi - amount
-                );
-
-            saveData(data);
-
-            return interaction.reply({
-                content:
-                    `❌ Đã trừ **${amount.toLocaleString()} Tu Vi** của <@${id}>.`,
-                ephemeral: true
-            });
-        }
-
-        // =================================================
-        // CỘNG LINH THẠCH
-        // =================================================
-
-        if (
-            interaction.customId ===
-            "admin_modal_add_linhthach"
-        ) {
-
-            const amount =
-                Number(
-                    interaction.fields
-                        .getTextInputValue(
-                            "amount"
-                        )
-                );
-
-            if (
-                !Number.isSafeInteger(amount) ||
-                amount <= 0
-            ) {
-                return interaction.reply({
-                    content:
-                        "❌ Số lượng linh thạch không hợp lệ!",
-                    ephemeral: true
-                });
-            }
-
-            data.users[id].linhthach +=
-                amount;
-
-            saveData(data);
-
-            return interaction.reply({
-                content:
-                    `💰 Đã cộng **${amount.toLocaleString()} Linh Thạch** cho <@${id}>.`,
-                ephemeral: true
-            });
-        }
-
-        // =================================================
-        // TRỪ LINH THẠCH
-        // =================================================
-
-        if (
-            interaction.customId ===
-            "admin_modal_remove_linhthach"
-        ) {
-
-            const amount =
-                Number(
-                    interaction.fields
-                        .getTextInputValue(
-                            "amount"
-                        )
-                );
-
-            if (
-                !Number.isSafeInteger(amount) ||
-                amount <= 0
-            ) {
-                return interaction.reply({
-                    content:
-                        "❌ Số lượng linh thạch không hợp lệ!",
-                    ephemeral: true
-                });
-            }
-
-            data.users[id].linhthach =
-                Math.max(
-                    0,
-                    data.users[id].linhthach -
-                    amount
-                );
-
-            saveData(data);
-
-            return interaction.reply({
-                content:
-                    `💸 Đã trừ **${amount.toLocaleString()} Linh Thạch** của <@${id}>.`,
-                ephemeral: true
-            });
-        }
-
-        // =================================================
-        // THIẾT LẬP CẢNH GIỚI
-        // =================================================
-
-        if (
-            interaction.customId ===
-            "admin_modal_set_realm"
-        ) {
-
-            const realmName =
-                interaction.fields
-                    .getTextInputValue(
-                        "realm"
-                    )
-                    .trim();
-
-            const found =
-                realms.find(
-                    x =>
-                        x.toLowerCase() ===
-                        realmName.toLowerCase()
-                );
-
-            if (!found) {
-
-                return interaction.reply({
-                    content:
-                        `❌ Cảnh giới không tồn tại!\n\n` +
-                        `📜 Danh sách:\n` +
-                        realms
-                            .map(
-                                x =>
-                                    `• ${x}`
+                const amount =
+                    Number(
+                        interaction.fields
+                            .getTextInputValue(
+                                "code_amount"
                             )
-                            .join("\n"),
-                    ephemeral: true
-                });
-            }
-
-            data.users[id].realm =
-                realms.indexOf(found);
-
-            data.users[id].canhGioi =
-                found;
-
-            saveData(data);
-
-            return interaction.reply({
-                content:
-                    `🌟 Đã thiết lập cảnh giới của <@${id}> thành **${found}**.`,
-                ephemeral: true
-            });
-        }
-
-        // =================================================
-        // ĐẠO LỮ
-        // =================================================
-
-        if (
-            interaction.customId ===
-            "admin_modal_daolu"
-        ) {
-
-            const partner =
-                interaction.fields
-                    .getTextInputValue(
-                        "partner"
-                    )
-                    .replace(/[<@!>]/g, "")
-                    .trim();
-
-            const type =
-                interaction.fields
-                    .getTextInputValue(
-                        "type"
-                    )
-                    .toLowerCase()
-                    .trim();
-
-            if (
-                !/^\d{17,20}$/.test(partner)
-            ) {
-                return interaction.reply({
-                    content:
-                        "❌ ID đạo lữ không hợp lệ!",
-                    ephemeral: true
-                });
-            }
-
-            if (
-                !["add", "remove"]
-                    .includes(type)
-            ) {
-                return interaction.reply({
-                    content:
-                        "❌ Hãy nhập `add` hoặc `remove`.",
-                    ephemeral: true
-                });
-            }
-
-            if (!data.relationships) {
-                data.relationships = {};
-            }
-
-            if (!data.relationships[id]) {
-                data.relationships[id] = [];
-            }
-
-            if (
-                type === "add"
-            ) {
-
-                if (
-                    !data.relationships[id]
-                        .includes(partner)
-                ) {
-                    data.relationships[id]
-                        .push(partner);
-                }
-
-                if (
-                    !data.relationships[partner]
-                ) {
-                    data.relationships[partner] = [];
-                }
-
-                if (
-                    !data.relationships[partner]
-                        .includes(id)
-                ) {
-                    data.relationships[partner]
-                        .push(id);
-                }
-
-                saveData(data);
-
-                return interaction.reply({
-                    content:
-                        `💞 Đã thiết lập <@${id}> và <@${partner}> trở thành đạo lữ.`,
-                    ephemeral: true
-                });
-            }
-
-            data.relationships[id] =
-                data.relationships[id]
-                    .filter(
-                        x =>
-                            x !== partner
+                            .trim()
                     );
 
-            if (
-                data.relationships[partner]
-            ) {
-
-                data.relationships[partner] =
-                    data.relationships[partner]
-                        .filter(
-                            x =>
-                                x !== id
-                        );
-            }
-
-            saveData(data);
-
-            return interaction.reply({
-                content:
-                    `💔 Đã xóa quan hệ đạo lữ giữa <@${id}> và <@${partner}>.`,
-                ephemeral: true
-            });
-        }
-
-        // =================================================
-        // CÔNG PHÁP
-        // =================================================
-
-        if (
-            interaction.customId ===
-            "admin_modal_congphap"
-        ) {
-
-            const name =
-                interaction.fields
-                    .getTextInputValue(
-                        "name"
-                    )
-                    .trim();
-
-            const type =
-                interaction.fields
-                    .getTextInputValue(
-                        "type"
-                    )
-                    .toLowerCase()
-                    .trim();
-
-            if (
-                !["add", "remove"]
-                    .includes(type)
-            ) {
-
-                return interaction.reply({
-                    content:
-                        "❌ Hãy nhập `add` hoặc `remove`.",
-                    ephemeral: true
-                });
-            }
-
-            if (!name) {
-
-                return interaction.reply({
-                    content:
-                        "❌ Tên công pháp không được để trống!",
-                    ephemeral: true
-                });
-            }
-
-            if (type === "add") {
-
                 if (
-                    !data.users[id]
-                        .congphap
-                        .includes(name)
+                    !/^[A-Z0-9_-]{3,32}$/.test(
+                        code
+                    )
                 ) {
 
-                    data.users[id]
-                        .congphap
-                        .push(name);
+                    return interaction.reply({
+                        content:
+                            "❌ Code phải 3-32 ký tự, chỉ A-Z, 0-9, _ hoặc -.",
+                        ephemeral: true
+                    });
                 }
 
-                saveData(data);
+                if (
+                    ![
+                        "tuvi",
+                        "linhthach",
+                        "danduoc"
+                    ].includes(reward)
+                ) {
 
-                return interaction.reply({
-                    content:
-                        `📖 Đã thêm công pháp **${name}** cho <@${id}>.`,
-                    ephemeral: true
-                });
-            }
+                    return interaction.reply({
+                        content:
+                            "❌ Phần thưởng phải là `tuvi`, `linhthach` hoặc `danduoc`.",
+                        ephemeral: true
+                    });
+                }
 
-            data.users[id].congphap =
-                data.users[id]
-                    .congphap
-                    .filter(
-                        x =>
-                            x !== name
-                    );
+                if (
+                    reward === "danduoc" &&
+                    !danName
+                ) {
 
-            saveData(data);
+                    return interaction.reply({
+                        content:
+                            "❌ Code đan dược phải có tên đan dược.",
+                        ephemeral: true
+                    });
+                }
 
-            return interaction.reply({
-                content:
-                    `📕 Đã xóa công pháp **${name}** của <@${id}>.`,
-                ephemeral: true
-            });
-        }
+                if (
+                    !Number.isSafeInteger(
+                        amount
+                    ) ||
+                    amount <= 0
+                ) {
 
-        // =================================================
-        // ĐAN DƯỢC
-        // =================================================
+                    return interaction.reply({
+                        content:
+                            "❌ Số lượng phải là số nguyên > 0.",
+                        ephemeral: true
+                    });
+                }
 
-        if (
-            interaction.customId ===
-            "admin_modal_danduoc"
-        ) {
+                const codes =
+                    loadCodes();
 
-            const danName =
-                interaction.fields
-                    .getTextInputValue(
-                        "dan_name"
-                    )
-                    .trim();
+                if (
+                    codes[code]
+                ) {
 
-            const amount =
-                Number(
-                    interaction.fields
-                        .getTextInputValue(
-                            "amount"
-                        )
-                );
+                    return interaction.reply({
+                        content:
+                            `❌ Code **${code}** đã tồn tại!`,
+                        ephemeral: true
+                    });
+                }
 
-            const type =
-                interaction.fields
-                    .getTextInputValue(
-                        "dan_type"
-                    )
-                    .toLowerCase()
-                    .trim();
+                codes[code] = {
 
-            if (!danName) {
+                    reward,
 
-                return interaction.reply({
-                    content:
-                        "❌ Tên đan dược không được để trống!",
-                    ephemeral: true
-                });
-            }
+                    amount,
 
-            if (
-                !Number.isSafeInteger(amount) ||
-                amount <= 0
-            ) {
+                    ...(reward === "danduoc"
+                        ? {
+                            danName
+                        }
+                        : {}),
 
-                return interaction.reply({
-                    content:
-                        "❌ Số lượng phải là số nguyên lớn hơn 0!",
-                    ephemeral: true
-                });
-            }
+                    usedBy: [],
 
-            if (
-                !["add", "remove"]
-                    .includes(type)
-            ) {
+                    createdBy:
+                        interaction.user.id,
 
-                return interaction.reply({
-                    content:
-                        "❌ Hãy nhập `add` hoặc `remove`.",
-                    ephemeral: true
-                });
-            }
+                    createdAt:
+                        Date.now()
+                };
 
-            if (!data.users[id].dan) {
-                data.users[id].dan = {};
-            }
+                if (
+                    !saveCodes(codes)
+                ) {
 
-            // =============================================
-            // ADD
-            // =============================================
-
-            if (type === "add") {
-
-                data.users[id].dan[danName] =
-                    (
-                        data.users[id]
-                            .dan[danName] ||
-                        0
-                    ) +
-                    amount;
-
-                saveData(data);
+                    return interaction.reply({
+                        content:
+                            "❌ Không thể lưu code!",
+                        ephemeral: true
+                    });
+                }
 
                 return interaction.reply({
 
                     embeds: [
 
                         new EmbedBuilder()
-
                             .setColor(
                                 0x2ecc71
                             )
-
                             .setTitle(
-                                "💊 THÊM ĐAN DƯỢC THÀNH CÔNG"
+                                "🔑 TẠO CODE THÀNH CÔNG"
                             )
-
                             .setDescription(
 
-                                `👤 **Người chơi:** <@${id}>\n\n` +
+                                `🔐 **Code:** \`${code}\`\n\n` +
 
-                                `💊 **Đan dược:** ${danName}\n` +
+                                (
+                                    reward === "danduoc"
 
-                                `📦 **Số lượng:** +${amount}\n` +
+                                        ? `💊 **Đan Dược:** ${danName}\n`
 
-                                `📊 **Hiện có:** ${data.users[id].dan[danName]}`
+                                        : `🎁 **Phần thưởng:** ${reward}\n`
+                                ) +
+
+                                `📦 **Số lượng:** ${amount.toLocaleString()}\n\n` +
+
+                                "👤 Mỗi người chơi chỉ dùng được 1 lần."
                             )
+
                     ],
 
                     ephemeral: true
                 });
             }
 
-            // =============================================
-            // REMOVE
-            // =============================================
+            // =================================================
+            // ID
+            // =================================================
 
-            const current =
-                data.users[id]
-                    .dan[danName] ||
-                0;
-
-            if (current <= 0) {
-
-                return interaction.reply({
-                    content:
-                        `❌ <@${id}> không có **${danName}**.`,
-                    ephemeral: true
-                });
-            }
-
-            const newAmount =
-                Math.max(
-                    0,
-                    current - amount
-                );
+            const id =
+                getId(interaction);
 
             if (
-                newAmount === 0
-            ) {
-
-                delete data.users[id]
-                    .dan[danName];
-
-            } else {
-
-                data.users[id]
-                    .dan[danName] =
-                    newAmount;
-            }
-
-            saveData(data);
-
-            return interaction.reply({
-
-                embeds: [
-
-                    new EmbedBuilder()
-
-                        .setColor(
-                            0xe74c3c
-                        )
-
-                        .setTitle(
-                            "💊 TRỪ ĐAN DƯỢC THÀNH CÔNG"
-                        )
-
-                        .setDescription(
-
-                            `👤 **Người chơi:** <@${id}>\n\n` +
-
-                            `💊 **Đan dược:** ${danName}\n` +
-
-                            `📦 **Đã trừ:** -${amount}\n` +
-
-                            `📊 **Còn lại:** ${newAmount}`
-                        )
-                ],
-
-                ephemeral: true
-            });
-        }
-
-        // =================================================
-        // LUYỆN KHÍ
-        // =================================================
-
-        if (
-            interaction.customId ===
-            "admin_modal_luyenkhi"
-        ) {
-
-            const item =
-                interaction.fields
-                    .getTextInputValue(
-                        "item"
-                    )
-                    .trim();
-
-            const amount =
-                Number(
-                    interaction.fields
-                        .getTextInputValue(
-                            "amount"
-                        )
-                );
-
-            if (
-                !Number.isSafeInteger(amount) ||
-                amount <= 0
+                !validId(id)
             ) {
 
                 return interaction.reply({
                     content:
-                        "❌ Số lượng không hợp lệ!",
+                        "❌ ID Discord không hợp lệ!",
                     ephemeral: true
                 });
             }
 
-            data.users[id]
-                .trangbi[item] =
-                (
-                    data.users[id]
-                        .trangbi[item] ||
-                    0
-                ) +
-                amount;
+            let player =
+                getOrCreatePlayer(
+                    id
+                );
 
-            saveData(data);
-
-            return interaction.reply({
-                content:
-                    `⚔️ Đã trao **${item} ×${amount}** cho <@${id}>.`,
-                ephemeral: true
-            });
-        }
-
-        // =================================================
-        // RESET
-        // =================================================
-
-        if (
-            interaction.customId ===
-            "admin_modal_reset"
-        ) {
-
-            delete data.users[id];
+            // =================================================
+            // CỘNG / TRỪ TU VI
+            // =================================================
 
             if (
-                data.relationships
+                interaction.customId ===
+                    "admin_modal_add_tuvi" ||
+                interaction.customId ===
+                    "admin_modal_remove_tuvi"
             ) {
 
-                delete data.relationships[id];
+                const amount =
+                    Number(
+                        interaction.fields
+                            .getTextInputValue(
+                                "amount"
+                            )
+                    );
 
-                for (
-                    const userId in
-                    data.relationships
+                if (
+                    !Number.isSafeInteger(
+                        amount
+                    ) ||
+                    amount <= 0
                 ) {
 
-                    data.relationships[userId] =
-                        data.relationships[userId]
-                            .filter(
+                    return interaction.reply({
+                        content:
+                            "❌ Số Tu Vi không hợp lệ!",
+                        ephemeral: true
+                    });
+                }
+
+                const old =
+                    Number(
+                        player.tuvi
+                    ) || 0;
+
+                const add =
+                    interaction.customId
+                        .includes("add");
+
+                const value =
+                    add
+                        ? old + amount
+                        : Math.max(
+                            0,
+                            old - amount
+                        );
+
+                db.updatePlayer(
+                    id,
+                    {
+                        tuvi:
+                            value
+                    }
+                );
+
+                return interaction.reply({
+
+                    content:
+
+                        `${add ? "✨ Đã cộng" : "❌ Đã trừ"} ` +
+
+                        `**${amount.toLocaleString()} Tu Vi** ` +
+
+                        `${add ? "cho" : "của"} <@${id}>.\n` +
+
+                        `⚔️ Tu Vi hiện tại: **${value.toLocaleString()}**`,
+
+                    ephemeral: true
+                });
+            }
+
+            // =================================================
+            // LINH THẠCH
+            // =================================================
+
+            if (
+                interaction.customId ===
+                    "admin_modal_add_linhthach" ||
+                interaction.customId ===
+                    "admin_modal_remove_linhthach"
+            ) {
+
+                const amount =
+                    Number(
+                        interaction.fields
+                            .getTextInputValue(
+                                "amount"
+                            )
+                    );
+
+                if (
+                    !Number.isSafeInteger(
+                        amount
+                    ) ||
+                    amount <= 0
+                ) {
+
+                    return interaction.reply({
+                        content:
+                            "❌ Số Linh Thạch không hợp lệ!",
+                        ephemeral: true
+                    });
+                }
+
+                const old =
+                    Number(
+                        player.linhThach
+                    ) || 0;
+
+                const add =
+                    interaction.customId
+                        .includes("add");
+
+                const value =
+                    add
+                        ? old + amount
+                        : Math.max(
+                            0,
+                            old - amount
+                        );
+
+                db.updatePlayer(
+                    id,
+                    {
+                        linhThach:
+                            value
+                    }
+                );
+
+                return interaction.reply({
+
+                    content:
+
+                        `${add ? "💰 Đã cộng" : "💸 Đã trừ"} ` +
+
+                        `**${amount.toLocaleString()} Linh Thạch** ` +
+
+                        `${add ? "cho" : "của"} <@${id}>.\n` +
+
+                        `💎 Hiện tại: **${value.toLocaleString()}**`,
+
+                    ephemeral: true
+                });
+            }
+
+            // =================================================
+            // CẢNH GIỚI
+            // =================================================
+
+            if (
+                interaction.customId ===
+                "admin_modal_set_realm"
+            ) {
+
+                const realmName =
+                    interaction.fields
+                        .getTextInputValue(
+                            "realm"
+                        )
+                        .trim();
+
+                const index =
+                    REALMS.findIndex(
+                        x =>
+                            x.toLowerCase() ===
+                            realmName.toLowerCase()
+                    );
+
+                if (
+                    index === -1
+                ) {
+
+                    return interaction.reply({
+
+                        content:
+
+                            `❌ Cảnh giới không tồn tại!\n\n` +
+
+                            `📜 Danh sách:\n` +
+
+                            REALMS
+                                .map(
+                                    (x, i) =>
+                                        `${i}. ${x}`
+                                )
+                                .join("\n"),
+
+                        ephemeral: true
+                    });
+                }
+
+                db.updatePlayer(
+                    id,
+                    {
+                        realm:
+                            index,
+
+                        canhGioi:
+                            REALMS[index],
+
+                        tang:
+                            1
+                    }
+                );
+
+                return interaction.reply({
+
+                    content:
+
+                        `🌟 Đã đặt <@${id}> thành **${REALMS[index]}**.\n` +
+
+                        `🔢 ID cảnh giới: **${index}**\n` +
+
+                        `🔢 Tầng: **1**`,
+
+                    ephemeral: true
+                });
+            }
+
+            // =================================================
+            // ĐẠO LỮ
+            // =================================================
+
+            if (
+                interaction.customId ===
+                "admin_modal_daolu"
+            ) {
+
+                const partner =
+                    interaction.fields
+                        .getTextInputValue(
+                            "partner"
+                        )
+                        .replace(
+                            /[<@!>]/g,
+                            ""
+                        )
+                        .trim();
+
+                const type =
+                    interaction.fields
+                        .getTextInputValue(
+                            "type"
+                        )
+                        .toLowerCase()
+                        .trim();
+
+                if (
+                    !validId(partner)
+                ) {
+
+                    return interaction.reply({
+                        content:
+                            "❌ ID đạo lữ không hợp lệ!",
+                        ephemeral: true
+                    });
+                }
+
+                if (
+                    ![
+                        "add",
+                        "remove"
+                    ].includes(type)
+                ) {
+
+                    return interaction.reply({
+                        content:
+                            "❌ Hãy nhập `add` hoặc `remove`.",
+                        ephemeral: true
+                    });
+                }
+
+                const rel =
+                    loadRelationships();
+
+                if (
+                    !Array.isArray(
+                        rel[id]
+                    )
+                ) {
+                    rel[id] = [];
+                }
+
+                if (
+                    type === "add"
+                ) {
+
+                    if (
+                        !Array.isArray(
+                            rel[partner]
+                        )
+                    ) {
+                        rel[partner] = [];
+                    }
+
+                    if (
+                        !rel[id]
+                            .includes(
+                                partner
+                            )
+                    ) {
+
+                        rel[id].push(
+                            partner
+                        );
+                    }
+
+                    if (
+                        !rel[partner]
+                            .includes(
+                                id
+                            )
+                    ) {
+
+                        rel[partner].push(
+                            id
+                        );
+                    }
+
+                    saveRelationships(
+                        rel
+                    );
+
+                    return interaction.reply({
+                        content:
+                            `💞 Đã thiết lập <@${id}> và <@${partner}> trở thành đạo lữ.`,
+                        ephemeral: true
+                    });
+                }
+
+                rel[id] =
+                    rel[id].filter(
+                        x =>
+                            x !== partner
+                    );
+
+                if (
+                    Array.isArray(
+                        rel[partner]
+                    )
+                ) {
+
+                    rel[partner] =
+                        rel[partner].filter(
+                            x =>
+                                x !== id
+                        );
+                }
+
+                saveRelationships(
+                    rel
+                );
+
+                return interaction.reply({
+                    content:
+                        `💔 Đã xóa quan hệ đạo lữ giữa <@${id}> và <@${partner}>.`,
+                    ephemeral: true
+                });
+            }
+
+            // =================================================
+            // CÔNG PHÁP
+            // =================================================
+
+            if (
+                interaction.customId ===
+                "admin_modal_congphap"
+            ) {
+
+                const name =
+                    interaction.fields
+                        .getTextInputValue(
+                            "name"
+                        )
+                        .trim();
+
+                const type =
+                    interaction.fields
+                        .getTextInputValue(
+                            "type"
+                        )
+                        .toLowerCase()
+                        .trim();
+
+                if (!name) {
+
+                    return interaction.reply({
+                        content:
+                            "❌ Tên công pháp không được để trống!",
+                        ephemeral: true
+                    });
+                }
+
+                if (
+                    ![
+                        "add",
+                        "remove"
+                    ].includes(type)
+                ) {
+
+                    return interaction.reply({
+                        content:
+                            "❌ Hãy nhập `add` hoặc `remove`.",
+                        ephemeral: true
+                    });
+                }
+
+                const list =
+                    Array.isArray(
+                        player.congphap
+                    )
+                        ? [
+                            ...player.congphap
+                        ]
+                        : [];
+
+                if (
+                    type === "add"
+                ) {
+
+                    if (
+                        !list.includes(
+                            name
+                        )
+                    ) {
+
+                        list.push(
+                            name
+                        );
+                    }
+
+                    db.updatePlayer(
+                        id,
+                        {
+                            congphap:
+                                list
+                        }
+                    );
+
+                    return interaction.reply({
+                        content:
+                            `📖 Đã thêm công pháp **${name}** cho <@${id}>.`,
+                        ephemeral: true
+                    });
+                }
+
+                db.updatePlayer(
+                    id,
+                    {
+                        congphap:
+                            list.filter(
+                                x =>
+                                    x !== name
+                            )
+                    }
+                );
+
+                return interaction.reply({
+                    content:
+                        `📕 Đã xóa công pháp **${name}** của <@${id}>.`,
+                    ephemeral: true
+                });
+            }
+
+            // =================================================
+            // ĐAN DƯỢC
+            // =================================================
+
+            if (
+                interaction.customId ===
+                "admin_modal_danduoc"
+            ) {
+
+                const danName =
+                    interaction.fields
+                        .getTextInputValue(
+                            "dan_name"
+                        )
+                        .trim();
+
+                const amount =
+                    Number(
+                        interaction.fields
+                            .getTextInputValue(
+                                "amount"
+                            )
+                    );
+
+                const type =
+                    interaction.fields
+                        .getTextInputValue(
+                            "dan_type"
+                        )
+                        .toLowerCase()
+                        .trim();
+
+                if (!danName) {
+
+                    return interaction.reply({
+                        content:
+                            "❌ Tên đan dược không được để trống!",
+                        ephemeral: true
+                    });
+                }
+
+                if (
+                    !Number.isSafeInteger(
+                        amount
+                    ) ||
+                    amount <= 0
+                ) {
+
+                    return interaction.reply({
+                        content:
+                            "❌ Số lượng phải là số nguyên > 0!",
+                        ephemeral: true
+                    });
+                }
+
+                if (
+                    ![
+                        "add",
+                        "remove"
+                    ].includes(type)
+                ) {
+
+                    return interaction.reply({
+                        content:
+                            "❌ Hãy nhập `add` hoặc `remove`.",
+                        ephemeral: true
+                    });
+                }
+
+                const list =
+                    Array.isArray(
+                        player.tuiDo.danDuoc
+                    )
+                        ? [
+                            ...player.tuiDo.danDuoc
+                        ]
+                        : [];
+
+                // ADD
+
+                if (
+                    type === "add"
+                ) {
+
+                    for (
+                        let i = 0;
+                        i < amount;
+                        i++
+                    ) {
+
+                        list.push(
+                            danName
+                        );
+                    }
+
+                    db.updatePlayer(
+                        id,
+                        {
+                            tuiDo: {
+                                ...player.tuiDo,
+                                danDuoc:
+                                    list
+                            }
+                        }
+                    );
+
+                    const count =
+                        list.filter(
+                            x =>
+                                x === danName
+                        ).length;
+
+                    return interaction.reply({
+                        content:
+
+                            `💊 Đã thêm **${danName} ×${amount}** cho <@${id}>.\n` +
+
+                            `📦 Hiện có: **${count}**`,
+
+                        ephemeral: true
+                    });
+                }
+
+                // REMOVE
+
+                let removed = 0;
+
+                for (
+                    let i =
+                        list.length - 1;
+
+                    i >= 0 &&
+                    removed < amount;
+
+                    i--
+                ) {
+
+                    if (
+                        list[i] ===
+                        danName
+                    ) {
+
+                        list.splice(
+                            i,
+                            1
+                        );
+
+                        removed++;
+                    }
+                }
+
+                if (
+                    removed === 0
+                ) {
+
+                    return interaction.reply({
+                        content:
+                            `❌ <@${id}> không có **${danName}**.`,
+                        ephemeral: true
+                    });
+                }
+
+                db.updatePlayer(
+                    id,
+                    {
+                        tuiDo: {
+                            ...player.tuiDo,
+                            danDuoc:
+                                list
+                        }
+                    }
+                );
+
+                return interaction.reply({
+                    content:
+                        `💊 Đã trừ **${danName} ×${removed}** của <@${id}>.`,
+                    ephemeral: true
+                });
+            }
+
+            // =================================================
+            // LUYỆN KHÍ
+            // =================================================
+
+            if (
+                interaction.customId ===
+                "admin_modal_luyenkhi"
+            ) {
+
+                const item =
+                    interaction.fields
+                        .getTextInputValue(
+                            "item"
+                        )
+                        .trim();
+
+                const amount =
+                    Number(
+                        interaction.fields
+                            .getTextInputValue(
+                                "amount"
+                            )
+                    );
+
+                if (!item) {
+
+                    return interaction.reply({
+                        content:
+                            "❌ Tên vật phẩm không được để trống!",
+                        ephemeral: true
+                    });
+                }
+
+                if (
+                    !Number.isSafeInteger(
+                        amount
+                    ) ||
+                    amount <= 0
+                ) {
+
+                    return interaction.reply({
+                        content:
+                            "❌ Số lượng không hợp lệ!",
+                        ephemeral: true
+                    });
+                }
+
+                const list =
+                    Array.isArray(
+                        player.tuiDo.vatPham
+                    )
+                        ? [
+                            ...player.tuiDo.vatPham
+                        ]
+                        : [];
+
+                for (
+                    let i = 0;
+                    i < amount;
+                    i++
+                ) {
+
+                    list.push(
+                        item
+                    );
+                }
+
+                db.updatePlayer(
+                    id,
+                    {
+                        tuiDo: {
+                            ...player.tuiDo,
+                            vatPham:
+                                list
+                        }
+                    }
+                );
+
+                return interaction.reply({
+                    content:
+                        `⚔️ Đã trao **${item} ×${amount}** cho <@${id}>.`,
+                    ephemeral: true
+                });
+            }
+
+            // =================================================
+            // RESET
+            // =================================================
+
+            if (
+                interaction.customId ===
+                "admin_modal_reset"
+            ) {
+
+                const old =
+                    db.getPlayer(id);
+
+                if (!old) {
+
+                    return interaction.reply({
+                        content:
+                            "❌ Người chơi chưa có nhân vật.",
+                        ephemeral: true
+                    });
+                }
+
+                db.updatePlayer(
+                    id,
+                    {
+
+                        tuvi: 0,
+
+                        canhGioi:
+                            "Luyện Khí",
+
+                        tang: 1,
+
+                        realm: 1,
+
+                        kinhNghiem: 0,
+
+                        linhCan: null,
+
+                        linhLuc: 0,
+
+                        linhThach: 100,
+
+                        hp: 100,
+
+                        maxHp: 100,
+
+                        cong: 10,
+
+                        thu: 5,
+
+                        beQuan: false,
+
+                        beQuanEnd: 0,
+
+                        lastTrain: 0,
+
+                        lastDungeon: 0,
+
+                        lastBoss: 0,
+
+                        bossDaGiet: 0,
+
+                        phoBanDaHoanThanh: 0,
+
+                        congphap: [],
+
+                        tuiDo: {
+
+                            danDuoc: [],
+
+                            vatPham: [],
+
+                            linhThu: []
+
+                        }
+
+                    }
+                );
+
+                const rel =
+                    loadRelationships();
+
+                delete rel[id];
+
+                for (
+                    const uid of
+                    Object.keys(rel)
+                ) {
+
+                    if (
+                        Array.isArray(
+                            rel[uid]
+                        )
+                    ) {
+
+                        rel[uid] =
+                            rel[uid].filter(
                                 x =>
                                     x !== id
                             );
+                    }
                 }
-            }
 
-            saveData(data);
+                saveRelationships(
+                    rel
+                );
+
+                return interaction.reply({
+                    content:
+                        `♻️ Đã reset dữ liệu nhân vật của <@${id}>.`,
+                    ephemeral: true
+                });
+            }
 
             return interaction.reply({
                 content:
-                    `♻️ Đã reset toàn bộ dữ liệu của <@${id}>.`,
+                    "❌ Không tìm thấy chức năng Admin.",
+                ephemeral: true
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Lỗi Admin Modal:",
+                error
+            );
+
+            return interaction.reply({
+
+                content:
+                    `❌ Admin lỗi: ${error.message}`,
+
                 ephemeral: true
             });
         }
