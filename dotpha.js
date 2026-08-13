@@ -2,6 +2,15 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getPlayer, updatePlayer } = require("./database");
 
 // =====================================================
+// COOLDOWN ĐỘT PHÁ
+// =====================================================
+
+// Lưu thời gian đột phá gần nhất của từng người chơi
+const dotPhaCooldown = new Map();
+
+const DOTPHA_COOLDOWN = 10 * 1000; // 10 giây
+
+// =====================================================
 // 18 CẢNH GIỚI
 // =====================================================
 
@@ -140,7 +149,48 @@ module.exports = {
 
     async execute(interaction) {
 
-        const p = getPlayer(interaction.user.id);
+        const userId = interaction.user.id;
+
+        // =================================================
+        // KIỂM TRA COOLDOWN 10 GIÂY
+        // =================================================
+
+        const now = Date.now();
+        const lastUse = dotPhaCooldown.get(userId);
+
+        if (lastUse) {
+
+            const remaining =
+                DOTPHA_COOLDOWN - (now - lastUse);
+
+            if (remaining > 0) {
+
+                const seconds =
+                    Math.ceil(remaining / 1000);
+
+                return interaction.reply({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor(0xf1c40f)
+                            .setTitle("⏳ ĐỘT PHÁ ĐANG HỒI CHIÊU")
+                            .setDescription(
+                                `⚡ Thiên kiếp vừa mới kết thúc.\n\n` +
+                                `🕐 Vui lòng chờ **${seconds} giây** nữa mới có thể đột phá tiếp.`
+                            )
+                            .setFooter({
+                                text: "Hồng Hoang Đại Lục • Cooldown 10 giây"
+                            })
+                    ],
+                    ephemeral: true
+                });
+            }
+        }
+
+        // =================================================
+        // LẤY NHÂN VẬT
+        // =================================================
+
+        const p = getPlayer(userId);
 
         if (!p) {
             return interaction.reply({
@@ -196,19 +246,13 @@ module.exports = {
                 requiredTuVi - currentTuVi;
 
             return interaction.reply({
-
                 embeds: [
-
                     new EmbedBuilder()
-
                         .setColor(0xf1c40f)
-
                         .setTitle("⚠️ CHƯA ĐỦ TU VI")
-
                         .setDescription(
                             `🌱 **${realm.name} tầng ${currentTier}**`
                         )
-
                         .addFields(
                             {
                                 name: "⚔️ Tu Vi hiện tại",
@@ -229,16 +273,32 @@ module.exports = {
                                 inline: true
                             }
                         )
-
                         .setFooter({
                             text:
                                 "Cần đủ Tu Vi mới có thể đột phá"
                         })
                 ],
-
                 ephemeral: true
             });
         }
+
+        // =================================================
+        // ĐẶT COOLDOWN
+        // =================================================
+
+        dotPhaCooldown.set(userId, Date.now());
+
+        // Tự xóa cooldown sau 10 giây
+        setTimeout(() => {
+            const current = dotPhaCooldown.get(userId);
+
+            if (
+                current &&
+                Date.now() - current >= DOTPHA_COOLDOWN
+            ) {
+                dotPhaCooldown.delete(userId);
+            }
+        }, DOTPHA_COOLDOWN + 100);
 
         // =================================================
         // RANDOM TỶ LỆ 1 - 100%
@@ -259,42 +319,42 @@ module.exports = {
 
         if (!success) {
 
+            // Mất ngẫu nhiên từ 1.000 → 10.000 Tu Vi
             const lostTuVi =
-                Math.max(
-                    1,
-                    Math.floor(requiredTuVi * 0.15)
+                Math.floor(
+                    Math.random() * 9001
+                ) + 1000;
+
+            const actualLost =
+                Math.min(
+                    currentTuVi,
+                    lostTuVi
                 );
 
             const newTuVi =
                 Math.max(
                     0,
-                    currentTuVi - lostTuVi
+                    currentTuVi - actualLost
                 );
 
             updatePlayer(
-                interaction.user.id,
+                userId,
                 {
                     tuvi: newTuVi
                 }
             );
 
             return interaction.reply({
-
                 embeds: [
-
                     new EmbedBuilder()
-
                         .setColor(0xe74c3c)
-
                         .setTitle(
                             "💥 ĐỘT PHÁ THẤT BẠI"
                         )
-
                         .setDescription(
                             `🌱 **${realm.name} tầng ${currentTier}**\n\n` +
                             `Thiên kiếp phản phệ, Tu Vi bị tổn hao!`
                         )
-
                         .addFields(
                             {
                                 name:
@@ -314,7 +374,7 @@ module.exports = {
                                 name:
                                     "💥 Tu Vi mất",
                                 value:
-                                    `-${lostTuVi.toLocaleString()}`,
+                                    `-${actualLost.toLocaleString()}`,
                                 inline: true
                             },
                             {
@@ -325,10 +385,9 @@ module.exports = {
                                 inline: true
                             }
                         )
-
                         .setFooter({
                             text:
-                                "Kinh nghiệm không bị ảnh hưởng"
+                                "Kinh nghiệm không bị ảnh hưởng • Có thể đột phá lại sau 10 giây"
                         })
                 ]
             });
@@ -352,7 +411,6 @@ module.exports = {
             if (!realms[index + 1]) {
 
                 return interaction.reply({
-
                     content:
                         "🌌 **ĐẠI ĐẠO TỐI CAO!**\n\n" +
                         "Bạn đã đạt **Đại Đạo tầng 9**.\n" +
@@ -465,9 +523,8 @@ module.exports = {
         // =================================================
 
         updatePlayer(
-            interaction.user.id,
+            userId,
             {
-
                 canhGioi:
                     newRealm.name,
 
@@ -500,21 +557,16 @@ module.exports = {
 
         const embed =
             new EmbedBuilder()
-
                 .setColor(0x2ecc71)
-
                 .setTitle(
                     "⚡ ĐỘT PHÁ THÀNH CÔNG!"
                 )
-
                 .setDescription(
                     `🌌 **${realm.name} tầng ${currentTier}**\n` +
                     `⬇️\n` +
                     `✨ **${newRealm.name} tầng ${newTier}**`
                 )
-
                 .addFields(
-
                     {
                         name:
                             "📈 Tỷ lệ thành công",
@@ -522,7 +574,6 @@ module.exports = {
                             `${successRate}%`,
                         inline: true
                     },
-
                     {
                         name:
                             "🎯 Kết quả",
@@ -530,7 +581,6 @@ module.exports = {
                             `${roll}`,
                         inline: true
                     },
-
                     {
                         name:
                             "⚔️ Tu Vi",
@@ -538,7 +588,6 @@ module.exports = {
                             `${remainingTuVi.toLocaleString()}`,
                         inline: true
                     },
-
                     {
                         name:
                             "🌱 Cảnh giới",
@@ -546,7 +595,6 @@ module.exports = {
                             `**${newRealm.name} tầng ${newTier}**`,
                         inline: true
                     },
-
                     {
                         name:
                             "❤️ HP",
@@ -555,7 +603,6 @@ module.exports = {
                             `Tổng: **${newMaxHp.toLocaleString()}**`,
                         inline: true
                     },
-
                     {
                         name:
                             "⚔️ Công",
@@ -564,7 +611,6 @@ module.exports = {
                             `Tổng: **${newCong.toLocaleString()}**`,
                         inline: true
                     },
-
                     {
                         name:
                             "🛡️ Thủ",
@@ -574,10 +620,9 @@ module.exports = {
                         inline: true
                     }
                 )
-
                 .setFooter({
                     text:
-                        "Hồng Hoang Đại Lục • Đột phá bằng Tu Vi • Chỉ số x9"
+                        "Hồng Hoang Đại Lục • Đột phá bằng Tu Vi • Chỉ số x9 • Cooldown 10 giây"
                 });
 
         return interaction.reply({
