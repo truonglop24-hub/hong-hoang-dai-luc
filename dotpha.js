@@ -1,4 +1,3 @@
-```javascript
 const {
     SlashCommandBuilder,
     EmbedBuilder
@@ -10,39 +9,11 @@ const {
 } = require("./database");
 
 // =====================================================
-// COOLDOWN ĐỘT PHÁ
+// COOLDOWN ĐỘT PHÁ: 20 GIÂY
 // =====================================================
 
 const dotPhaCooldown = new Map();
-
-const DOTPHA_COOLDOWN = 20_000;
-
-// =====================================================
-// LẤY GIAI ĐOẠN
-// 1 - 3  : Sơ Kỳ
-// 4 - 6  : Trung Kỳ
-// 7 - 9  : Hậu Kỳ
-// 10-12  : Viên Mãn
-// =====================================================
-
-function getGiaiDoan(tang) {
-
-    tang = Number(tang || 1);
-
-    if (tang <= 3) {
-        return "Sơ Kỳ";
-    }
-
-    if (tang <= 6) {
-        return "Trung Kỳ";
-    }
-
-    if (tang <= 9) {
-        return "Hậu Kỳ";
-    }
-
-    return "Viên Mãn";
-}
+const DOTPHA_COOLDOWN = 20 * 1000;
 
 // =====================================================
 // 18 CẢNH GIỚI
@@ -50,172 +21,96 @@ function getGiaiDoan(tang) {
 // =====================================================
 
 const realms = [
-
     {
         name: "Phàm Nhân",
         max: 12,
         needTuVi: 50,
-        stats: {
-            hp: 100,
-            cong: 20,
-            thu: 15
-        }
+        stats: { hp: 100, cong: 20, thu: 15 }
     },
-
     {
         name: "Luyện Khí",
         max: 12,
         needTuVi: 100,
-        stats: {
-            hp: 300,
-            cong: 60,
-            thu: 40
-        }
+        stats: { hp: 300, cong: 60, thu: 40 }
     },
-
     {
         name: "Trúc Cơ",
         max: 12,
         needTuVi: 250,
-        stats: {
-            hp: 1000,
-            cong: 200,
-            thu: 140
-        }
+        stats: { hp: 1000, cong: 200, thu: 140 }
     },
-
     {
         name: "Kim Đan",
         max: 12,
         needTuVi: 500,
-        stats: {
-            hp: 3000,
-            cong: 600,
-            thu: 400
-        }
+        stats: { hp: 3000, cong: 600, thu: 400 }
     },
-
     {
         name: "Nguyên Anh",
         max: 12,
         needTuVi: 1000,
-        stats: {
-            hp: 10000,
-            cong: 2000,
-            thu: 1400
-        }
+        stats: { hp: 10000, cong: 2000, thu: 1400 }
     },
-
     {
         name: "Hóa Thần",
         max: 12,
         needTuVi: 2000,
-        stats: {
-            hp: 30000,
-            cong: 6000,
-            thu: 4000
-        }
+        stats: { hp: 30000, cong: 6000, thu: 4000 }
     },
-
     {
         name: "Luyện Hư",
         max: 12,
         needTuVi: 4000,
-        stats: {
-            hp: 100000,
-            cong: 20000,
-            thu: 14000
-        }
+        stats: { hp: 100000, cong: 20000, thu: 14000 }
     },
-
     {
         name: "Hợp Thể",
         max: 12,
         needTuVi: 8000,
-        stats: {
-            hp: 300000,
-            cong: 60000,
-            thu: 40000
-        }
+        stats: { hp: 300000, cong: 60000, thu: 40000 }
     },
-
     {
         name: "Đại Thừa",
         max: 12,
         needTuVi: 16000,
-        stats: {
-            hp: 1000000,
-            cong: 200000,
-            thu: 140000
-        }
+        stats: { hp: 1000000, cong: 200000, thu: 140000 }
     },
-
     {
         name: "Độ Kiếp",
         max: 12,
         needTuVi: 32000,
-        stats: {
-            hp: 3000000,
-            cong: 600000,
-            thu: 400000
-        }
+        stats: { hp: 3000000, cong: 600000, thu: 400000 }
     },
-
     {
         name: "Tiên Nhân",
         max: 12,
         needTuVi: 64000,
-        stats: {
-            hp: 10000000,
-            cong: 2000000,
-            thu: 1400000
-        }
+        stats: { hp: 10000000, cong: 2000000, thu: 1400000 }
     },
-
     {
         name: "Chân Tiên",
         max: 12,
         needTuVi: 128000,
-        stats: {
-            hp: 30000000,
-            cong: 6000000,
-            thu: 4000000
-        }
+        stats: { hp: 30000000, cong: 6000000, thu: 4000000 }
     },
-
     {
         name: "Thiên Tiên",
         max: 12,
         needTuVi: 256000,
-        stats: {
-            hp: 100000000,
-            cong: 20000000,
-            thu: 14000000
-        }
+        stats: { hp: 100000000, cong: 20000000, thu: 14000000 }
     },
-
     {
         name: "Huyền Tiên",
         max: 12,
         needTuVi: 512000,
-        stats: {
-            hp: 300000000,
-            cong: 60000000,
-            thu: 40000000
-        }
+        stats: { hp: 300000000, cong: 60000000, thu: 40000000 }
     },
-
     {
         name: "Kim Tiên",
         max: 12,
         needTuVi: 1024000,
-        stats: {
-            hp: 1000000000,
-            cong: 200000000,
-            thu: 140000000
-        }
+        stats: { hp: 1000000000, cong: 200000000, thu: 140000000 }
     },
-
     {
         name: "Thánh Nhân",
         max: 12,
@@ -226,7 +121,6 @@ const realms = [
             thu: 700000000
         }
     },
-
     {
         name: "Thiên Đạo",
         max: 12,
@@ -237,7 +131,6 @@ const realms = [
             thu: 2800000000
         }
     },
-
     {
         name: "Đại Đạo",
         max: 12,
@@ -248,53 +141,80 @@ const realms = [
             thu: 14000000000
         }
     }
-
 ];
 
 // =====================================================
-// LẤY VẬT PHẨM YÊU CẦU
+// GIAI ĐOẠN
 //
-// Tầng 3  -> Trung Kỳ
-// Tầng 6  -> Hậu Kỳ
-// Tầng 9  -> Viên Mãn
-// Tầng 12 -> Phá Cảnh
+// TẦNG 1-3  = SƠ KỲ
+// TẦNG 4-6  = TRUNG KỲ
+// TẦNG 7-9  = HẬU KỲ
+// TẦNG 10-12 = VIÊN MÃN
 // =====================================================
 
-function getRequiredItem(realmName, currentTier) {
+function getStage(tier) {
+    tier = Number(tier || 1);
 
-    if (currentTier === 3) {
+    if (tier <= 3) {
+        return "Sơ Kỳ";
+    }
 
+    if (tier <= 6) {
+        return "Trung Kỳ";
+    }
+
+    if (tier <= 9) {
+        return "Hậu Kỳ";
+    }
+
+    return "Viên Mãn";
+}
+
+// =====================================================
+// VẬT PHẨM YÊU CẦU
+//
+// 3 -> 4  : Trung Kỳ Đan
+// 6 -> 7  : Hậu Kỳ Đan
+// 9 -> 10 : Viên Mãn Đan
+// 12 -> 1 cảnh giới mới : Phá Cảnh Đan
+//
+// Tên này phải trùng tên vật phẩm trong tuiDo.
+// =====================================================
+
+function getRequiredItem(realmName, tier) {
+    if (tier === 3) {
         return {
             type: "danDuoc",
             name: realmName + " Trung Kỳ Đan",
-            reason: "Đột phá " + realmName + " Sơ Kỳ → Trung Kỳ"
+            description:
+                "Cần đan dược để từ Sơ Kỳ tiến vào Trung Kỳ."
         };
     }
 
-    if (currentTier === 6) {
-
+    if (tier === 6) {
         return {
             type: "danDuoc",
             name: realmName + " Hậu Kỳ Đan",
-            reason: "Đột phá " + realmName + " Trung Kỳ → Hậu Kỳ"
+            description:
+                "Cần đan dược để từ Trung Kỳ tiến vào Hậu Kỳ."
         };
     }
 
-    if (currentTier === 9) {
-
+    if (tier === 9) {
         return {
             type: "danDuoc",
             name: realmName + " Viên Mãn Đan",
-            reason: "Đột phá " + realmName + " Hậu Kỳ → Viên Mãn"
+            description:
+                "Cần đan dược để từ Hậu Kỳ tiến vào Viên Mãn."
         };
     }
 
-    if (currentTier === 12) {
-
+    if (tier === 12) {
         return {
             type: "vatPham",
             name: realmName + " Phá Cảnh Đan",
-            reason: "Đột phá " + realmName + " Viên Mãn → cảnh giới tiếp theo"
+            description:
+                "Cần vật phẩm phá cảnh để tiến vào cảnh giới tiếp theo."
         };
     }
 
@@ -302,104 +222,73 @@ function getRequiredItem(realmName, currentTier) {
 }
 
 // =====================================================
-// LẤY TÊN ITEM
-// HỖ TRỢ STRING HOẶC OBJECT
+// TÌM VẬT PHẨM
 // =====================================================
 
-function getItemName(item) {
-
-    if (typeof item === "string") {
-        return item;
-    }
-
-    if (item && typeof item === "object") {
-
-        return (
-            item.name ||
-            item.ten ||
-            item.itemName ||
-            item.tenItem ||
-            ""
-        );
-    }
-
-    return "";
-}
-
-// =====================================================
-// TÌM ITEM TRONG TÚI
-// =====================================================
-
-function findItemIndex(player, requiredItem) {
-
+function findItem(player, requiredItem) {
     if (!player || !player.tuiDo) {
         return -1;
     }
 
-    const inventory =
-        Array.isArray(
-            player.tuiDo[requiredItem.type]
-        )
-            ? player.tuiDo[requiredItem.type]
-            : [];
+    if (!Array.isArray(player.tuiDo[requiredItem.type])) {
+        return -1;
+    }
+
+    const list = player.tuiDo[requiredItem.type];
 
     const target =
-        requiredItem.name
+        String(requiredItem.name)
             .trim()
             .toLowerCase();
 
-    return inventory.findIndex(function(item) {
-
-        return getItemName(item)
+    return list.findIndex(function(item) {
+        return String(item)
             .trim()
             .toLowerCase() === target;
-
     });
 }
 
 // =====================================================
-// XÓA 1 ITEM
-// CHỈ GỌI HÀM NÀY SAU KHI ĐỘT PHÁ THÀNH CÔNG
+// XÓA 1 VẬT PHẨM
 // =====================================================
 
 function consumeItem(player, requiredItem) {
-
     if (!player || !player.tuiDo) {
         return false;
     }
 
-    const inventory =
-        Array.isArray(
-            player.tuiDo[requiredItem.type]
-        )
-            ? [...player.tuiDo[requiredItem.type]]
-            : [];
+    if (!Array.isArray(player.tuiDo[requiredItem.type])) {
+        return false;
+    }
+
+    const list =
+        [...player.tuiDo[requiredItem.type]];
+
+    const target =
+        String(requiredItem.name)
+            .trim()
+            .toLowerCase();
 
     const index =
-        inventory.findIndex(function(item) {
-
-            return getItemName(item)
+        list.findIndex(function(item) {
+            return String(item)
                 .trim()
-                .toLowerCase() ===
-                requiredItem.name
-                    .trim()
-                    .toLowerCase();
-
+                .toLowerCase() === target;
         });
 
     if (index === -1) {
         return false;
     }
 
-    inventory.splice(index, 1);
+    list.splice(index, 1);
 
-    player.tuiDo[requiredItem.type] = inventory;
+    player.tuiDo[requiredItem.type] = list;
 
     return true;
 }
 
 // =====================================================
-// /DOTPHA
+// MODULE
 // =====================================================
 
 module.exports = {
@@ -410,6 +299,10 @@ module.exports = {
             .setDescription(
                 "⚡ Đột phá cảnh giới bằng Tu Vi"
             ),
+
+    // =================================================
+    // EXECUTE
+    // =================================================
 
     async execute(interaction) {
 
@@ -424,7 +317,6 @@ module.exports = {
         // =================================================
 
         if (!p) {
-
             return interaction.reply({
                 content:
                     "⚠️ Hãy dùng `/batdau` trước.",
@@ -433,34 +325,32 @@ module.exports = {
         }
 
         // =================================================
-        // KIỂM TRA COOLDOWN 20 GIÂY
+        // COOLDOWN 20 GIÂY
         // =================================================
 
         const now =
             Date.now();
 
-        const lastAttempt =
+        const lastTime =
             dotPhaCooldown.get(userId) || 0;
 
-        const remainingCooldown =
+        const remaining =
             DOTPHA_COOLDOWN -
-            (now - lastAttempt);
+            (now - lastTime);
 
-        if (remainingCooldown > 0) {
+        if (remaining > 0) {
 
             const seconds =
                 Math.ceil(
-                    remainingCooldown / 1000
+                    remaining / 1000
                 );
 
             return interaction.reply({
-
                 content:
-                    "⏳ **Thiên kiếp đang hồi phục!**\n" +
-                    "Bạn phải chờ **" +
+                    "⏳ **Bạn vừa đột phá!**\n\n" +
+                    "Hãy chờ **" +
                     seconds +
                     " giây** nữa mới có thể đột phá tiếp.",
-
                 ephemeral: true
             });
         }
@@ -469,19 +359,17 @@ module.exports = {
         // TÌM CẢNH GIỚI
         // =================================================
 
-        let index =
+        let realmIndex =
             realms.findIndex(function(realm) {
-
                 return realm.name === p.canhGioi;
-
             });
 
-        if (index === -1) {
-            index = 0;
+        if (realmIndex === -1) {
+            realmIndex = 0;
         }
 
         const realm =
-            realms[index];
+            realms[realmIndex];
 
         // =================================================
         // TẦNG HIỆN TẠI
@@ -497,10 +385,10 @@ module.exports = {
             );
 
         const currentStage =
-            getGiaiDoan(currentTier);
+            getStage(currentTier);
 
         // =================================================
-        // TU VI HIỆN TẠI
+        // TU VI
         // =================================================
 
         const currentTuVi =
@@ -511,7 +399,7 @@ module.exports = {
         // =================================================
 
         const requiredTuVi =
-            realm.needTuVi *
+            Number(realm.needTuVi) *
             currentTier;
 
         // =================================================
@@ -551,43 +439,35 @@ module.exports = {
                             {
                                 name:
                                     "⚔️ Tu Vi hiện tại",
-
                                 value:
                                     currentTuVi
                                         .toLocaleString(),
-
                                 inline: true
                             },
 
                             {
                                 name:
                                     "🔓 Tu Vi yêu cầu",
-
                                 value:
                                     requiredTuVi
                                         .toLocaleString(),
-
                                 inline: true
                             },
 
                             {
                                 name:
                                     "📉 Còn thiếu",
-
                                 value:
                                     missing
                                         .toLocaleString(),
-
                                 inline: true
                             }
 
                         )
 
                         .setFooter({
-
                             text:
-                                "Cần đủ Tu Vi mới có thể đột phá"
-
+                                "Cần đủ Tu Vi mới có thể đột phá."
                         })
 
                 ],
@@ -597,7 +477,7 @@ module.exports = {
         }
 
         // =================================================
-        // KIỂM TRA VẬT PHẨM
+        // KIỂM TRA VẬT PHẨM YÊU CẦU
         // =================================================
 
         const requiredItem =
@@ -609,7 +489,7 @@ module.exports = {
         if (requiredItem) {
 
             const itemIndex =
-                findItemIndex(
+                findItem(
                     p,
                     requiredItem
                 );
@@ -622,9 +502,7 @@ module.exports = {
 
                         new EmbedBuilder()
 
-                            .setColor(
-                                0xe67e22
-                            )
+                            .setColor(0xe67e22)
 
                             .setTitle(
                                 "❌ THIẾU VẬT PHẨM ĐỘT PHÁ"
@@ -637,51 +515,44 @@ module.exports = {
                                 currentStage +
                                 " tầng " +
                                 currentTier +
-                                "**"
+                                "**\n\n" +
+                                requiredItem.description
                             )
 
                             .addFields(
 
                                 {
                                     name:
-                                        "🔓 Yêu cầu",
-
-                                    value:
-                                        requiredItem.reason,
-
-                                    inline: false
-                                },
-
-                                {
-                                    name:
-                                        "💊 Vật phẩm cần có",
-
+                                        "💊 Vật phẩm yêu cầu",
                                     value:
                                         "**" +
                                         requiredItem.name +
                                         "**",
-
                                     inline: false
                                 },
 
                                 {
                                     name:
-                                        "📦 Có thể kiếm",
-
+                                        "🏪 Cách kiếm",
                                     value:
-                                        "🏪 Cửa hàng\n" +
-                                        "⚔️ Phó bản",
+                                        "• Có thể bán trong cửa hàng.\n" +
+                                        "• Có thể rơi từ phó bản.",
+                                    inline: false
+                                },
 
+                                {
+                                    name:
+                                        "📦 Túi đồ",
+                                    value:
+                                        "Bạn chưa có vật phẩm này.",
                                     inline: false
                                 }
 
                             )
 
                             .setFooter({
-
                                 text:
-                                    "Vật phẩm chỉ bị mất khi đột phá thành công"
-
+                                    "Vật phẩm chỉ bị mất khi đột phá thành công."
                             })
 
                     ],
@@ -693,7 +564,6 @@ module.exports = {
 
         // =================================================
         // KHÓA COOLDOWN
-        // THÀNH CÔNG / THẤT BẠI ĐỀU 20 GIÂY
         // =================================================
 
         dotPhaCooldown.set(
@@ -703,6 +573,9 @@ module.exports = {
 
         // =================================================
         // TỶ LỆ THÀNH CÔNG
+        //
+        // GIỮ CƠ CHẾ CŨ:
+        // RANDOM 1-100%
         // =================================================
 
         const successRate =
@@ -755,16 +628,13 @@ module.exports = {
 
                     new EmbedBuilder()
 
-                        .setColor(
-                            0xe74c3c
-                        )
+                        .setColor(0xe74c3c)
 
                         .setTitle(
                             "💥 ĐỘT PHÁ THẤT BẠI"
                         )
 
                         .setDescription(
-
                             "🌱 **" +
                             realm.name +
                             " " +
@@ -772,9 +642,7 @@ module.exports = {
                             " tầng " +
                             currentTier +
                             "**\n\n" +
-
                             "Thiên kiếp phản phệ, Tu Vi bị tổn hao!"
-
                         )
 
                         .addFields(
@@ -782,64 +650,53 @@ module.exports = {
                             {
                                 name:
                                     "🎲 Tỷ lệ thành công",
-
                                 value:
-                                    successRate +
-                                    "%",
-
+                                    successRate + "%",
                                 inline: true
                             },
 
                             {
                                 name:
                                     "🎯 Kết quả",
-
                                 value:
                                     String(roll),
-
                                 inline: true
                             },
 
                             {
                                 name:
                                     "💥 Tu Vi mất",
-
                                 value:
                                     "-" +
                                     lostTuVi
                                         .toLocaleString(),
-
                                 inline: true
                             },
 
                             {
                                 name:
                                     "⚔️ Tu Vi còn lại",
-
                                 value:
                                     newTuVi
                                         .toLocaleString(),
-
                                 inline: true
                             },
 
                             {
                                 name:
                                     "💊 Vật phẩm",
-
                                 value:
-                                    "Không bị mất",
-
+                                    requiredItem
+                                        ? "Không bị mất"
+                                        : "Không yêu cầu",
                                 inline: true
                             }
 
                         )
 
                         .setFooter({
-
                             text:
-                                "Có thể đột phá lại sau 20 giây"
-
+                                "Có thể đột phá lại sau 20 giây."
                         })
 
                 ]
@@ -848,11 +705,11 @@ module.exports = {
         }
 
         // =================================================
-        // XÁC ĐỊNH TẦNG / CẢNH GIỚI MỚI
+        // XÁC ĐỊNH CẢNH GIỚI / TẦNG MỚI
         // =================================================
 
         let newRealmIndex =
-            index;
+            realmIndex;
 
         let newTier =
             currentTier + 1;
@@ -861,24 +718,34 @@ module.exports = {
         // TẦNG 12 → CẢNH GIỚI TIẾP THEO
         // =================================================
 
-        if (newTier > realm.max) {
+        if (newTier > 12) {
 
-            if (!realms[index + 1]) {
+            if (!realms[realmIndex + 1]) {
 
                 return interaction.reply({
 
-                    content:
-                        "🌌 **ĐẠI ĐẠO TỐI CAO!**\n\n" +
-                        "Bạn đã đạt **Đại Đạo Viên Mãn tầng 12**.\n" +
-                        "Không còn cảnh giới nào cao hơn.",
+                    embeds: [
 
-                    ephemeral: true
+                        new EmbedBuilder()
+
+                            .setColor(0x9b59b6)
+
+                            .setTitle(
+                                "🌌 ĐẠI ĐẠO TỐI CAO"
+                            )
+
+                            .setDescription(
+                                "Bạn đã đạt **Đại Đạo Viên Mãn tầng 12**.\n\n" +
+                                "Không còn cảnh giới nào cao hơn."
+                            )
+
+                    ]
 
                 });
             }
 
             newRealmIndex =
-                index + 1;
+                realmIndex + 1;
 
             newTier = 1;
         }
@@ -887,10 +754,12 @@ module.exports = {
             realms[newRealmIndex];
 
         const newStage =
-            getGiaiDoan(newTier);
+            getStage(newTier);
 
         // =================================================
-        // CHỈ TRỪ VẬT PHẨM SAU KHI THÀNH CÔNG
+        // TRỪ VẬT PHẨM
+        //
+        // CHỈ TRỪ SAU KHI XÁC ĐỊNH THÀNH CÔNG
         // =================================================
 
         if (requiredItem) {
@@ -906,7 +775,8 @@ module.exports = {
                 return interaction.reply({
 
                     content:
-                        "❌ Vật phẩm đột phá không còn trong túi. Đột phá chưa được lưu.",
+                        "❌ Không thể tìm thấy vật phẩm yêu cầu trong túi.\n" +
+                        "Đột phá chưa được lưu và vật phẩm không bị trừ.",
 
                     ephemeral: true
 
@@ -915,7 +785,8 @@ module.exports = {
         }
 
         // =================================================
-        // HỆ SỐ CHỈ SỐ x9
+        // HỆ SỐ CHỈ SỐ
+        // GIỮ X9 NHƯ CODE CŨ
         // =================================================
 
         const BREAKTHROUGH_MULTIPLIER =
@@ -930,11 +801,9 @@ module.exports = {
 
         const hpIncrease =
             Math.floor(
-
                 newRealm.stats.hp *
                 tierMultiplier *
                 BREAKTHROUGH_MULTIPLIER
-
             );
 
         // =================================================
@@ -943,11 +812,9 @@ module.exports = {
 
         const congIncrease =
             Math.floor(
-
                 newRealm.stats.cong *
                 tierMultiplier *
                 BREAKTHROUGH_MULTIPLIER
-
             );
 
         // =================================================
@@ -956,11 +823,9 @@ module.exports = {
 
         const thuIncrease =
             Math.floor(
-
                 newRealm.stats.thu *
                 tierMultiplier *
                 BREAKTHROUGH_MULTIPLIER
-
             );
 
         // =================================================
@@ -1000,7 +865,7 @@ module.exports = {
             thuIncrease;
 
         // =================================================
-        // TU VI GIỮ NGUYÊN
+        // TU VI GIỮ NGUYÊN KHI THÀNH CÔNG
         // =================================================
 
         const remainingTuVi =
@@ -1054,10 +919,11 @@ module.exports = {
         );
 
         // =================================================
-        // THÔNG BÁO ITEM ĐÃ DÙNG
+        // TEXT VẬT PHẨM
         // =================================================
 
-        let itemText = "";
+        let itemText =
+            "";
 
         if (requiredItem) {
 
@@ -1067,15 +933,13 @@ module.exports = {
         }
 
         // =================================================
-        // THÔNG BÁO THÀNH CÔNG
+        // EMBED THÀNH CÔNG
         // =================================================
 
         const embed =
             new EmbedBuilder()
 
-                .setColor(
-                    0x2ecc71
-                )
+                .setColor(0x2ecc71)
 
                 .setTitle(
                     "⚡ ĐỘT PHÁ THÀNH CÔNG!"
@@ -1110,39 +974,31 @@ module.exports = {
                     {
                         name:
                             "📈 Tỷ lệ thành công",
-
                         value:
-                            successRate +
-                            "%",
-
+                            successRate + "%",
                         inline: true
                     },
 
                     {
                         name:
                             "🎯 Kết quả",
-
                         value:
                             String(roll),
-
                         inline: true
                     },
 
                     {
                         name:
                             "⚔️ Tu Vi",
-
                         value:
                             remainingTuVi
                                 .toLocaleString(),
-
                         inline: true
                     },
 
                     {
                         name:
                             "🌱 Cảnh giới",
-
                         value:
                             "**" +
                             newRealm.name +
@@ -1151,14 +1007,12 @@ module.exports = {
                             " tầng " +
                             newTier +
                             "**",
-
                         inline: false
                     },
 
                     {
                         name:
                             "❤️ HP",
-
                         value:
                             "+" +
                             hpIncrease
@@ -1167,14 +1021,12 @@ module.exports = {
                             newMaxHp
                                 .toLocaleString() +
                             "**",
-
                         inline: true
                     },
 
                     {
                         name:
                             "⚔️ Công",
-
                         value:
                             "+" +
                             congIncrease
@@ -1183,14 +1035,12 @@ module.exports = {
                             newCong
                                 .toLocaleString() +
                             "**",
-
                         inline: true
                     },
 
                     {
                         name:
                             "🛡️ Thủ",
-
                         value:
                             "+" +
                             thuIncrease
@@ -1199,26 +1049,20 @@ module.exports = {
                             newThu
                                 .toLocaleString() +
                             "**",
-
                         inline: true
                     }
 
                 )
 
                 .setFooter({
-
                     text:
-                        "Hồng Hoang Đại Lục • Đột phá bằng Tu Vi • Chỉ số x9 • Cooldown 20 giây"
-
+                        "Hồng Hoang Đại Lục • 12 tầng • Cooldown 20 giây • Thất bại mất 1-10.000 Tu Vi"
                 });
 
         return interaction.reply({
-
             embeds: [
                 embed
             ]
-
         });
     }
 };
-```
