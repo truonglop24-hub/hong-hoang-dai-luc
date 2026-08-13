@@ -1,33 +1,56 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { getPlayer, updatePlayer } = require("./database");
+
+const {
+    getPlayer,
+    updatePlayer,
+    generateLinhCan
+} = require("./database");
 
 module.exports = {
+
+    // =====================================================
+    // SLASH COMMAND
+    // =====================================================
+
     data: new SlashCommandBuilder()
         .setName("dungdan")
-        .setDescription("Dùng đan dược bằng cách nhập tên đan")
+        .setDescription("Sử dụng đan dược trong túi")
         .addStringOption(option =>
             option
                 .setName("dan")
-                .setDescription("Nhập chính xác tên đan dược trong túi")
+                .setDescription("Nhập tên đan dược muốn sử dụng")
                 .setRequired(true)
         ),
+
+    // =====================================================
+    // EXECUTE
+    // =====================================================
 
     async execute(interaction) {
 
         try {
 
-            const p = getPlayer(interaction.user.id);
+            const p = getPlayer(
+                interaction.user.id
+            );
+
+            // =================================================
+            // CHƯA CÓ NHÂN VẬT
+            // =================================================
 
             if (!p) {
+
                 return interaction.reply({
-                    content: "⚠️ Hãy dùng `/batdau` trước.",
+                    content:
+                        "⚠️ Hãy dùng `/batdau` trước.",
                     ephemeral: true
                 });
+
             }
 
-            // ==========================================
-            // TÊN ĐAN NGƯỜI CHƠI NHẬP
-            // ==========================================
+            // =================================================
+            // LẤY TÊN ĐAN
+            // =================================================
 
             const danNhap =
                 interaction.options
@@ -35,106 +58,294 @@ module.exports = {
                     .trim();
 
             if (!danNhap) {
+
                 return interaction.reply({
-                    content: "❌ Vui lòng nhập tên đan dược.",
+                    content:
+                        "❌ Vui lòng nhập tên đan dược.",
                     ephemeral: true
                 });
+
             }
 
-            // ==========================================
-            // KIỂM TRA TÚI ĐAN
-            // ==========================================
+            // =================================================
+            // KIỂM TRA TÚI ĐỒ
+            // =================================================
+
+            if (!p.tuiDo) {
+
+                return interaction.reply({
+                    content:
+                        "❌ Không tìm thấy túi đồ.",
+                    ephemeral: true
+                });
+
+            }
 
             if (
-                !p.tuiDo ||
-                !Array.isArray(p.tuiDo.danDuoc)
+                !Array.isArray(
+                    p.tuiDo.danDuoc
+                )
             ) {
+
                 return interaction.reply({
-                    content: "❌ Túi đan dược của bạn đang trống.",
+                    content:
+                        "❌ Túi đan dược đang trống.",
                     ephemeral: true
                 });
+
             }
 
-            const list = p.tuiDo.danDuoc;
+            const list =
+                p.tuiDo.danDuoc;
 
-            // Tìm không phân biệt hoa/thường
-            // và bỏ khoảng trắng đầu/cuối
-            const index = list.findIndex(
-                item =>
+            // =================================================
+            // TÌM ĐAN
+            // Không phân biệt hoa thường
+            // =================================================
+
+            const index =
+                list.findIndex(item =>
                     String(item)
                         .trim()
                         .toLowerCase() ===
                     danNhap.toLowerCase()
-            );
+                );
 
-            // ==========================================
+            // =================================================
             // KHÔNG CÓ ĐAN
-            // ==========================================
+            // =================================================
 
             if (index === -1) {
+
                 return interaction.reply({
                     content:
                         `❌ Bạn không có **${danNhap}** trong túi đan dược.`,
                     ephemeral: true
                 });
+
             }
 
-            // ==========================================
-            // LẤY TÊN ĐAN THỰC TẾ TRONG TÚI
-            // ==========================================
+            // =================================================
+            // TÊN ĐAN THỰC TẾ
+            // =================================================
 
-            const tenDan = list[index];
+            const tenDan =
+                String(list[index]).trim();
 
-            // ==========================================
-            // XỬ LÝ HIỆU ỨNG ĐAN
-            //
-            // Giữ nguyên 2 loại đan hiện tại:
-            //
-            // 🔥 Đan Linh Lực
-            // ✨ Đan Kinh Nghiệm
-            // ==========================================
+            // =================================================
+            // XÓA 1 VIÊN ĐAN
+            // =================================================
 
-            let linhLucThem = 0;
-            let kinhNghiemThem = 0;
-
-            if (
-                tenDan === "🔥 Đan Linh Lực"
-            ) {
-                linhLucThem = 100;
-            }
-
-            if (
-                tenDan === "✨ Đan Kinh Nghiệm"
-            ) {
-                kinhNghiemThem = 100;
-            }
-
-            // ==========================================
-            // ĐAN KHÁC
-            //
-            // Nếu tên đan không phải 2 loại cũ,
-            // vẫn cho phép sử dụng và trừ đan.
-            // Không tự bịa hiệu ứng.
-            // ==========================================
-
-            // Xóa đúng 1 viên
             list.splice(index, 1);
 
-            // ==========================================
-            // CẬP NHẬT PLAYER
-            // ==========================================
+            // =================================================
+            // ĐAN LINH LỰC
+            // =================================================
+
+            if (
+                tenDan
+                    .toLowerCase()
+                    .includes("đan linh lực")
+            ) {
+
+                const linhLucMoi =
+                    (Number(p.linhLuc) || 0) + 100;
+
+                updatePlayer(
+                    interaction.user.id,
+                    {
+                        linhLuc: linhLucMoi,
+
+                        tuiDo: {
+                            ...p.tuiDo,
+                            danDuoc: list
+                        }
+                    }
+                );
+
+                return interaction.reply(
+                    `🧪 Đã sử dụng **${tenDan}**.\n` +
+                    `🔥 Linh lực **+100**.\n` +
+                    `💠 Linh lực hiện tại: **${linhLucMoi}**`
+                );
+
+            }
+
+            // =================================================
+            // ĐAN KINH NGHIỆM
+            // =================================================
+
+            if (
+                tenDan
+                    .toLowerCase()
+                    .includes("đan kinh nghiệm")
+            ) {
+
+                const kinhNghiemMoi =
+                    (Number(p.kinhNghiem) || 0) + 100;
+
+                updatePlayer(
+                    interaction.user.id,
+                    {
+                        kinhNghiem: kinhNghiemMoi,
+
+                        tuiDo: {
+                            ...p.tuiDo,
+                            danDuoc: list
+                        }
+                    }
+                );
+
+                return interaction.reply(
+                    `🧪 Đã sử dụng **${tenDan}**.\n` +
+                    `✨ Kinh nghiệm **+100**.\n` +
+                    `📖 Kinh nghiệm hiện tại: **${kinhNghiemMoi}**`
+                );
+
+            }
+
+            // =================================================
+            // ĐAN ĐỔI LINH CĂN
+            // =================================================
+
+            if (
+                tenDan
+                    .toLowerCase()
+                    .includes("đan đổi linh căn")
+            ) {
+
+                // ---------------------------------------------
+                // LINH CĂN CŨ
+                // ---------------------------------------------
+
+                const linhCanCu =
+                    p.linhCan;
+
+                // ---------------------------------------------
+                // TẠO LINH CĂN MỚI
+                // ---------------------------------------------
+
+                const linhCanMoi =
+                    generateLinhCan();
+
+                // ---------------------------------------------
+                // CẬP NHẬT DATABASE
+                // ---------------------------------------------
+
+                updatePlayer(
+                    interaction.user.id,
+                    {
+                        linhCan: linhCanMoi,
+
+                        tuiDo: {
+                            ...p.tuiDo,
+                            danDuoc: list
+                        }
+                    }
+                );
+
+                // ---------------------------------------------
+                // HIỂN THỊ
+                // ---------------------------------------------
+
+                let message =
+                    `🧪 Đã sử dụng **${tenDan}**!\n\n` +
+                    `🧬 **LINH CĂN ĐÃ ĐƯỢC THAY ĐỔI**\n\n`;
+
+                if (linhCanCu) {
+
+                    message +=
+                        `🔻 Linh căn cũ:\n` +
+                        `**${linhCanCu.ten || "Không rõ"}**\n\n`;
+
+                } else {
+
+                    message +=
+                        `🔻 Linh căn cũ:\n` +
+                        `**Chưa có**\n\n`;
+
+                }
+
+                message +=
+                    `🔺 Linh căn mới:\n` +
+                    `**${linhCanMoi.ten}**\n\n` +
+
+                    `🏆 Phẩm cấp: **${linhCanMoi.phamCap}**\n` +
+                    `🌟 Thuộc tính: **${linhCanMoi.thuocTinh}**\n\n` +
+
+                    `📜 ${linhCanMoi.moTa}`;
+
+                return interaction.reply(message);
+
+            }
+
+            // =================================================
+            // ĐAN ĐỔI LINH CĂN - TRƯỜNG HỢP KHÁC CÁCH VIẾT
+            // =================================================
+
+            if (
+                tenDan
+                    .toLowerCase()
+                    .includes("đổi linh căn")
+            ) {
+
+                const linhCanCu =
+                    p.linhCan;
+
+                const linhCanMoi =
+                    generateLinhCan();
+
+                updatePlayer(
+                    interaction.user.id,
+                    {
+                        linhCan: linhCanMoi,
+
+                        tuiDo: {
+                            ...p.tuiDo,
+                            danDuoc: list
+                        }
+                    }
+                );
+
+                return interaction.reply(
+                    `🧪 Đã sử dụng **${tenDan}**!\n\n` +
+
+                    `🧬 **LINH CĂN ĐÃ ĐƯỢC THAY ĐỔI**\n\n` +
+
+                    `🔻 Cũ: **${
+                        linhCanCu?.ten || "Chưa có"
+                    }**\n\n` +
+
+                    `🔺 Mới: **${linhCanMoi.ten}**\n` +
+
+                    `🏆 Phẩm cấp: **${linhCanMoi.phamCap}**\n` +
+
+                    `🌟 Thuộc tính: **${linhCanMoi.thuocTinh}**\n\n` +
+
+                    `📜 ${linhCanMoi.moTa}`
+                );
+
+            }
+
+            // =================================================
+            // ĐAN CHƯA CÓ HIỆU ỨNG
+            // =================================================
+
+            // Quan trọng:
+            // Nếu đan không phải các loại trên,
+            // KHÔNG âm thầm mất đan.
+            //
+            // Hoàn lại viên đan nếu chưa có hiệu ứng.
+
+            list.splice(
+                index,
+                0,
+                tenDan
+            );
 
             updatePlayer(
                 interaction.user.id,
                 {
-                    linhLuc:
-                        (Number(p.linhLuc) || 0) +
-                        linhLucThem,
-
-                    kinhNghiem:
-                        (Number(p.kinhNghiem) || 0) +
-                        kinhNghiemThem,
-
                     tuiDo: {
                         ...p.tuiDo,
                         danDuoc: list
@@ -142,34 +353,11 @@ module.exports = {
                 }
             );
 
-            // ==========================================
-            // THÔNG BÁO
-            // ==========================================
-
-            let message =
-                `🧪 Đã sử dụng **${tenDan}**.`;
-
-            if (linhLucThem > 0) {
-                message +=
-                    `\n🔥 Linh lực +${linhLucThem}`;
-            }
-
-            if (kinhNghiemThem > 0) {
-                message +=
-                    `\n✨ Kinh nghiệm +${kinhNghiemThem}`;
-            }
-
-            // Đan chưa có hiệu ứng trong file hiện tại
-            if (
-                linhLucThem === 0 &&
-                kinhNghiemThem === 0
-            ) {
-                message +=
-                    `\n⚠️ Đan này chưa được khai báo hiệu ứng trong hệ thống.`;
-            }
-
             return interaction.reply({
-                content: message
+                content:
+                    `⚠️ **${tenDan}** chưa được khai báo hiệu ứng.\n` +
+                    `📦 Đan dược **không bị mất**.`,
+                ephemeral: true
             });
 
         } catch (error) {
@@ -183,11 +371,13 @@ module.exports = {
                 interaction.replied ||
                 interaction.deferred
             ) {
+
                 return interaction.followUp({
                     content:
                         "❌ Đã xảy ra lỗi khi sử dụng đan dược.",
                     ephemeral: true
                 });
+
             }
 
             return interaction.reply({
@@ -195,6 +385,9 @@ module.exports = {
                     "❌ Đã xảy ra lỗi khi sử dụng đan dược.",
                 ephemeral: true
             });
+
         }
+
     }
+
 };
