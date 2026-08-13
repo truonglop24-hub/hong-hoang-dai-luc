@@ -10,7 +10,7 @@ const {
 } = require("./database");
 
 // =====================================================
-// COOLDOWN ĐỘT PHÁ: 20 GIÂY / LẦN THỬ
+// COOLDOWN ĐỘT PHÁ
 // =====================================================
 
 const dotPhaCooldown = new Map();
@@ -18,41 +18,26 @@ const dotPhaCooldown = new Map();
 const DOTPHA_COOLDOWN = 20_000;
 
 // =====================================================
-// CẤU TRÚC GIAI ĐOẠN
-// =====================================================
-//
-// Tầng 1 - 3  : Sơ Kỳ
-// Tầng 4 - 6  : Trung Kỳ
-// Tầng 7 - 9  : Hậu Kỳ
-// Tầng 10-12  : Viên Mãn
-//
-// Mốc đột phá:
-// 3  -> 4  : cần Đan Trung Kỳ
-// 6  -> 7  : cần Đan Hậu Kỳ
-// 9  -> 10 : cần Đan Viên Mãn
-// 12 -> cảnh giới mới tầng 1 : cần Phá Cảnh Đan
+// LẤY GIAI ĐOẠN
+// 1 - 3  : Sơ Kỳ
+// 4 - 6  : Trung Kỳ
+// 7 - 9  : Hậu Kỳ
+// 10-12  : Viên Mãn
 // =====================================================
 
 function getGiaiDoan(tang) {
 
-    const tier =
-        Math.max(
-            1,
-            Math.min(
-                12,
-                Number(tang || 1)
-            )
-        );
+    tang = Number(tang || 1);
 
-    if (tier <= 3) {
+    if (tang <= 3) {
         return "Sơ Kỳ";
     }
 
-    if (tier <= 6) {
+    if (tang <= 6) {
         return "Trung Kỳ";
     }
 
-    if (tier <= 9) {
+    if (tang <= 9) {
         return "Hậu Kỳ";
     }
 
@@ -60,174 +45,8 @@ function getGiaiDoan(tang) {
 }
 
 // =====================================================
-// TÊN VẬT PHẨM YÊU CẦU
-// =====================================================
-
-function getRequiredItem(
-    realmName,
-    currentTier
-) {
-
-    if (currentTier === 3) {
-
-        return {
-            type: "danDuoc",
-            name: `${realmName} Trung Kỳ Đan`,
-            reason: `Đột phá ${realmName} Sơ Kỳ → Trung Kỳ`
-        };
-    }
-
-    if (currentTier === 6) {
-
-        return {
-            type: "danDuoc",
-            name: `${realmName} Hậu Kỳ Đan`,
-            reason: `Đột phá ${realmName} Trung Kỳ → Hậu Kỳ`
-        };
-    }
-
-    if (currentTier === 9) {
-
-        return {
-            type: "danDuoc",
-            name: `${realmName} Viên Mãn Đan`,
-            reason: `Đột phá ${realmName} Hậu Kỳ → Viên Mãn`
-        };
-    }
-
-    if (currentTier === 12) {
-
-        return {
-            type: "vatPham",
-            name: `${realmName} Phá Cảnh Đan`,
-            reason: `Đột phá ${realmName} Viên Mãn → cảnh giới tiếp theo`
-        };
-    }
-
-    return null;
-}
-
-// =====================================================
-// TÌM ITEM TRONG TÚI
-// Hỗ trợ item là string hoặc object có name/ten
-// =====================================================
-
-function getItemName(item) {
-
-    if (typeof item === "string") {
-        return item;
-    }
-
-    if (
-        item &&
-        typeof item === "object"
-    ) {
-
-        return (
-            item.name ||
-            item.ten ||
-            item.itemName ||
-            item.tenItem ||
-            ""
-        );
-    }
-
-    return "";
-}
-
-// =====================================================
-// KIỂM TRA ITEM
-// =====================================================
-
-function findRequiredItem(
-    player,
-    requiredItem
-) {
-
-    if (
-        !player ||
-        !player.tuiDo ||
-        !requiredItem
-    ) {
-        return -1;
-    }
-
-    const inventory =
-        Array.isArray(
-            player.tuiDo[requiredItem.type]
-        )
-            ? player.tuiDo[requiredItem.type]
-            : [];
-
-    const target =
-        requiredItem.name
-            .trim()
-            .toLowerCase();
-
-    return inventory.findIndex(
-        item =>
-            getItemName(item)
-                .trim()
-                .toLowerCase() === target
-    );
-}
-
-// =====================================================
-// XÓA 1 ITEM KHI ĐỘT PHÁ THÀNH CÔNG
-// =====================================================
-
-function consumeRequiredItem(
-    player,
-    requiredItem
-) {
-
-    if (
-        !player ||
-        !player.tuiDo ||
-        !requiredItem
-    ) {
-        return false;
-    }
-
-    const inventory =
-        Array.isArray(
-            player.tuiDo[requiredItem.type]
-        )
-            ? [...player.tuiDo[requiredItem.type]]
-            : [];
-
-    const targetIndex =
-        inventory.findIndex(
-            item =>
-                getItemName(item)
-                    .trim()
-                    .toLowerCase() ===
-                requiredItem.name
-                    .trim()
-                    .toLowerCase()
-        );
-
-    if (targetIndex === -1) {
-        return false;
-    }
-
-    // Mất đúng 1 vật phẩm
-    inventory.splice(
-        targetIndex,
-        1
-    );
-
-    player.tuiDo = {
-        ...player.tuiDo,
-        [requiredItem.type]:
-            inventory
-    };
-
-    return true;
-}
-
-// =====================================================
-// 18 ĐẠI CẢNH GIỚI
+// 18 CẢNH GIỚI
+// MỖI CẢNH GIỚI 12 TẦNG
 // =====================================================
 
 const realms = [
@@ -433,6 +252,153 @@ const realms = [
 ];
 
 // =====================================================
+// LẤY VẬT PHẨM YÊU CẦU
+//
+// Tầng 3  -> Trung Kỳ
+// Tầng 6  -> Hậu Kỳ
+// Tầng 9  -> Viên Mãn
+// Tầng 12 -> Phá Cảnh
+// =====================================================
+
+function getRequiredItem(realmName, currentTier) {
+
+    if (currentTier === 3) {
+
+        return {
+            type: "danDuoc",
+            name: realmName + " Trung Kỳ Đan",
+            reason: "Đột phá " + realmName + " Sơ Kỳ → Trung Kỳ"
+        };
+    }
+
+    if (currentTier === 6) {
+
+        return {
+            type: "danDuoc",
+            name: realmName + " Hậu Kỳ Đan",
+            reason: "Đột phá " + realmName + " Trung Kỳ → Hậu Kỳ"
+        };
+    }
+
+    if (currentTier === 9) {
+
+        return {
+            type: "danDuoc",
+            name: realmName + " Viên Mãn Đan",
+            reason: "Đột phá " + realmName + " Hậu Kỳ → Viên Mãn"
+        };
+    }
+
+    if (currentTier === 12) {
+
+        return {
+            type: "vatPham",
+            name: realmName + " Phá Cảnh Đan",
+            reason: "Đột phá " + realmName + " Viên Mãn → cảnh giới tiếp theo"
+        };
+    }
+
+    return null;
+}
+
+// =====================================================
+// LẤY TÊN ITEM
+// HỖ TRỢ STRING HOẶC OBJECT
+// =====================================================
+
+function getItemName(item) {
+
+    if (typeof item === "string") {
+        return item;
+    }
+
+    if (item && typeof item === "object") {
+
+        return (
+            item.name ||
+            item.ten ||
+            item.itemName ||
+            item.tenItem ||
+            ""
+        );
+    }
+
+    return "";
+}
+
+// =====================================================
+// TÌM ITEM TRONG TÚI
+// =====================================================
+
+function findItemIndex(player, requiredItem) {
+
+    if (!player || !player.tuiDo) {
+        return -1;
+    }
+
+    const inventory =
+        Array.isArray(
+            player.tuiDo[requiredItem.type]
+        )
+            ? player.tuiDo[requiredItem.type]
+            : [];
+
+    const target =
+        requiredItem.name
+            .trim()
+            .toLowerCase();
+
+    return inventory.findIndex(function(item) {
+
+        return getItemName(item)
+            .trim()
+            .toLowerCase() === target;
+
+    });
+}
+
+// =====================================================
+// XÓA 1 ITEM
+// CHỈ GỌI HÀM NÀY SAU KHI ĐỘT PHÁ THÀNH CÔNG
+// =====================================================
+
+function consumeItem(player, requiredItem) {
+
+    if (!player || !player.tuiDo) {
+        return false;
+    }
+
+    const inventory =
+        Array.isArray(
+            player.tuiDo[requiredItem.type]
+        )
+            ? [...player.tuiDo[requiredItem.type]]
+            : [];
+
+    const index =
+        inventory.findIndex(function(item) {
+
+            return getItemName(item)
+                .trim()
+                .toLowerCase() ===
+                requiredItem.name
+                    .trim()
+                    .toLowerCase();
+
+        });
+
+    if (index === -1) {
+        return false;
+    }
+
+    inventory.splice(index, 1);
+
+    player.tuiDo[requiredItem.type] = inventory;
+
+    return true;
+}
+
+// =====================================================
 // /DOTPHA
 // =====================================================
 
@@ -480,9 +446,7 @@ module.exports = {
             DOTPHA_COOLDOWN -
             (now - lastAttempt);
 
-        if (
-            remainingCooldown > 0
-        ) {
+        if (remainingCooldown > 0) {
 
             const seconds =
                 Math.ceil(
@@ -492,8 +456,10 @@ module.exports = {
             return interaction.reply({
 
                 content:
-                    `⏳ **Thiên kiếp đang hồi phục!**\n` +
-                    `Bạn phải chờ **${seconds} giây** nữa mới có thể đột phá tiếp.`,
+                    "⏳ **Thiên kiếp đang hồi phục!**\n" +
+                    "Bạn phải chờ **" +
+                    seconds +
+                    " giây** nữa mới có thể đột phá tiếp.",
 
                 ephemeral: true
             });
@@ -504,13 +470,12 @@ module.exports = {
         // =================================================
 
         let index =
-            realms.findIndex(
-                r =>
-                    r.name ===
-                    p.canhGioi
-            );
+            realms.findIndex(function(realm) {
 
-        // Hỗ trợ dữ liệu cũ
+                return realm.name === p.canhGioi;
+
+            });
+
         if (index === -1) {
             index = 0;
         }
@@ -527,25 +492,19 @@ module.exports = {
                 1,
                 Math.min(
                     12,
-                    Number(
-                        p.tang || 1
-                    )
+                    Number(p.tang || 1)
                 )
             );
 
         const currentStage =
-            getGiaiDoan(
-                currentTier
-            );
+            getGiaiDoan(currentTier);
 
         // =================================================
         // TU VI HIỆN TẠI
         // =================================================
 
         const currentTuVi =
-            Number(
-                p.tuvi || 0
-            );
+            Number(p.tuvi || 0);
 
         // =================================================
         // TU VI YÊU CẦU
@@ -556,13 +515,10 @@ module.exports = {
             currentTier;
 
         // =================================================
-        // KIỂM TRA ĐỦ TU VI
+        // KIỂM TRA TU VI
         // =================================================
 
-        if (
-            currentTuVi <
-            requiredTuVi
-        ) {
+        if (currentTuVi < requiredTuVi) {
 
             const missing =
                 requiredTuVi -
@@ -574,16 +530,20 @@ module.exports = {
 
                     new EmbedBuilder()
 
-                        .setColor(
-                            0xf1c40f
-                        )
+                        .setColor(0xf1c40f)
 
                         .setTitle(
                             "⚠️ CHƯA ĐỦ TU VI"
                         )
 
                         .setDescription(
-                            `🌱 **${realm.name} ${currentStage} tầng ${currentTier}**`
+                            "🌱 **" +
+                            realm.name +
+                            " " +
+                            currentStage +
+                            " tầng " +
+                            currentTier +
+                            "**"
                         )
 
                         .addFields(
@@ -624,8 +584,10 @@ module.exports = {
                         )
 
                         .setFooter({
+
                             text:
                                 "Cần đủ Tu Vi mới có thể đột phá"
+
                         })
 
                 ],
@@ -635,7 +597,7 @@ module.exports = {
         }
 
         // =================================================
-        // KIỂM TRA ĐAN DƯỢC / VẬT PHẨM
+        // KIỂM TRA VẬT PHẨM
         // =================================================
 
         const requiredItem =
@@ -647,7 +609,7 @@ module.exports = {
         if (requiredItem) {
 
             const itemIndex =
-                findRequiredItem(
+                findItemIndex(
                     p,
                     requiredItem
                 );
@@ -669,7 +631,13 @@ module.exports = {
                             )
 
                             .setDescription(
-                                `🌱 **${realm.name} ${currentStage} tầng ${currentTier}**`
+                                "🌱 **" +
+                                realm.name +
+                                " " +
+                                currentStage +
+                                " tầng " +
+                                currentTier +
+                                "**"
                             )
 
                             .addFields(
@@ -689,17 +657,20 @@ module.exports = {
                                         "💊 Vật phẩm cần có",
 
                                     value:
-                                        `**${requiredItem.name}**`,
+                                        "**" +
+                                        requiredItem.name +
+                                        "**",
 
                                     inline: false
                                 },
 
                                 {
                                     name:
-                                        "📦 Nơi kiếm",
+                                        "📦 Có thể kiếm",
 
                                     value:
-                                        "🏪 Cửa hàng\n⚔️ Phó bản",
+                                        "🏪 Cửa hàng\n" +
+                                        "⚔️ Phó bản",
 
                                     inline: false
                                 }
@@ -707,8 +678,10 @@ module.exports = {
                             )
 
                             .setFooter({
+
                                 text:
-                                    "Có đủ Tu Vi và vật phẩm mới có thể đột phá"
+                                    "Vật phẩm chỉ bị mất khi đột phá thành công"
+
                             })
 
                     ],
@@ -719,8 +692,8 @@ module.exports = {
         }
 
         // =================================================
-        // BẮT ĐẦU LƯỢT ĐỘT PHÁ
-        // KHÓA 20 GIÂY
+        // KHÓA COOLDOWN
+        // THÀNH CÔNG / THẤT BẠI ĐỀU 20 GIÂY
         // =================================================
 
         dotPhaCooldown.set(
@@ -729,7 +702,7 @@ module.exports = {
         );
 
         // =================================================
-        // RANDOM TỶ LỆ
+        // TỶ LỆ THÀNH CÔNG
         // =================================================
 
         const successRate =
@@ -746,21 +719,19 @@ module.exports = {
             roll <= successRate;
 
         // =================================================
-        // ĐỘT PHÁ THẤT BẠI
+        // THẤT BẠI
+        // MẤT 1 - 10.000 TU VI
+        // KHÔNG MẤT VẬT PHẨM
         // =================================================
 
         if (!success) {
-
-            // Không mất vật phẩm
-            // Chỉ mất 1.000 - 10.000 Tu Vi
 
             const lostTuVi =
                 Math.min(
                     currentTuVi,
                     Math.floor(
-                        Math.random() *
-                        9001
-                    ) + 1000
+                        Math.random() * 10000
+                    ) + 1
                 );
 
             const newTuVi =
@@ -794,9 +765,16 @@ module.exports = {
 
                         .setDescription(
 
-                            `🌱 **${realm.name} ${currentStage} tầng ${currentTier}**\n\n` +
+                            "🌱 **" +
+                            realm.name +
+                            " " +
+                            currentStage +
+                            " tầng " +
+                            currentTier +
+                            "**\n\n" +
 
-                            `Thiên kiếp phản phệ, Tu Vi bị tổn hao!`
+                            "Thiên kiếp phản phệ, Tu Vi bị tổn hao!"
+
                         )
 
                         .addFields(
@@ -806,7 +784,8 @@ module.exports = {
                                     "🎲 Tỷ lệ thành công",
 
                                 value:
-                                    `${successRate}%`,
+                                    successRate +
+                                    "%",
 
                                 inline: true
                             },
@@ -816,7 +795,7 @@ module.exports = {
                                     "🎯 Kết quả",
 
                                 value:
-                                    `${roll}`,
+                                    String(roll),
 
                                 inline: true
                             },
@@ -826,7 +805,9 @@ module.exports = {
                                     "💥 Tu Vi mất",
 
                                 value:
-                                    `-${lostTuVi.toLocaleString()}`,
+                                    "-" +
+                                    lostTuVi
+                                        .toLocaleString(),
 
                                 inline: true
                             },
@@ -836,19 +817,18 @@ module.exports = {
                                     "⚔️ Tu Vi còn lại",
 
                                 value:
-                                    `${newTuVi.toLocaleString()}`,
+                                    newTuVi
+                                        .toLocaleString(),
 
                                 inline: true
                             },
 
                             {
                                 name:
-                                    "📦 Vật phẩm",
+                                    "💊 Vật phẩm",
 
                                 value:
-                                    requiredItem
-                                        ? "Không bị mất"
-                                        : "Không yêu cầu",
+                                    "Không bị mất",
 
                                 inline: true
                             }
@@ -856,8 +836,10 @@ module.exports = {
                         )
 
                         .setFooter({
+
                             text:
-                                "Thất bại không mất đan dược/vật phẩm • Có thể thử lại sau 20 giây"
+                                "Có thể đột phá lại sau 20 giây"
+
                         })
 
                 ]
@@ -866,7 +848,7 @@ module.exports = {
         }
 
         // =================================================
-        // XÁC ĐỊNH CẢNH GIỚI / TẦNG MỚI
+        // XÁC ĐỊNH TẦNG / CẢNH GIỚI MỚI
         // =================================================
 
         let newRealmIndex =
@@ -879,29 +861,19 @@ module.exports = {
         // TẦNG 12 → CẢNH GIỚI TIẾP THEO
         // =================================================
 
-        if (
-            newTier >
-            realm.max
-        ) {
+        if (newTier > realm.max) {
 
-            // Đại Đạo tầng 12
-            if (
-                !realms[
-                    index + 1
-                ]
-            ) {
+            if (!realms[index + 1]) {
 
                 return interaction.reply({
 
                     content:
-
                         "🌌 **ĐẠI ĐẠO TỐI CAO!**\n\n" +
-
-                        "Bạn đã đạt **Đại Đạo Viên Mãn tầng 12**.\n\n" +
-
+                        "Bạn đã đạt **Đại Đạo Viên Mãn tầng 12**.\n" +
                         "Không còn cảnh giới nào cao hơn.",
 
                     ephemeral: true
+
                 });
             }
 
@@ -912,63 +884,20 @@ module.exports = {
         }
 
         const newRealm =
-            realms[
-                newRealmIndex
-            ];
+            realms[newRealmIndex];
 
         const newStage =
-            getGiaiDoan(
-                newTier
-            );
+            getGiaiDoan(newTier);
 
         // =================================================
-        // TRỪ VẬT PHẨM YÊU CẦU
-        // CHỈ TRỪ SAU KHI ĐỘT PHÁ THÀNH CÔNG
+        // CHỈ TRỪ VẬT PHẨM SAU KHI THÀNH CÔNG
         // =================================================
 
-        let newInventory =
-            p.tuiDo
-                ? {
-                    ...p.tuiDo
-                }
-                : {
-                    danDuoc: [],
-                    vatPham: [],
-                    linhThu: []
-                };
-
-        if (
-            requiredItem
-        ) {
-
-            const copiedPlayer = {
-                ...p,
-                tuiDo: {
-                    ...newInventory,
-
-                    danDuoc:
-                        Array.isArray(
-                            newInventory.danDuoc
-                        )
-                            ? [
-                                ...newInventory.danDuoc
-                            ]
-                            : [],
-
-                    vatPham:
-                        Array.isArray(
-                            newInventory.vatPham
-                        )
-                            ? [
-                                ...newInventory.vatPham
-                            ]
-                            : []
-                }
-            };
+        if (requiredItem) {
 
             const consumed =
-                consumeRequiredItem(
-                    copiedPlayer,
+                consumeItem(
+                    p,
                     requiredItem
                 );
 
@@ -977,19 +906,16 @@ module.exports = {
                 return interaction.reply({
 
                     content:
-                        "❌ Vật phẩm đột phá không còn trong túi. Vui lòng thử lại.",
+                        "❌ Vật phẩm đột phá không còn trong túi. Đột phá chưa được lưu.",
 
                     ephemeral: true
+
                 });
             }
-
-            newInventory =
-                copiedPlayer.tuiDo;
         }
 
         // =================================================
-        // TĂNG CHỈ SỐ
-        // HỆ SỐ x9 GIỮ NGUYÊN
+        // HỆ SỐ CHỈ SỐ x9
         // =================================================
 
         const BREAKTHROUGH_MULTIPLIER =
@@ -999,7 +925,7 @@ module.exports = {
             newTier;
 
         // =================================================
-        // HP
+        // TĂNG HP
         // =================================================
 
         const hpIncrease =
@@ -1012,7 +938,7 @@ module.exports = {
             );
 
         // =================================================
-        // CÔNG
+        // TĂNG CÔNG
         // =================================================
 
         const congIncrease =
@@ -1025,7 +951,7 @@ module.exports = {
             );
 
         // =================================================
-        // THỦ
+        // TĂNG THỦ
         // =================================================
 
         const thuIncrease =
@@ -1042,24 +968,16 @@ module.exports = {
         // =================================================
 
         const oldMaxHp =
-            Number(
-                p.maxHp || 0
-            );
+            Number(p.maxHp || 0);
 
         const oldHp =
-            Number(
-                p.hp || 0
-            );
+            Number(p.hp || 0);
 
         const oldCong =
-            Number(
-                p.cong || 0
-            );
+            Number(p.cong || 0);
 
         const oldThu =
-            Number(
-                p.thu || 0
-            );
+            Number(p.thu || 0);
 
         // =================================================
         // CHỈ SỐ MỚI
@@ -1111,9 +1029,6 @@ module.exports = {
                 tang:
                     newTier,
 
-                giaiDoan:
-                    newStage,
-
                 tuvi:
                     remainingTuVi,
 
@@ -1121,7 +1036,7 @@ module.exports = {
                     remainingKinhNghiem,
 
                 tuiDo:
-                    newInventory,
+                    p.tuiDo,
 
                 maxHp:
                     newMaxHp,
@@ -1134,6 +1049,7 @@ module.exports = {
 
                 thu:
                     newThu
+
             }
         );
 
@@ -1141,10 +1057,14 @@ module.exports = {
         // THÔNG BÁO ITEM ĐÃ DÙNG
         // =================================================
 
-        const itemUsedText =
-            requiredItem
-                ? `\n💊 **Đã sử dụng:** ${requiredItem.name}`
-                : "";
+        let itemText = "";
+
+        if (requiredItem) {
+
+            itemText =
+                "\n💊 **Đã sử dụng:** " +
+                requiredItem.name;
+        }
 
         // =================================================
         // THÔNG BÁO THÀNH CÔNG
@@ -1163,13 +1083,26 @@ module.exports = {
 
                 .setDescription(
 
-                    `🌌 **${realm.name} ${currentStage} tầng ${currentTier}**\n` +
+                    "🌌 **" +
+                    realm.name +
+                    " " +
+                    currentStage +
+                    " tầng " +
+                    currentTier +
+                    "**\n" +
 
-                    `⬇️\n` +
+                    "⬇️\n" +
 
-                    `✨ **${newRealm.name} ${newStage} tầng ${newTier}**` +
+                    "✨ **" +
+                    newRealm.name +
+                    " " +
+                    newStage +
+                    " tầng " +
+                    newTier +
+                    "**" +
 
-                    itemUsedText
+                    itemText
+
                 )
 
                 .addFields(
@@ -1179,7 +1112,8 @@ module.exports = {
                             "📈 Tỷ lệ thành công",
 
                         value:
-                            `${successRate}%`,
+                            successRate +
+                            "%",
 
                         inline: true
                     },
@@ -1189,7 +1123,7 @@ module.exports = {
                             "🎯 Kết quả",
 
                         value:
-                            `${roll}`,
+                            String(roll),
 
                         inline: true
                     },
@@ -1199,7 +1133,8 @@ module.exports = {
                             "⚔️ Tu Vi",
 
                         value:
-                            `${remainingTuVi.toLocaleString()}`,
+                            remainingTuVi
+                                .toLocaleString(),
 
                         inline: true
                     },
@@ -1209,7 +1144,13 @@ module.exports = {
                             "🌱 Cảnh giới",
 
                         value:
-                            `**${newRealm.name} ${newStage} tầng ${newTier}**`,
+                            "**" +
+                            newRealm.name +
+                            " " +
+                            newStage +
+                            " tầng " +
+                            newTier +
+                            "**",
 
                         inline: false
                     },
@@ -1219,10 +1160,13 @@ module.exports = {
                             "❤️ HP",
 
                         value:
-
-                            `+${hpIncrease.toLocaleString()}\n` +
-
-                            `Tổng: **${newMaxHp.toLocaleString()}**`,
+                            "+" +
+                            hpIncrease
+                                .toLocaleString() +
+                            "\nTổng: **" +
+                            newMaxHp
+                                .toLocaleString() +
+                            "**",
 
                         inline: true
                     },
@@ -1232,10 +1176,13 @@ module.exports = {
                             "⚔️ Công",
 
                         value:
-
-                            `+${congIncrease.toLocaleString()}\n` +
-
-                            `Tổng: **${newCong.toLocaleString()}**`,
+                            "+" +
+                            congIncrease
+                                .toLocaleString() +
+                            "\nTổng: **" +
+                            newCong
+                                .toLocaleString() +
+                            "**",
 
                         inline: true
                     },
@@ -1245,10 +1192,13 @@ module.exports = {
                             "🛡️ Thủ",
 
                         value:
-
-                            `+${thuIncrease.toLocaleString()}\n` +
-
-                            `Tổng: **${newThu.toLocaleString()}**`,
+                            "+" +
+                            thuIncrease
+                                .toLocaleString() +
+                            "\nTổng: **" +
+                            newThu
+                                .toLocaleString() +
+                            "**",
 
                         inline: true
                     }
