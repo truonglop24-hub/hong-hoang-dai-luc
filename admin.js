@@ -12,152 +12,44 @@ const {
 const fs = require("fs");
 const path = require("path");
 
-// =====================================================
-// DATABASE
-// =====================================================
-
-const dataPath = path.join(
-    __dirname,
-    "data",
-    "data.json"
-);
-
-const codePath = path.join(
-    __dirname,
-    "data",
-    "admin_codes.json"
-);
+const dataPath = path.join(__dirname, "data", "data.json");
 
 // =====================================================
-// LOAD DATA
+// DATABASE CODE
 // =====================================================
 
-function loadData() {
-
-    if (!fs.existsSync(dataPath)) {
-        return {
-            users: {},
-            relationships: {}
-        };
-    }
-
-    try {
-
-        return JSON.parse(
-            fs.readFileSync(
-                dataPath,
-                "utf8"
-            )
-        );
-
-    } catch (error) {
-
-        console.error(
-            "❌ Không thể đọc data.json:",
-            error
-        );
-
-        return {
-            users: {},
-            relationships: {}
-        };
-    }
-}
-
-// =====================================================
-// SAVE DATA
-// =====================================================
-
-function saveData(data) {
-
-    const dir =
-        path.dirname(dataPath);
-
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(
-            dir,
-            { recursive: true }
-        );
-    }
-
-    fs.writeFileSync(
-        dataPath,
-        JSON.stringify(
-            data,
-            null,
-            2
-        ),
-        "utf8"
-    );
-}
-
-// =====================================================
-// LOAD CODE
-// =====================================================
+const codePath = path.join(__dirname, "data", "admin_codes.json");
 
 function loadCodes() {
-
     try {
-
         if (!fs.existsSync(codePath)) {
             return {};
         }
 
         return JSON.parse(
-            fs.readFileSync(
-                codePath,
-                "utf8"
-            )
+            fs.readFileSync(codePath, "utf8")
         );
-
     } catch (error) {
-
         console.error(
-            "❌ Không thể đọc admin_codes.json:",
+            "❌ Lỗi đọc admin_codes.json:",
             error
         );
-
         return {};
     }
 }
 
-// =====================================================
-// SAVE CODE
-// =====================================================
-
 function saveCodes(codes) {
-
     try {
-
-        const dir =
-            path.dirname(codePath);
-
-        if (!fs.existsSync(dir)) {
-
-            fs.mkdirSync(
-                dir,
-                {
-                    recursive: true
-                }
-            );
-        }
-
         fs.writeFileSync(
             codePath,
-            JSON.stringify(
-                codes,
-                null,
-                2
-            ),
+            JSON.stringify(codes, null, 2),
             "utf8"
         );
 
         return true;
-
     } catch (error) {
-
         console.error(
-            "❌ Không thể lưu admin_codes.json:",
+            "❌ Lỗi lưu admin_codes.json:",
             error
         );
 
@@ -166,8 +58,28 @@ function saveCodes(codes) {
 }
 
 // =====================================================
-// CREATE USER
+// DATABASE
 // =====================================================
+
+function loadData() {
+    if (!fs.existsSync(dataPath)) {
+        return {
+            users: {},
+            relationships: {}
+        };
+    }
+
+    return JSON.parse(
+        fs.readFileSync(dataPath, "utf8")
+    );
+}
+
+function saveData(data) {
+    fs.writeFileSync(
+        dataPath,
+        JSON.stringify(data, null, 2)
+    );
+}
 
 function createUser(data, id) {
 
@@ -176,21 +88,13 @@ function createUser(data, id) {
     }
 
     if (!data.users[id]) {
-
         data.users[id] = {
-
             tuvi: 0,
-
             linhthach: 0,
-
             realm: 0,
-
             congphap: [],
-
             dan: {},
-
             trangbi: {}
-
         };
     }
 
@@ -212,69 +116,43 @@ function createUser(data, id) {
 // =====================================================
 
 const realms = [
-
     "Phàm Nhân",
-
     "Luyện Khí",
-
     "Trúc Cơ",
-
     "Kim Đan",
-
     "Nguyên Anh",
-
     "Hóa Thần",
-
     "Luyện Hư",
-
     "Hợp Thể",
-
     "Đại Thừa",
-
     "Độ Kiếp",
-
     "Tán Tiên",
-
     "Chân Tiên",
-
     "Kim Tiên",
-
     "Tiên Vương",
-
     "Tiên Đế",
-
     "Thánh Nhân",
-
     "Thiên Đạo",
-
     "Đại Đạo"
-
 ];
 
 // =====================================================
-// /ADMIN
+// LỆNH /ADMIN
 // =====================================================
 
-const command =
-    new SlashCommandBuilder()
-        .setName("admin")
-        .setDescription(
-            "🛡️ Bảng điều khiển quản trị"
-        )
-        .setDefaultMemberPermissions(
-            PermissionFlagsBits.Administrator
-        );
-
-// =====================================================
-// EXPORT
-// =====================================================
+const command = new SlashCommandBuilder()
+    .setName("admin")
+    .setDescription("🛡️ Bảng điều khiển quản trị")
+    .setDefaultMemberPermissions(
+        PermissionFlagsBits.Administrator
+    );
 
 module.exports = {
 
     data: command,
 
     // =================================================
-    // EXECUTE
+    // /ADMIN
     // =================================================
 
     async execute(interaction) {
@@ -284,7 +162,6 @@ module.exports = {
                 PermissionFlagsBits.Administrator
             )
         ) {
-
             return interaction.reply({
                 content:
                     "🚫 Bạn không có quyền sử dụng Admin Panel!",
@@ -298,9 +175,7 @@ module.exports = {
 
         const menu =
             new StringSelectMenuBuilder()
-                .setCustomId(
-                    "admin_menu"
-                )
+                .setCustomId("admin_menu")
                 .setPlaceholder(
                     "🛡️ Chọn chức năng quản trị..."
                 )
@@ -371,19 +246,19 @@ module.exports = {
                     },
 
                     {
-                        label: "Tạo Code",
-                        description:
-                            "Tạo code Tu Vi, Linh Thạch hoặc Đan Dược",
-                        value: "create_code",
-                        emoji: "🔑"
-                    },
-
-                    {
                         label: "Luyện Khí",
                         description:
                             "Trao pháp bảo / trang bị",
                         value: "luyenkhi",
                         emoji: "⚔️"
+                    },
+
+                    {
+                        label: "🔑 Tạo Code",
+                        description:
+                            "Tạo code nhận phần thưởng",
+                        value: "create_code",
+                        emoji: "🎁"
                     },
 
                     {
@@ -403,9 +278,7 @@ module.exports = {
         const embed =
             new EmbedBuilder()
                 .setColor(0x8e44ad)
-                .setTitle(
-                    "🛡️ HỒNG HOANG ĐẠI LỤC"
-                )
+                .setTitle("🛡️ HỒNG HOANG ĐẠI LỤC")
                 .setDescription(
                     "## ⚡ ADMIN PANEL\n\n" +
                     "Chào mừng đến với hệ thống quản trị.\n\n" +
@@ -418,22 +291,14 @@ module.exports = {
                 });
 
         return interaction.reply({
-
-            embeds: [
-                embed
-            ],
-
-            components: [
-                row
-            ],
-
+            embeds: [embed],
+            components: [row],
             ephemeral: true
-
         });
     },
 
     // =====================================================
-    // HANDLE SELECT
+    // XỬ LÝ SELECT MENU
     // =====================================================
 
     async handleSelect(interaction) {
@@ -443,7 +308,6 @@ module.exports = {
                 PermissionFlagsBits.Administrator
             )
         ) {
-
             return interaction.reply({
                 content:
                     "🚫 Bạn không có quyền Admin!",
@@ -457,40 +321,24 @@ module.exports = {
         const modal =
             new ModalBuilder();
 
-        // =================================================
-        // INPUT CHUNG
-        // =================================================
-
         const userIdInput =
             new TextInputBuilder()
-                .setCustomId(
-                    "user_id"
-                )
-                .setLabel(
-                    "ID người chơi"
-                )
+                .setCustomId("user_id")
+                .setLabel("ID người chơi")
                 .setPlaceholder(
                     "Nhập ID Discord người chơi"
                 )
-                .setStyle(
-                    TextInputStyle.Short
-                )
+                .setStyle(TextInputStyle.Short)
                 .setRequired(true);
 
         const amountInput =
             new TextInputBuilder()
-                .setCustomId(
-                    "amount"
-                )
-                .setLabel(
-                    "Số lượng"
-                )
+                .setCustomId("amount")
+                .setLabel("Số lượng")
                 .setPlaceholder(
                     "Ví dụ: 10000"
                 )
-                .setStyle(
-                    TextInputStyle.Short
-                )
+                .setStyle(TextInputStyle.Short)
                 .setRequired(true);
 
         // =================================================
@@ -513,22 +361,14 @@ module.exports = {
                 );
 
             modal.addComponents(
+                new ActionRowBuilder()
+                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        userIdInput
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-                        amountInput
-                    )
-
+                    .addComponents(amountInput)
             );
 
-            return interaction.showModal(
-                modal
-            );
+            return interaction.showModal(modal);
         }
 
         // =================================================
@@ -551,46 +391,30 @@ module.exports = {
                 );
 
             modal.addComponents(
+                new ActionRowBuilder()
+                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        userIdInput
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-                        amountInput
-                    )
-
+                    .addComponents(amountInput)
             );
 
-            return interaction.showModal(
-                modal
-            );
+            return interaction.showModal(modal);
         }
 
         // =================================================
         // CẢNH GIỚI
         // =================================================
 
-        if (
-            action === "set_realm"
-        ) {
+        if (action === "set_realm") {
 
             const realmInput =
                 new TextInputBuilder()
-                    .setCustomId(
-                        "realm"
-                    )
-                    .setLabel(
-                        "ID cảnh giới 0 - 17"
-                    )
+                    .setCustomId("realm")
+                    .setLabel("Tên cảnh giới")
                     .setPlaceholder(
-                        "Ví dụ: 5 = Hóa Thần"
+                        "Ví dụ: Kim Đan"
                     )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
+                    .setStyle(TextInputStyle.Short)
                     .setRequired(true);
 
             modal
@@ -602,62 +426,40 @@ module.exports = {
                 );
 
             modal.addComponents(
+                new ActionRowBuilder()
+                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        userIdInput
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-                        realmInput
-                    )
-
+                    .addComponents(realmInput)
             );
 
-            return interaction.showModal(
-                modal
-            );
+            return interaction.showModal(modal);
         }
 
         // =================================================
         // ĐẠO LỮ
         // =================================================
 
-        if (
-            action === "daolu"
-        ) {
+        if (action === "daolu") {
 
             const partnerInput =
                 new TextInputBuilder()
-                    .setCustomId(
-                        "partner_id"
-                    )
-                    .setLabel(
-                        "ID đạo lữ"
-                    )
+                    .setCustomId("partner")
+                    .setLabel("ID người còn lại")
                     .setPlaceholder(
-                        "Nhập ID Discord đạo lữ"
+                        "Nhập ID Discord"
                     )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
+                    .setStyle(TextInputStyle.Short)
                     .setRequired(true);
 
             const typeInput =
                 new TextInputBuilder()
-                    .setCustomId(
-                        "type"
-                    )
-                    .setLabel(
-                        "add hoặc remove"
-                    )
+                    .setCustomId("type")
+                    .setLabel("add hoặc remove")
                     .setPlaceholder(
                         "add = thêm | remove = xóa"
                     )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
+                    .setStyle(TextInputStyle.Short)
                     .setRequired(true);
 
             modal
@@ -669,67 +471,43 @@ module.exports = {
                 );
 
             modal.addComponents(
+                new ActionRowBuilder()
+                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        userIdInput
-                    ),
+                    .addComponents(partnerInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        partnerInput
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-                        typeInput
-                    )
-
+                    .addComponents(typeInput)
             );
 
-            return interaction.showModal(
-                modal
-            );
+            return interaction.showModal(modal);
         }
 
         // =================================================
         // CÔNG PHÁP
         // =================================================
 
-        if (
-            action === "congphap"
-        ) {
+        if (action === "congphap") {
 
             const nameInput =
                 new TextInputBuilder()
-                    .setCustomId(
-                        "name"
-                    )
-                    .setLabel(
-                        "Tên công pháp"
-                    )
+                    .setCustomId("name")
+                    .setLabel("Tên công pháp")
                     .setPlaceholder(
-                        "Ví dụ: Cửu Thiên Huyền Công"
+                        "Ví dụ: Cửu Chuyển Huyền Công"
                     )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
+                    .setStyle(TextInputStyle.Short)
                     .setRequired(true);
 
             const typeInput =
                 new TextInputBuilder()
-                    .setCustomId(
-                        "type"
-                    )
-                    .setLabel(
-                        "add hoặc remove"
-                    )
+                    .setCustomId("type")
+                    .setLabel("add hoặc remove")
                     .setPlaceholder(
                         "add = thêm | remove = xóa"
                     )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
+                    .setStyle(TextInputStyle.Short)
                     .setRequired(true);
 
             modal
@@ -741,67 +519,43 @@ module.exports = {
                 );
 
             modal.addComponents(
+                new ActionRowBuilder()
+                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        userIdInput
-                    ),
+                    .addComponents(nameInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        nameInput
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-                        typeInput
-                    )
-
+                    .addComponents(typeInput)
             );
 
-            return interaction.showModal(
-                modal
-            );
+            return interaction.showModal(modal);
         }
 
         // =================================================
         // ĐAN DƯỢC
         // =================================================
 
-        if (
-            action === "danduoc"
-        ) {
+        if (action === "danduoc") {
 
-            const danInput =
+            const danNameInput =
                 new TextInputBuilder()
-                    .setCustomId(
-                        "dan_name"
-                    )
-                    .setLabel(
-                        "Tên đan dược"
-                    )
+                    .setCustomId("dan_name")
+                    .setLabel("Tên đan dược")
                     .setPlaceholder(
                         "Ví dụ: Đan Đổi Linh Căn"
                     )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
+                    .setStyle(TextInputStyle.Short)
                     .setRequired(true);
 
-            const typeInput =
+            const danTypeInput =
                 new TextInputBuilder()
-                    .setCustomId(
-                        "dan_type"
-                    )
-                    .setLabel(
-                        "add hoặc remove"
-                    )
+                    .setCustomId("dan_type")
+                    .setLabel("add hoặc remove")
                     .setPlaceholder(
                         "add = thêm | remove = xóa"
                     )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
+                    .setStyle(TextInputStyle.Short)
                     .setRequired(true);
 
             modal
@@ -813,181 +567,36 @@ module.exports = {
                 );
 
             modal.addComponents(
+                new ActionRowBuilder()
+                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        userIdInput
-                    ),
+                    .addComponents(danNameInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        danInput
-                    ),
+                    .addComponents(amountInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        amountInput
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-                        typeInput
-                    )
-
+                    .addComponents(danTypeInput)
             );
 
-            return interaction.showModal(
-                modal
-            );
-        }
-
-        // =================================================
-        // TẠO CODE
-        // =================================================
-
-        if (
-            action === "create_code"
-        ) {
-
-            const codeInput =
-                new TextInputBuilder()
-                    .setCustomId(
-                        "code"
-                    )
-                    .setLabel(
-                        "Mã Code"
-                    )
-                    .setPlaceholder(
-                        "Ví dụ: HONGHOANG2026"
-                    )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
-                    .setRequired(true);
-
-            const rewardInput =
-                new TextInputBuilder()
-                    .setCustomId(
-                        "reward"
-                    )
-                    .setLabel(
-                        "Loại phần thưởng"
-                    )
-                    .setPlaceholder(
-                        "tuvi / linhthach / danduoc"
-                    )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
-                    .setRequired(true);
-
-            const codeAmountInput =
-                new TextInputBuilder()
-                    .setCustomId(
-                        "code_amount"
-                    )
-                    .setLabel(
-                        "Số lượng"
-                    )
-                    .setPlaceholder(
-                        "Ví dụ: 1 hoặc 50000"
-                    )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
-                    .setRequired(true);
-
-            const danNameInput =
-                new TextInputBuilder()
-                    .setCustomId(
-                        "dan_name"
-                    )
-                    .setLabel(
-                        "Tên đan dược"
-                    )
-                    .setPlaceholder(
-                        "Ví dụ: Đan Đổi Linh Căn"
-                    )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
-                    .setRequired(false);
-
-            modal
-                .setCustomId(
-                    "admin_modal_create_code"
-                )
-                .setTitle(
-                    "🔑 TẠO CODE"
-                );
-
-            modal.addComponents(
-
-                new ActionRowBuilder()
-                    .addComponents(
-                        codeInput
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-                        rewardInput
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-                        codeAmountInput
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-                        danNameInput
-                    )
-
-            );
-
-            return interaction.showModal(
-                modal
-            );
+            return interaction.showModal(modal);
         }
 
         // =================================================
         // LUYỆN KHÍ
         // =================================================
 
-        if (
-            action === "luyenkhi"
-        ) {
+        if (action === "luyenkhi") {
 
             const itemInput =
                 new TextInputBuilder()
-                    .setCustomId(
-                        "item"
-                    )
-                    .setLabel(
-                        "Tên pháp bảo"
-                    )
+                    .setCustomId("item")
+                    .setLabel("Tên pháp bảo / trang bị")
                     .setPlaceholder(
-                        "Ví dụ: Tru Tiên Kiếm"
+                        "Ví dụ: Hỗn Độn Chung"
                     )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
-                    .setRequired(true);
-
-            const amountItemInput =
-                new TextInputBuilder()
-                    .setCustomId(
-                        "amount"
-                    )
-                    .setLabel(
-                        "Số lượng"
-                    )
-                    .setPlaceholder(
-                        "Ví dụ: 1"
-                    )
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
+                    .setStyle(TextInputStyle.Short)
                     .setRequired(true);
 
             modal
@@ -995,40 +604,103 @@ module.exports = {
                     "admin_modal_luyenkhi"
                 )
                 .setTitle(
-                    "⚔️ QUẢN LÝ LUYỆN KHÍ"
+                    "⚔️ TRAO PHÁP BẢO"
                 );
 
             modal.addComponents(
+                new ActionRowBuilder()
+                    .addComponents(userIdInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        userIdInput
-                    ),
+                    .addComponents(itemInput),
 
                 new ActionRowBuilder()
-                    .addComponents(
-                        itemInput
-                    ),
+                    .addComponents(amountInput)
+            );
 
-                new ActionRowBuilder()
-                    .addComponents(
-                        amountItemInput
+            return interaction.showModal(modal);
+        }
+
+        // =================================================
+        // TẠO CODE
+        // =================================================
+
+        if (action === "create_code") {
+
+            const codeInput =
+                new TextInputBuilder()
+                    .setCustomId("code")
+                    .setLabel("Mã Code")
+                    .setPlaceholder(
+                        "Ví dụ: HONGHOANG2026"
                     )
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true);
 
+            const rewardInput =
+                new TextInputBuilder()
+                    .setCustomId("reward")
+                    .setLabel("Phần thưởng")
+                    .setPlaceholder(
+                        "tuvi | linhthach | danduoc"
+                    )
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true);
+
+            const danNameInput =
+                new TextInputBuilder()
+                    .setCustomId("dan_name")
+                    .setLabel(
+                        "Tên đan dược (nếu danduoc)"
+                    )
+                    .setPlaceholder(
+                        "Ví dụ: Đan Đổi Linh Căn"
+                    )
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(false);
+
+            const codeAmountInput =
+                new TextInputBuilder()
+                    .setCustomId("code_amount")
+                    .setLabel(
+                        "Số lượng phần thưởng"
+                    )
+                    .setPlaceholder(
+                        "Ví dụ: 50000"
+                    )
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true);
+
+            modal
+                .setCustomId(
+                    "admin_modal_create_code"
+                )
+                .setTitle(
+                    "🔑 TẠO CODE PHẦN THƯỞNG"
+                );
+
+            modal.addComponents(
+                new ActionRowBuilder()
+                    .addComponents(codeInput),
+
+                new ActionRowBuilder()
+                    .addComponents(rewardInput),
+
+                new ActionRowBuilder()
+                    .addComponents(danNameInput),
+
+                new ActionRowBuilder()
+                    .addComponents(codeAmountInput)
             );
 
-            return interaction.showModal(
-                modal
-            );
+            return interaction.showModal(modal);
         }
 
         // =================================================
         // RESET
         // =================================================
 
-        if (
-            action === "reset"
-        ) {
+        if (action === "reset") {
 
             modal
                 .setCustomId(
@@ -1039,22 +711,16 @@ module.exports = {
                 );
 
             modal.addComponents(
-
                 new ActionRowBuilder()
-                    .addComponents(
-                        userIdInput
-                    )
-
+                    .addComponents(userIdInput)
             );
 
-            return interaction.showModal(
-                modal
-            );
+            return interaction.showModal(modal);
         }
     },
 
     // =====================================================
-    // HANDLE MODAL
+    // XỬ LÝ MODAL
     // =====================================================
 
     async handleModal(interaction) {
@@ -1064,7 +730,6 @@ module.exports = {
                 PermissionFlagsBits.Administrator
             )
         ) {
-
             return interaction.reply({
                 content:
                     "🚫 Bạn không có quyền sử dụng chức năng này!",
@@ -1074,6 +739,7 @@ module.exports = {
 
         // =================================================
         // TẠO CODE
+        // ĐẶT TRƯỚC PHẦN LẤY user_id
         // =================================================
 
         if (
@@ -1083,19 +749,20 @@ module.exports = {
 
             const code =
                 interaction.fields
-                    .getTextInputValue(
-                        "code"
-                    )
+                    .getTextInputValue("code")
                     .trim()
                     .toUpperCase();
 
             const reward =
                 interaction.fields
-                    .getTextInputValue(
-                        "reward"
-                    )
+                    .getTextInputValue("reward")
                     .trim()
                     .toLowerCase();
+
+            const danName =
+                interaction.fields
+                    .getTextInputValue("dan_name")
+                    .trim();
 
             const amount =
                 Number(
@@ -1106,32 +773,13 @@ module.exports = {
                         .trim()
                 );
 
-            let danName = "";
-
-            try {
-
-                danName =
-                    interaction.fields
-                        .getTextInputValue(
-                            "dan_name"
-                        )
-                        .trim();
-
-            } catch {
-
-                danName = "";
-            }
-
-            // =============================================
+            // ---------------------------------------------
             // KIỂM TRA CODE
-            // =============================================
+            // ---------------------------------------------
 
             if (
-                !/^[A-Z0-9_-]{3,32}$/.test(
-                    code
-                )
+                !/^[A-Z0-9_-]{3,32}$/.test(code)
             ) {
-
                 return interaction.reply({
                     content:
                         "❌ Code phải dài 3-32 ký tự, chỉ gồm A-Z, 0-9, _ hoặc -.",
@@ -1139,9 +787,9 @@ module.exports = {
                 });
             }
 
-            // =============================================
-            // KIỂM TRA LOẠI
-            // =============================================
+            // ---------------------------------------------
+            // KIỂM TRA PHẦN THƯỞNG
+            // ---------------------------------------------
 
             if (
                 ![
@@ -1150,25 +798,36 @@ module.exports = {
                     "danduoc"
                 ].includes(reward)
             ) {
-
                 return interaction.reply({
                     content:
-                        "❌ Loại phần thưởng phải là `tuvi`, `linhthach` hoặc `danduoc`.",
+                        "❌ Phần thưởng phải là `tuvi`, `linhthach` hoặc `danduoc`.",
                     ephemeral: true
                 });
             }
 
-            // =============================================
-            // KIỂM TRA SỐ LƯỢNG
-            // =============================================
+            // ---------------------------------------------
+            // KIỂM TRA TÊN ĐAN
+            // ---------------------------------------------
 
             if (
-                !Number.isSafeInteger(
-                    amount
-                ) ||
+                reward === "danduoc" &&
+                !danName
+            ) {
+                return interaction.reply({
+                    content:
+                        "❌ Khi chọn `danduoc`, phải nhập tên đan dược!",
+                    ephemeral: true
+                });
+            }
+
+            // ---------------------------------------------
+            // KIỂM TRA SỐ LƯỢNG
+            // ---------------------------------------------
+
+            if (
+                !Number.isSafeInteger(amount) ||
                 amount <= 0
             ) {
-
                 return interaction.reply({
                     content:
                         "❌ Số lượng phải là số nguyên lớn hơn 0!",
@@ -1176,33 +835,18 @@ module.exports = {
                 });
             }
 
-            // =============================================
-            // KIỂM TRA TÊN ĐAN
-            // =============================================
-
-            if (
-                reward === "danduoc" &&
-                !danName
-            ) {
-
-                return interaction.reply({
-                    content:
-                        "❌ Khi chọn `danduoc`, bạn phải nhập tên đan dược.",
-                    ephemeral: true
-                });
-            }
-
-            // =============================================
-            // LOAD CODE
-            // =============================================
+            // ---------------------------------------------
+            // ĐỌC CODE
+            // ---------------------------------------------
 
             const codes =
                 loadCodes();
 
-            if (
-                codes[code]
-            ) {
+            // ---------------------------------------------
+            // CHỐNG TRÙNG CODE
+            // ---------------------------------------------
 
+            if (codes[code]) {
                 return interaction.reply({
                     content:
                         `❌ Code **${code}** đã tồn tại!`,
@@ -1210,15 +854,19 @@ module.exports = {
                 });
             }
 
-            // =============================================
+            // ---------------------------------------------
             // TẠO CODE
-            // =============================================
+            // ---------------------------------------------
 
             codes[code] = {
-
                 reward,
-
                 amount,
+
+                ...(reward === "danduoc"
+                    ? {
+                        danName
+                    }
+                    : {}),
 
                 usedBy: [],
 
@@ -1227,28 +875,13 @@ module.exports = {
 
                 createdAt:
                     Date.now()
-
             };
 
-            if (
-                reward ===
-                "danduoc"
-            ) {
-
-                codes[code].danName =
-                    danName;
-            }
-
-            // =============================================
+            // ---------------------------------------------
             // LƯU
-            // =============================================
+            // ---------------------------------------------
 
-            if (
-                !saveCodes(
-                    codes
-                )
-            ) {
-
+            if (!saveCodes(codes)) {
                 return interaction.reply({
                     content:
                         "❌ Không thể lưu code!",
@@ -1256,34 +889,9 @@ module.exports = {
                 });
             }
 
-            // =============================================
+            // ---------------------------------------------
             // THÔNG BÁO
-            // =============================================
-
-            let rewardText;
-
-            if (
-                reward ===
-                "tuvi"
-            ) {
-
-                rewardText =
-                    `✨ **Tu Vi:** +${amount.toLocaleString()}`;
-
-            } else if (
-                reward ===
-                "linhthach"
-            ) {
-
-                rewardText =
-                    `💰 **Linh Thạch:** +${amount.toLocaleString()}`;
-
-            } else {
-
-                rewardText =
-                    `💊 **Đan Dược:** ${danName}\n` +
-                    `📦 **Số lượng:** ${amount.toLocaleString()}`;
-            }
+            // ---------------------------------------------
 
             return interaction.reply({
 
@@ -1303,21 +911,26 @@ module.exports = {
 
                             `🔐 **Code:** \`${code}\`\n\n` +
 
-                            `${rewardText}\n\n` +
+                            (
+                                reward === "danduoc"
+
+                                    ? `💊 **Đan Dược:** ${danName}\n`
+
+                                    : `🎁 **Phần thưởng:** ${reward}\n`
+                            ) +
+
+                            `📦 **Số lượng:** ${amount.toLocaleString()}\n\n` +
 
                             "👤 Mỗi người chơi chỉ dùng được 1 lần."
-
                         )
-
                 ],
 
                 ephemeral: true
-
             });
         }
 
         // =================================================
-        // DATABASE NGƯỜI CHƠI
+        // DATABASE
         // =================================================
 
         const data =
@@ -1325,13 +938,8 @@ module.exports = {
 
         const id =
             interaction.fields
-                .getTextInputValue(
-                    "user_id"
-                )
-                .replace(
-                    /[<@!>]/g,
-                    ""
-                )
+                .getTextInputValue("user_id")
+                .replace(/[<@!>]/g, "")
                 .trim();
 
         // =================================================
@@ -1339,9 +947,7 @@ module.exports = {
         // =================================================
 
         if (
-            !/^\d{17,20}$/.test(
-                id
-            )
+            !/^\d{17,20}$/.test(id)
         ) {
 
             return interaction.reply({
@@ -1350,6 +956,11 @@ module.exports = {
                 ephemeral: true
             });
         }
+
+        createUser(
+            data,
+            id
+        );
 
         // =================================================
         // CỘNG TU VI
@@ -1369,57 +980,23 @@ module.exports = {
                 );
 
             if (
-                !Number.isSafeInteger(
-                    amount
-                ) ||
+                !Number.isSafeInteger(amount) ||
                 amount <= 0
             ) {
-
                 return interaction.reply({
                     content:
-                        "❌ Số tu vi không hợp lệ!",
+                        "❌ Số lượng tu vi không hợp lệ!",
                     ephemeral: true
                 });
             }
 
-            createUser(
-                data,
-                id
-            );
+            data.users[id].tuvi += amount;
 
-            data.users[id].tuvi +=
-                amount;
-
-            saveData(
-                data
-            );
+            saveData(data);
 
             return interaction.reply({
-
-                embeds: [
-
-                    new EmbedBuilder()
-
-                        .setColor(
-                            0x2ecc71
-                        )
-
-                        .setTitle(
-                            "✨ CỘNG TU VI THÀNH CÔNG"
-                        )
-
-                        .setDescription(
-
-                            `👤 **Người chơi:** <@${id}>\n\n` +
-
-                            `✨ **Đã cộng:** +${amount.toLocaleString()}\n` +
-
-                            `📊 **Tu vi hiện tại:** ${data.users[id].tuvi.toLocaleString()}`
-
-                        )
-
-                ],
-
+                content:
+                    `✨ Đã cộng **${amount.toLocaleString()} Tu Vi** cho <@${id}>.`,
                 ephemeral: true
             });
         }
@@ -1442,38 +1019,27 @@ module.exports = {
                 );
 
             if (
-                !Number.isSafeInteger(
-                    amount
-                ) ||
+                !Number.isSafeInteger(amount) ||
                 amount <= 0
             ) {
-
                 return interaction.reply({
                     content:
-                        "❌ Số tu vi không hợp lệ!",
+                        "❌ Số lượng tu vi không hợp lệ!",
                     ephemeral: true
                 });
             }
 
-            createUser(
-                data,
-                id
-            );
-
             data.users[id].tuvi =
                 Math.max(
                     0,
-                    data.users[id].tuvi -
-                    amount
+                    data.users[id].tuvi - amount
                 );
 
-            saveData(
-                data
-            );
+            saveData(data);
 
             return interaction.reply({
                 content:
-                    `❌ Đã trừ **${amount.toLocaleString()} tu vi** của <@${id}>.`,
+                    `❌ Đã trừ **${amount.toLocaleString()} Tu Vi** của <@${id}>.`,
                 ephemeral: true
             });
         }
@@ -1496,34 +1062,24 @@ module.exports = {
                 );
 
             if (
-                !Number.isSafeInteger(
-                    amount
-                ) ||
+                !Number.isSafeInteger(amount) ||
                 amount <= 0
             ) {
-
                 return interaction.reply({
                     content:
-                        "❌ Số lượng không hợp lệ!",
+                        "❌ Số lượng linh thạch không hợp lệ!",
                     ephemeral: true
                 });
             }
 
-            createUser(
-                data,
-                id
-            );
-
             data.users[id].linhthach +=
                 amount;
 
-            saveData(
-                data
-            );
+            saveData(data);
 
             return interaction.reply({
                 content:
-                    `💰 Đã cộng **${amount.toLocaleString()} linh thạch** cho <@${id}>.`,
+                    `💰 Đã cộng **${amount.toLocaleString()} Linh Thạch** cho <@${id}>.`,
                 ephemeral: true
             });
         }
@@ -1546,23 +1102,15 @@ module.exports = {
                 );
 
             if (
-                !Number.isSafeInteger(
-                    amount
-                ) ||
+                !Number.isSafeInteger(amount) ||
                 amount <= 0
             ) {
-
                 return interaction.reply({
                     content:
-                        "❌ Số lượng không hợp lệ!",
+                        "❌ Số lượng linh thạch không hợp lệ!",
                     ephemeral: true
                 });
             }
-
-            createUser(
-                data,
-                id
-            );
 
             data.users[id].linhthach =
                 Math.max(
@@ -1571,19 +1119,17 @@ module.exports = {
                     amount
                 );
 
-            saveData(
-                data
-            );
+            saveData(data);
 
             return interaction.reply({
                 content:
-                    `💸 Đã trừ **${amount.toLocaleString()} linh thạch** của <@${id}>.`,
+                    `💸 Đã trừ **${amount.toLocaleString()} Linh Thạch** của <@${id}>.`,
                 ephemeral: true
             });
         }
 
         // =================================================
-        // CẢNH GIỚI
+        // THIẾT LẬP CẢNH GIỚI
         // =================================================
 
         if (
@@ -1591,69 +1137,48 @@ module.exports = {
             "admin_modal_set_realm"
         ) {
 
-            const realm =
-                Number(
-                    interaction.fields
-                        .getTextInputValue(
-                            "realm"
-                        )
+            const realmName =
+                interaction.fields
+                    .getTextInputValue(
+                        "realm"
+                    )
+                    .trim();
+
+            const found =
+                realms.find(
+                    x =>
+                        x.toLowerCase() ===
+                        realmName.toLowerCase()
                 );
 
-            if (
-                !Number.isInteger(
-                    realm
-                ) ||
-                realm < 0 ||
-                realm > 17
-            ) {
+            if (!found) {
 
                 return interaction.reply({
                     content:
-                        "❌ Cảnh giới phải từ **0 đến 17**!",
+                        `❌ Cảnh giới không tồn tại!\n\n` +
+                        `📜 Danh sách:\n` +
+                        realms
+                            .map(
+                                x =>
+                                    `• ${x}`
+                            )
+                            .join("\n"),
                     ephemeral: true
                 });
             }
 
-            createUser(
-                data,
-                id
-            );
-
             data.users[id].realm =
-                realm;
+                realms.indexOf(found);
 
-            saveData(
-                data
-            );
+            data.users[id].canhGioi =
+                found;
+
+            saveData(data);
 
             return interaction.reply({
-
-                embeds: [
-
-                    new EmbedBuilder()
-
-                        .setColor(
-                            0x9b59b6
-                        )
-
-                        .setTitle(
-                            "🌟 THIẾT LẬP CẢNH GIỚI"
-                        )
-
-                        .setDescription(
-
-                            `👤 **Người chơi:** <@${id}>\n\n` +
-
-                            `🌟 **Cảnh giới:** ${realms[realm]}\n` +
-
-                            `🔢 **ID:** ${realm}`
-
-                        )
-
-                ],
-
+                content:
+                    `🌟 Đã thiết lập cảnh giới của <@${id}> thành **${found}**.`,
                 ephemeral: true
-
             });
         }
 
@@ -1669,12 +1194,9 @@ module.exports = {
             const partner =
                 interaction.fields
                     .getTextInputValue(
-                        "partner_id"
+                        "partner"
                     )
-                    .replace(
-                        /[<@!>]/g,
-                        ""
-                    )
+                    .replace(/[<@!>]/g, "")
                     .trim();
 
             const type =
@@ -1686,11 +1208,8 @@ module.exports = {
                     .trim();
 
             if (
-                !/^\d{17,20}$/.test(
-                    partner
-                )
+                !/^\d{17,20}$/.test(partner)
             ) {
-
                 return interaction.reply({
                     content:
                         "❌ ID đạo lữ không hợp lệ!",
@@ -1699,12 +1218,9 @@ module.exports = {
             }
 
             if (
-                ![
-                    "add",
-                    "remove"
-                ].includes(type)
+                !["add", "remove"]
+                    .includes(type)
             ) {
-
                 return interaction.reply({
                     content:
                         "❌ Hãy nhập `add` hoặc `remove`.",
@@ -1712,30 +1228,22 @@ module.exports = {
                 });
             }
 
-            if (
-                !data.relationships
-            ) {
-
+            if (!data.relationships) {
                 data.relationships = {};
             }
 
-            if (
-                !data.relationships[id]
-            ) {
-
+            if (!data.relationships[id]) {
                 data.relationships[id] = [];
             }
 
             if (
-                type ===
-                "add"
+                type === "add"
             ) {
 
                 if (
                     !data.relationships[id]
                         .includes(partner)
                 ) {
-
                     data.relationships[id]
                         .push(partner);
                 }
@@ -1743,23 +1251,18 @@ module.exports = {
                 if (
                     !data.relationships[partner]
                 ) {
-
-                    data.relationships[partner] =
-                        [];
+                    data.relationships[partner] = [];
                 }
 
                 if (
                     !data.relationships[partner]
                         .includes(id)
                 ) {
-
                     data.relationships[partner]
                         .push(id);
                 }
 
-                saveData(
-                    data
-                );
+                saveData(data);
 
                 return interaction.reply({
                     content:
@@ -1787,9 +1290,7 @@ module.exports = {
                         );
             }
 
-            saveData(
-                data
-            );
+            saveData(data);
 
             return interaction.reply({
                 content:
@@ -1823,10 +1324,8 @@ module.exports = {
                     .trim();
 
             if (
-                ![
-                    "add",
-                    "remove"
-                ].includes(type)
+                !["add", "remove"]
+                    .includes(type)
             ) {
 
                 return interaction.reply({
@@ -1845,15 +1344,7 @@ module.exports = {
                 });
             }
 
-            createUser(
-                data,
-                id
-            );
-
-            if (
-                type ===
-                "add"
-            ) {
+            if (type === "add") {
 
                 if (
                     !data.users[id]
@@ -1866,9 +1357,7 @@ module.exports = {
                         .push(name);
                 }
 
-                saveData(
-                    data
-                );
+                saveData(data);
 
                 return interaction.reply({
                     content:
@@ -1885,9 +1374,7 @@ module.exports = {
                             x !== name
                     );
 
-            saveData(
-                data
-            );
+            saveData(data);
 
             return interaction.reply({
                 content:
@@ -1938,9 +1425,7 @@ module.exports = {
             }
 
             if (
-                !Number.isSafeInteger(
-                    amount
-                ) ||
+                !Number.isSafeInteger(amount) ||
                 amount <= 0
             ) {
 
@@ -1952,10 +1437,8 @@ module.exports = {
             }
 
             if (
-                ![
-                    "add",
-                    "remove"
-                ].includes(type)
+                !["add", "remove"]
+                    .includes(type)
             ) {
 
                 return interaction.reply({
@@ -1965,18 +1448,17 @@ module.exports = {
                 });
             }
 
-            createUser(
-                data,
-                id
-            );
+            if (!data.users[id].dan) {
+                data.users[id].dan = {};
+            }
 
-            if (
-                type ===
-                "add"
-            ) {
+            // =============================================
+            // ADD
+            // =============================================
 
-                data.users[id]
-                    .dan[danName] =
+            if (type === "add") {
+
+                data.users[id].dan[danName] =
                     (
                         data.users[id]
                             .dan[danName] ||
@@ -1984,9 +1466,7 @@ module.exports = {
                     ) +
                     amount;
 
-                saveData(
-                    data
-                );
+                saveData(data);
 
                 return interaction.reply({
 
@@ -2011,23 +1491,23 @@ module.exports = {
                                 `📦 **Số lượng:** +${amount}\n` +
 
                                 `📊 **Hiện có:** ${data.users[id].dan[danName]}`
-
                             )
-
                     ],
 
                     ephemeral: true
                 });
             }
 
+            // =============================================
+            // REMOVE
+            // =============================================
+
             const current =
                 data.users[id]
                     .dan[danName] ||
                 0;
 
-            if (
-                current <= 0
-            ) {
+            if (current <= 0) {
 
                 return interaction.reply({
                     content:
@@ -2039,13 +1519,11 @@ module.exports = {
             const newAmount =
                 Math.max(
                     0,
-                    current -
-                    amount
+                    current - amount
                 );
 
             if (
-                newAmount ===
-                0
+                newAmount === 0
             ) {
 
                 delete data.users[id]
@@ -2058,9 +1536,7 @@ module.exports = {
                     newAmount;
             }
 
-            saveData(
-                data
-            );
+            saveData(data);
 
             return interaction.reply({
 
@@ -2085,9 +1561,7 @@ module.exports = {
                             `📦 **Đã trừ:** -${amount}\n` +
 
                             `📊 **Còn lại:** ${newAmount}`
-
                         )
-
                 ],
 
                 ephemeral: true
@@ -2119,9 +1593,7 @@ module.exports = {
                 );
 
             if (
-                !Number.isSafeInteger(
-                    amount
-                ) ||
+                !Number.isSafeInteger(amount) ||
                 amount <= 0
             ) {
 
@@ -2132,11 +1604,6 @@ module.exports = {
                 });
             }
 
-            createUser(
-                data,
-                id
-            );
-
             data.users[id]
                 .trangbi[item] =
                 (
@@ -2146,9 +1613,7 @@ module.exports = {
                 ) +
                 amount;
 
-            saveData(
-                data
-            );
+            saveData(data);
 
             return interaction.reply({
                 content:
@@ -2175,8 +1640,8 @@ module.exports = {
                 delete data.relationships[id];
 
                 for (
-                    const userId
-                    in data.relationships
+                    const userId in
+                    data.relationships
                 ) {
 
                     data.relationships[userId] =
@@ -2188,9 +1653,7 @@ module.exports = {
                 }
             }
 
-            saveData(
-                data
-            );
+            saveData(data);
 
             return interaction.reply({
                 content:
