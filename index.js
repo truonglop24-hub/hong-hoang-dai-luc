@@ -131,7 +131,8 @@ client.on("interactionCreate", async interaction => {
 
             if (
                 customId === "admin_user_select" ||
-                customId === "admin_select"
+                customId === "admin_select" ||
+                customId === "admin_menu"
             ) {
                 const admin = client.commands.get("admin");
 
