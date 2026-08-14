@@ -9,134 +9,400 @@ module.exports = {
 
     data: new SlashCommandBuilder()
         .setName("tuido")
-        .setDescription("🎒 Xem túi đồ"),
+        .setDescription("🎒 Xem túi đồ của bạn"),
 
     async execute(interaction) {
 
-        const p =
-            getPlayer(interaction.user.id);
+        try {
 
-        if (!p) {
-            return interaction.reply({
-                content:
-                    "⚠️ Hãy dùng `/batdau` trước.",
-                ephemeral: true
-            });
-        }
+            const p = getPlayer(interaction.user.id);
 
-        const tuiDo =
-            p.tuiDo || {};
+            // ==============================
+            // KIỂM TRA NHÂN VẬT
+            // ==============================
 
-        const dan =
-            tuiDo.danDuoc || [];
-
-        const vatPham =
-            tuiDo.vatPham || [];
-
-        const linhThu =
-            tuiDo.linhThu || [];
-
-        const congPhap =
-            tuiDo.congPhap || [];
-
-        const phapBao =
-            tuiDo.phapBao || [];
-
-        const buaChu =
-            tuiDo.buaChu || [];
-
-        const format = (list, mode = "normal") => {
-
-            if (!list.length) {
-                return "Trống";
+            if (!p) {
+                return interaction.reply({
+                    content:
+                        "⚠️ Hãy dùng `/batdau` trước để tạo nhân vật.",
+                    ephemeral: true
+                });
             }
 
-            return list
-                .map(item => {
+            // ==============================
+            // TÚI ĐỒ
+            // ==============================
 
+            const tuiDo =
+                p.tuiDo &&
+                typeof p.tuiDo === "object"
+                    ? p.tuiDo
+                    : {};
+
+            const dan =
+                Array.isArray(tuiDo.danDuoc)
+                    ? tuiDo.danDuoc
+                    : [];
+
+            const vatPham =
+                Array.isArray(tuiDo.vatPham)
+                    ? tuiDo.vatPham
+                    : [];
+
+            const linhThu =
+                Array.isArray(tuiDo.linhThu)
+                    ? tuiDo.linhThu
+                    : [];
+
+            const congPhap =
+                Array.isArray(tuiDo.congPhap)
+                    ? tuiDo.congPhap
+                    : [];
+
+            const phapBao =
+                Array.isArray(tuiDo.phapBao)
+                    ? tuiDo.phapBao
+                    : [];
+
+            const buaChu =
+                Array.isArray(tuiDo.buaChu)
+                    ? tuiDo.buaChu
+                    : [];
+
+            // ==============================
+            // FORMAT ITEM
+            // ==============================
+
+            const format = (
+                list,
+                mode = "normal"
+            ) => {
+
+                if (!Array.isArray(list) || list.length === 0) {
+                    return "📭 *Trống*";
+                }
+
+                const result = [];
+
+                for (let i = 0; i < list.length; i++) {
+
+                    const item = list[i];
+
+                    // Item dạng string
                     if (typeof item === "string") {
-                        return `• ${item}`;
+
+                        result.push(
+                            `**${i + 1}.** ${item}`
+                        );
+
+                        continue;
                     }
+
+                    // Item null / lỗi
+                    if (
+                        !item ||
+                        typeof item !== "object"
+                    ) {
+
+                        result.push(
+                            `**${i + 1}.** ❓ Vật phẩm không xác định`
+                        );
+
+                        continue;
+                    }
+
+                    const name =
+                        item.name ||
+                        item.id ||
+                        item.itemId ||
+                        "Vật phẩm không tên";
+
+                    const bonus =
+                        Number(item.bonus || 0);
+
+                    const quantity =
+                        Number(
+                            item.quantity ??
+                            item.soLuong ??
+                            item.amount ??
+                            1
+                        );
+
+                    // ==========================
+                    // LINH THÚ
+                    // ==========================
 
                     if (mode === "pet") {
-                        return `• ${item.name} — ⚔️ +${item.bonus || 0} Công`;
+
+                        result.push(
+                            `**${i + 1}.** 🐉 ${name} — ⚔️ +${bonus} Công`
+                        );
+
+                        continue;
                     }
+
+                    // ==========================
+                    // CÔNG PHÁP
+                    // ==========================
 
                     if (mode === "congphap") {
-                        return `• ${item.name} — ✨ +${item.bonus || 0}% tu luyện`;
+
+                        result.push(
+                            `**${i + 1}.** 📜 ${name} — ✨ +${bonus}% tu luyện`
+                        );
+
+                        continue;
                     }
 
-                    if (item.bonus) {
-                        return `• ${item.name} — +${item.bonus}`;
+                    // ==========================
+                    // ITEM CÓ BONUS
+                    // ==========================
+
+                    if (bonus) {
+
+                        result.push(
+                            `**${i + 1}.** ${name} — ✨ +${bonus}`
+                        );
+
+                        continue;
                     }
 
-                    return `• ${item.name}`;
+                    // ==========================
+                    // ITEM CÓ SỐ LƯỢNG
+                    // ==========================
 
-                })
-                .join("\n");
-        };
+                    if (quantity > 1) {
 
-        const embed =
-            new EmbedBuilder()
+                        result.push(
+                            `**${i + 1}.** ${name} ×${quantity}`
+                        );
 
-                .setColor(0x8e44ad)
-
-                .setTitle(
-                    `🎒 TÚI ĐỒ • ${p.username}`
-                )
-
-                .addFields(
-
-                    {
-                        name: "💊 Đan dược",
-                        value: format(dan),
-                        inline: false
-                    },
-
-                    {
-                        name: "📦 Vật phẩm",
-                        value: format(vatPham),
-                        inline: false
-                    },
-
-                    {
-                        name: "📜 Công pháp",
-                        value: format(
-                            congPhap,
-                            "congphap"
-                        ),
-                        inline: false
-                    },
-
-                    {
-                        name: "🐉 Linh thú",
-                        value: format(
-                            linhThu,
-                            "pet"
-                        ),
-                        inline: false
-                    },
-
-                    {
-                        name: "⚔️ Pháp bảo",
-                        value: format(phapBao),
-                        inline: false
-                    },
-
-                    {
-                        name: "🧿 Bùa chú",
-                        value: format(buaChu),
-                        inline: false
+                        continue;
                     }
-                )
 
-                .setFooter({
-                    text:
-                        "Hồng Hoang Đại Lục"
-                });
+                    // ==========================
+                    // ITEM BÌNH THƯỜNG
+                    // ==========================
 
-        return interaction.reply({
-            embeds: [embed]
-        });
+                    result.push(
+                        `**${i + 1}.** ${name}`
+                    );
+                }
+
+                if (!result.length) {
+                    return "📭 *Trống*";
+                }
+
+                return result.join("\n");
+            };
+
+            // ==============================
+            // GIỚI HẠN FIELD DISCORD
+            // ==============================
+
+            const safeText = (
+                text,
+                max = 1000
+            ) => {
+
+                if (!text) {
+                    return "📭 *Trống*";
+                }
+
+                if (text.length <= max) {
+                    return text;
+                }
+
+                const cut =
+                    text.slice(0, max - 80);
+
+                return (
+                    cut +
+                    "\n\n" +
+                    "━━━━━━━━━━━━━━\n" +
+                    "📦 *Danh sách quá dài, một số vật phẩm được ẩn...*"
+                );
+            };
+
+            // ==============================
+            // NỘI DUNG
+            // ==============================
+
+            const danText =
+                safeText(
+                    format(dan)
+                );
+
+            const vatPhamText =
+                safeText(
+                    format(vatPham)
+                );
+
+            const congPhapText =
+                safeText(
+                    format(
+                        congPhap,
+                        "congphap"
+                    )
+                );
+
+            const linhThuText =
+                safeText(
+                    format(
+                        linhThu,
+                        "pet"
+                    )
+                );
+
+            const phapBaoText =
+                safeText(
+                    format(phapBao)
+                );
+
+            const buaChuText =
+                safeText(
+                    format(buaChu)
+                );
+
+            // ==============================
+            // TỔNG SỐ
+            // ==============================
+
+            const tongVatPham =
+                dan.length +
+                vatPham.length +
+                linhThu.length +
+                congPhap.length +
+                phapBao.length +
+                buaChu.length;
+
+            // ==============================
+            // EMBED
+            // ==============================
+
+            const embed =
+                new EmbedBuilder()
+
+                    .setColor(0x5865F2)
+
+                    .setTitle(
+                        `🎒 TÚI ĐỒ • ${p.username || interaction.user.username}`
+                    )
+
+                    .setDescription([
+                        "✨ **Kho báu cá nhân của ngươi**",
+                        "",
+                        `📦 Tổng vật phẩm: **${tongVatPham}**`,
+                        "",
+                        "━━━━━━━━━━━━━━━━━━━━"
+                    ].join("\n"))
+
+                    // ==========================
+                    // ĐAN DƯỢC
+                    // ==========================
+
+                    .addFields({
+                        name: "💊 ĐAN DƯỢC",
+                        value: danText,
+                        inline: false
+                    })
+
+                    // ==========================
+                    // VẬT PHẨM
+                    // ==========================
+
+                    .addFields({
+                        name: "📦 VẬT PHẨM",
+                        value: vatPhamText,
+                        inline: false
+                    })
+
+                    // ==========================
+                    // CÔNG PHÁP
+                    // ==========================
+
+                    .addFields({
+                        name: "📜 CÔNG PHÁP",
+                        value: congPhapText,
+                        inline: false
+                    })
+
+                    // ==========================
+                    // LINH THÚ
+                    // ==========================
+
+                    .addFields({
+                        name: "🐉 LINH THÚ",
+                        value: linhThuText,
+                        inline: false
+                    })
+
+                    // ==========================
+                    // PHÁP BẢO
+                    // ==========================
+
+                    .addFields({
+                        name: "⚔️ PHÁP BẢO",
+                        value: phapBaoText,
+                        inline: false
+                    })
+
+                    // ==========================
+                    // BÙA CHÚ
+                    // ==========================
+
+                    .addFields({
+                        name: "🧿 BÙA CHÚ",
+                        value: buaChuText,
+                        inline: false
+                    })
+
+                    .setFooter({
+                        text:
+                            "🌌 Hồng Hoang Đại Lục • Túi đồ"
+                    });
+
+            // ==============================
+            // GỬI
+            // ==============================
+
+            return interaction.reply({
+                embeds: [embed]
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Lỗi /tuido:",
+                error
+            );
+
+            // ==============================
+            // XỬ LÝ LỖI DISCORD
+            // ==============================
+
+            const errorMessage = {
+                content:
+                    "❌ **Không thể mở túi đồ!**\n" +
+                    "🔧 Đã xảy ra lỗi khi đọc dữ liệu túi đồ.\n" +
+                    "📋 Lỗi đã được ghi vào console.",
+                ephemeral: true
+            };
+
+            if (
+                interaction.replied ||
+                interaction.deferred
+            ) {
+
+                return interaction.editReply(
+                    errorMessage
+                );
+
+            }
+
+            return interaction.reply(
+                errorMessage
+            );
+        }
     }
 };
