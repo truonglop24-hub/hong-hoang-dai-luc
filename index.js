@@ -112,6 +112,7 @@ for (const file of commandFiles) {
 // ==========================================
 
 client.once("ready", () => {
+
     console.log("");
     console.log("====================================");
     console.log("🌌 HỒNG HOANG ĐẠI LỤC");
@@ -121,6 +122,7 @@ client.once("ready", () => {
     console.log(`🧬 Thể Chất: ${THE_CHAT.length}`);
     console.log("====================================");
     console.log("🟢 Bot đang hoạt động.");
+
 });
 
 // ==========================================
@@ -128,6 +130,7 @@ client.once("ready", () => {
 // ==========================================
 
 client.on("interactionCreate", async interaction => {
+
     try {
 
         // ==================================
@@ -143,27 +146,70 @@ client.on("interactionCreate", async interaction => {
             const customId = interaction.customId;
 
             // ==================================
-            // 🏯 HỆ THỐNG BÁCH THÁP
+            // 🏯 TÔNG MÔN
             // ==================================
 
-            if (
-                interaction.isButton() &&
-                customId.startsWith("thap_")
-            ) {
+            if (customId.startsWith("tm_")) {
 
-                const thap = client.commands.get("thap");
+                const tongmon =
+                    client.commands.get("tongmon");
 
-                if (thap?.buttonHandler) {
-                    return await thap.buttonHandler(
-                        interaction
-                    );
+                if (!tongmon) {
+                    return interaction.reply({
+                        content:
+                            "❌ Không tải được hệ thống Tông Môn.",
+                        ephemeral: true
+                    });
                 }
 
-                return interaction.reply({
-                    content:
-                        "❌ Không tải được hệ thống Bách Tháp.",
-                    ephemeral: true
-                });
+                // BUTTON
+                if (interaction.isButton()) {
+
+                    if (tongmon.buttonHandler) {
+                        return await tongmon.buttonHandler(
+                            interaction
+                        );
+                    }
+
+                    return interaction.reply({
+                        content:
+                            "❌ Tông Môn chưa hỗ trợ nút này.",
+                        ephemeral: true
+                    });
+                }
+
+                // STRING SELECT MENU
+                if (interaction.isStringSelectMenu()) {
+
+                    if (tongmon.selectHandler) {
+                        return await tongmon.selectHandler(
+                            interaction
+                        );
+                    }
+
+                    return interaction.reply({
+                        content:
+                            "❌ Tông Môn chưa hỗ trợ menu này.",
+                        ephemeral: true
+                    });
+                }
+
+                // USER SELECT MENU
+                if (interaction.isUserSelectMenu()) {
+
+                    if (tongmon.selectHandler) {
+                        return await tongmon.selectHandler(
+                            interaction
+                        );
+                    }
+
+                    return interaction.reply({
+                        content:
+                            "❌ Tông Môn chưa hỗ trợ menu này.",
+                        ephemeral: true
+                    });
+                }
+
             }
 
             // ==================================
@@ -212,6 +258,7 @@ client.on("interactionCreate", async interaction => {
                         `⭐ Cấp: ${item.rank}\n` +
                         `🌀 Tu luyện: x${item.train}\n` +
                         `🎲 Độ hiếm: ${item.rate}\n\n`;
+
                 });
 
                 // Discord giới hạn Embed Description
@@ -235,6 +282,7 @@ client.on("interactionCreate", async interaction => {
                 return interaction.update({
                     embeds: [embed]
                 });
+
             }
 
             // ==================================
@@ -286,6 +334,7 @@ client.on("interactionCreate", async interaction => {
                         `⚔️ Lực chiến: +${item.power}\n` +
                         `🌀 Tu luyện: x${item.train}\n` +
                         `🎲 Độ hiếm: ${item.rate}\n\n`;
+
                 });
 
                 if (text.length > 3900) {
@@ -308,6 +357,7 @@ client.on("interactionCreate", async interaction => {
                 return interaction.update({
                     embeds: [embed]
                 });
+
             }
 
             // ==================================
@@ -319,7 +369,8 @@ client.on("interactionCreate", async interaction => {
                 customId.startsWith("pvp_")
             ) {
 
-                const menu = client.commands.get("menu");
+                const menu =
+                    client.commands.get("menu");
 
                 if (menu?.handleComponent) {
                     return await menu.handleComponent(
@@ -332,6 +383,7 @@ client.on("interactionCreate", async interaction => {
                         "❌ Không tải được hệ thống Menu.",
                     ephemeral: true
                 });
+
             }
 
             // ==================================
@@ -344,7 +396,8 @@ client.on("interactionCreate", async interaction => {
                 customId === "admin_menu"
             ) {
 
-                const admin = client.commands.get("admin");
+                const admin =
+                    client.commands.get("admin");
 
                 if (admin?.handleSelect) {
                     return await admin.handleSelect(
@@ -357,7 +410,9 @@ client.on("interactionCreate", async interaction => {
                         "❌ Không tải được Admin Panel.",
                     ephemeral: true
                 });
+
             }
+
         }
 
         // ==================================
@@ -366,7 +421,45 @@ client.on("interactionCreate", async interaction => {
 
         if (interaction.isModalSubmit()) {
 
-            const admin = client.commands.get("admin");
+            // ==================================
+            // 🏯 MODAL TÔNG MÔN
+            // ==================================
+
+            if (
+                interaction.customId.startsWith("tm_")
+            ) {
+
+                const tongmon =
+                    client.commands.get("tongmon");
+
+                if (!tongmon) {
+                    return interaction.reply({
+                        content:
+                            "❌ Không tải được hệ thống Tông Môn.",
+                        ephemeral: true
+                    });
+                }
+
+                if (tongmon.modalHandler) {
+                    return await tongmon.modalHandler(
+                        interaction
+                    );
+                }
+
+                return interaction.reply({
+                    content:
+                        "❌ Tông Môn chưa hỗ trợ Modal này.",
+                    ephemeral: true
+                });
+
+            }
+
+            // ==================================
+            // 🛡️ MODAL ADMIN
+            // ==================================
+
+            const admin =
+                client.commands.get("admin");
 
             if (
                 interaction.customId.startsWith(
@@ -378,6 +471,7 @@ client.on("interactionCreate", async interaction => {
                 return await admin.handleModal(
                     interaction
                 );
+
             }
 
             return interaction.reply({
@@ -385,6 +479,7 @@ client.on("interactionCreate", async interaction => {
                     "❌ Không tìm thấy chức năng Modal.",
                 ephemeral: true
             });
+
         }
 
         // ==================================
@@ -395,9 +490,10 @@ client.on("interactionCreate", async interaction => {
             return;
         }
 
-        const command = client.commands.get(
-            interaction.commandName
-        );
+        const command =
+            client.commands.get(
+                interaction.commandName
+            );
 
         if (!command) {
             return interaction.reply({
@@ -442,7 +538,9 @@ client.on("interactionCreate", async interaction => {
             }
 
         } catch {}
+
     }
+
 });
 
 // ==========================================
@@ -456,4 +554,5 @@ client.login(TOKEN).catch(error => {
     );
 
     console.error(error);
+
 });
