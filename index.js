@@ -3,6 +3,10 @@ require("dotenv").config();
 const fs = require("fs");
 
 const {
+    regenerateAllPlayers
+} = require("./database");
+
+const {
     Client,
     Collection,
     GatewayIntentBits,
