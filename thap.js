@@ -497,11 +497,10 @@ function createTowerList() {
 
     text +=
         "⚔️ **Chọn một tháp để bắt đầu thử thách.**\n\n" +
-        "🌅 **Mỗi ngày chỉ được leo tối đa 4 lượt.**";
+        "🌅 **Mỗi ngày chỉ được leo 4 lượt.**";
 
     return text;
 }
-
 // =====================================================
 // 🔘 NÚT 12 THÁP
 // =====================================================
@@ -728,12 +727,14 @@ module.exports = {
             }
 
             // =========================================
-            // ⚔️ TRỪ 1 LƯỢT
+            // ⚔️ BẮT ĐẦU KHIÊU CHIẾN
+            //
+            // ❗ KHÔNG TRỪ LƯỢT Ở ĐÂY
+            //
+            // Một lượt chỉ bị trừ khi:
+            // 💀 Người chơi thua
+            // 🚪 Người chơi rút lui
             // =========================================
-
-            player.dailyTower.used++;
-
-            saveData(data);
 
             const tower =
                 TOWERS[player.tower];
@@ -857,8 +858,10 @@ module.exports = {
             }
 
             // =========================================
-            // 💀 THUA
+            // 💀 THUA → TRỪ 1 LƯỢT
             // =========================================
+
+            player.dailyTower.used++;
 
             player.monster = null;
 
@@ -965,6 +968,12 @@ module.exports = {
                     ephemeral: true
                 });
             }
+
+            // =========================================
+            // 🚪 RÚT LUI → TRỪ 1 LƯỢT
+            // =========================================
+
+            player.dailyTower.used++;
 
             const reward =
                 player.pendingReward;
@@ -1096,7 +1105,6 @@ module.exports = {
         }
     }
 };
-
 // =====================================================
 // 🏯 HIỂN THỊ TẦNG
 // =====================================================
@@ -1160,10 +1168,8 @@ async function showTower(
 
                 (
                     boss
-
                         ? "👑 **BOSS TẦNG!**\n" +
                           "⚠️ Tầng này khó hơn bình thường rất nhiều!\n\n"
-
                         : ""
                 ) +
 
@@ -1378,7 +1384,6 @@ async function showVictory(
         components: [row]
     });
 }
-
 // =====================================================
 // 💀 THẤT BẠI
 // =====================================================
@@ -1416,6 +1421,8 @@ async function showDefeat(
                 `━━━━━━━━━━━━━━━━━━━━\n\n` +
 
                 `💀 Bạn đã bị đánh bại.\n\n` +
+
+                `⚔️ **Lượt này đã bị trừ vì bạn thất bại.**\n\n` +
 
                 `🎁 **Phần thưởng các tầng trước vẫn được giữ:**\n\n` +
 
