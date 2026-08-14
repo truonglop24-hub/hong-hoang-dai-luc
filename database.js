@@ -1118,7 +1118,60 @@ function getAllPlayers() {
         players
     );
 }
+// =====================================================
+// ❤️ HỆ THỐNG HỒI MÁU TỰ ĐỘNG
+// ❤️ Hồi 1% MAX HP mỗi giây
+// =====================================================
 
+function regenerateAllPlayers() {
+
+    let changed = false;
+
+    for (const player of Object.values(players)) {
+
+        if (!player) continue;
+
+        const maxHp = Math.max(
+            1,
+            Number(player.maxHp || 1)
+        );
+
+        const hp = Math.max(
+            0,
+            Number(player.hp || 0)
+        );
+
+        // Đã đầy máu
+        if (hp >= maxHp) {
+            continue;
+        }
+
+        // HP = 0 không tự hồi sinh
+        if (hp <= 0) {
+            continue;
+        }
+
+        // Hồi 1% Max HP mỗi giây
+        const heal = Math.max(
+            1,
+            Math.floor(maxHp * 0.01)
+        );
+
+        const newHp = Math.min(
+            maxHp,
+            hp + heal
+        );
+
+        if (newHp !== hp) {
+            player.hp = newHp;
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        save();
+    }
+}
 // =====================================================
 // THÊM ITEM
 // =====================================================
@@ -1166,7 +1219,9 @@ module.exports = {
     updatePlayer,
 
     getAllPlayers,
-
+    
+    regenerateAllPlayers,
+    
     addItem,
 
     save,
