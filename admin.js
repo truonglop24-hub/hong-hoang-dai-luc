@@ -17,41 +17,7 @@ const dataPath = path.join(__dirname, "data", "data.json");
 const codePath = path.join(__dirname, "data", "admin_codes.json");
 
 // =====================================================
-// CODE
-// =====================================================
-
-function loadCodes() {
-    try {
-        if (!fs.existsSync(codePath)) {
-            return {};
-        }
-
-        return JSON.parse(
-            fs.readFileSync(codePath, "utf8")
-        );
-    } catch (error) {
-        console.error("❌ Lỗi đọc admin_codes.json:", error);
-        return {};
-    }
-}
-
-function saveCodes(codes) {
-    try {
-        fs.writeFileSync(
-            codePath,
-            JSON.stringify(codes, null, 2),
-            "utf8"
-        );
-
-        return true;
-    } catch (error) {
-        console.error("❌ Lỗi lưu admin_codes.json:", error);
-        return false;
-    }
-}
-
-// =====================================================
-// DATA
+// DATABASE
 // =====================================================
 
 function loadData() {
@@ -81,7 +47,9 @@ function saveData(data) {
         const dir = path.dirname(dataPath);
 
         if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
+            fs.mkdirSync(dir, {
+                recursive: true
+            });
         }
 
         fs.writeFileSync(
@@ -92,10 +60,64 @@ function saveData(data) {
 
         return true;
     } catch (error) {
-        console.error("❌ Lỗi lưu data.json:", error);
+        console.error("❌ Lỗi lưu data:", error);
         return false;
     }
 }
+
+// =====================================================
+// ADMIN CODE
+// =====================================================
+
+function loadCodes() {
+    try {
+        if (!fs.existsSync(codePath)) {
+            return {};
+        }
+
+        return JSON.parse(
+            fs.readFileSync(codePath, "utf8")
+        );
+    } catch (error) {
+        console.error(
+            "❌ Lỗi đọc admin_codes.json:",
+            error
+        );
+
+        return {};
+    }
+}
+
+function saveCodes(codes) {
+    try {
+        const dir = path.dirname(codePath);
+
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, {
+                recursive: true
+            });
+        }
+
+        fs.writeFileSync(
+            codePath,
+            JSON.stringify(codes, null, 2),
+            "utf8"
+        );
+
+        return true;
+    } catch (error) {
+        console.error(
+            "❌ Lỗi lưu admin_codes.json:",
+            error
+        );
+
+        return false;
+    }
+}
+
+// =====================================================
+// TẠO USER
+// =====================================================
 
 function createUser(data, id) {
     if (!data.users) {
@@ -107,6 +129,8 @@ function createUser(data, id) {
             tuvi: 0,
             linhthach: 0,
             realm: 0,
+            tang: 1,
+            canhGioi: "Phàm Nhân",
             congphap: [],
             dan: {},
             trangbi: {}
@@ -131,28 +155,103 @@ function createUser(data, id) {
 // =====================================================
 
 const realms = [
-    { id: 0, name: "Phàm Nhân", max: 1000 },
-    { id: 1, name: "Luyện Khí", max: 10000 },
-    { id: 2, name: "Trúc Cơ", max: 30000 },
-    { id: 3, name: "Kim Đan", max: 80000 },
-    { id: 4, name: "Nguyên Anh", max: 200000 },
-    { id: 5, name: "Hóa Thần", max: 500000 },
-    { id: 6, name: "Luyện Hư", max: 1000000 },
-    { id: 7, name: "Hợp Thể", max: 3000000 },
-    { id: 8, name: "Đại Thừa", max: 10000000 },
-    { id: 9, name: "Độ Kiếp", max: 30000000 },
-    { id: 10, name: "Tiên Nhân", max: 100000000 },
-    { id: 11, name: "Chân Tiên", max: 500000000 },
-    { id: 12, name: "Thiên Tiên", max: 1000000000 },
-    { id: 13, name: "Huyền Tiên", max: 5000000000 },
-    { id: 14, name: "Kim Tiên", max: 30000000000 },
-    { id: 15, name: "Thánh Nhân", max: 100000000000 },
-    { id: 16, name: "Thiên Đạo", max: 10000000000000 },
-    { id: 17, name: "Đại Đạo", max: 99999999999999 }
+    {
+        id: 0,
+        name: "Phàm Nhân",
+        max: 1000
+    },
+    {
+        id: 1,
+        name: "Luyện Khí",
+        max: 10000
+    },
+    {
+        id: 2,
+        name: "Trúc Cơ",
+        max: 30000
+    },
+    {
+        id: 3,
+        name: "Kim Đan",
+        max: 80000
+    },
+    {
+        id: 4,
+        name: "Nguyên Anh",
+        max: 200000
+    },
+    {
+        id: 5,
+        name: "Hóa Thần",
+        max: 500000
+    },
+    {
+        id: 6,
+        name: "Luyện Hư",
+        max: 1000000
+    },
+    {
+        id: 7,
+        name: "Hợp Thể",
+        max: 3000000
+    },
+    {
+        id: 8,
+        name: "Đại Thừa",
+        max: 10000000
+    },
+    {
+        id: 9,
+        name: "Độ Kiếp",
+        max: 30000000
+    },
+    {
+        id: 10,
+        name: "Tiên Nhân",
+        max: 100000000
+    },
+    {
+        id: 11,
+        name: "Chân Tiên",
+        max: 500000000
+    },
+    {
+        id: 12,
+        name: "Thiên Tiên",
+        max: 1000000000
+    },
+    {
+        id: 13,
+        name: "Huyền Tiên",
+        max: 5000000000
+    },
+    {
+        id: 14,
+        name: "Kim Tiên",
+        max: 30000000000
+    },
+    {
+        id: 15,
+        name: "Thánh Nhân",
+        max: 100000000000
+    },
+    {
+        id: 16,
+        name: "Thiên Đạo",
+        max: 10000000000000
+    },
+    {
+        id: 17,
+        name: "Đại Đạo",
+        max: 99999999999999
+    }
 ];
 
 function getRealmInfo(tuvi) {
-    const value = Math.max(0, Number(tuvi) || 0);
+    const value = Math.max(
+        0,
+        Number(tuvi) || 0
+    );
 
     let index = realms.findIndex(
         realm => value <= realm.max
@@ -198,21 +297,24 @@ function getRealmInfo(tuvi) {
 }
 
 // =====================================================
-// /ADMIN
+// LỆNH ADMIN
 // =====================================================
 
-const command = new SlashCommandBuilder()
-    .setName("admin")
-    .setDescription("🛡️ Bảng điều khiển quản trị")
-    .setDefaultMemberPermissions(
-        PermissionFlagsBits.Administrator
-    );
+const command =
+    new SlashCommandBuilder()
+        .setName("admin")
+        .setDescription(
+            "🛡️ Bảng điều khiển quản trị"
+        )
+        .setDefaultMemberPermissions(
+            PermissionFlagsBits.Administrator
+        );
 
 module.exports = {
     data: command,
 
     // =================================================
-    // EXECUTE
+    // /ADMIN
     // =================================================
 
     async execute(interaction) {
@@ -301,7 +403,7 @@ module.exports = {
                     {
                         label: "Tạo Code",
                         description:
-                            "Tạo code nhận phần thưởng",
+                            "Tạo code Tu Vi, Linh Thạch hoặc Đan Dược",
                         value: "create_code",
                         emoji: "🔑"
                     },
@@ -321,12 +423,14 @@ module.exports = {
         const embed =
             new EmbedBuilder()
                 .setColor(0x8e44ad)
-                .setTitle("🛡️ HỒNG HOANG ĐẠI LỤC")
+                .setTitle(
+                    "🛡️ HỒNG HOANG ĐẠI LỤC"
+                )
                 .setDescription(
                     "## ⚡ ADMIN PANEL\n\n" +
                     "Chào mừng đến với hệ thống quản trị.\n\n" +
                     "🔽 **Hãy chọn chức năng bên dưới để tiếp tục.**\n\n" +
-                    "🔒 Chỉ thành viên có quyền **Administrator** mới có thể sử dụng."
+                    "🔒 Chỉ Administrator mới có thể sử dụng."
                 )
                 .setFooter({
                     text:
@@ -357,9 +461,11 @@ module.exports = {
             });
         }
 
-        const action = interaction.values[0];
+        const action =
+            interaction.values[0];
 
-        const modal = new ModalBuilder();
+        const modal =
+            new ModalBuilder();
 
         const userIdInput =
             new TextInputBuilder()
@@ -405,10 +511,13 @@ module.exports = {
 
             modal.addComponents(
                 new ActionRowBuilder()
-                    .addComponents(userIdInput),
-
+                    .addComponents(
+                        userIdInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(amountInput)
+                    .addComponents(
+                        amountInput
+                    )
             );
 
             return interaction.showModal(modal);
@@ -434,10 +543,13 @@ module.exports = {
 
             modal.addComponents(
                 new ActionRowBuilder()
-                    .addComponents(userIdInput),
-
+                    .addComponents(
+                        userIdInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(amountInput)
+                    .addComponents(
+                        amountInput
+                    )
             );
 
             return interaction.showModal(modal);
@@ -472,10 +584,13 @@ module.exports = {
 
             modal.addComponents(
                 new ActionRowBuilder()
-                    .addComponents(userIdInput),
-
+                    .addComponents(
+                        userIdInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(realmInput)
+                    .addComponents(
+                        realmInput
+                    )
             );
 
             return interaction.showModal(modal);
@@ -522,13 +637,17 @@ module.exports = {
 
             modal.addComponents(
                 new ActionRowBuilder()
-                    .addComponents(userIdInput),
-
+                    .addComponents(
+                        userIdInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(partnerInput),
-
+                    .addComponents(
+                        partnerInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(typeInput)
+                    .addComponents(
+                        typeInput
+                    )
             );
 
             return interaction.showModal(modal);
@@ -542,9 +661,7 @@ module.exports = {
             const nameInput =
                 new TextInputBuilder()
                     .setCustomId("name")
-                    .setLabel(
-                        "Tên công pháp"
-                    )
+                    .setLabel("Tên công pháp")
                     .setPlaceholder(
                         "Ví dụ: Cửu Thiên Huyền Công"
                     )
@@ -556,11 +673,9 @@ module.exports = {
             const typeInput =
                 new TextInputBuilder()
                     .setCustomId("type")
-                    .setLabel(
-                        "add hoặc remove"
-                    )
+                    .setLabel("Loại công pháp")
                     .setPlaceholder(
-                        "add = thêm | remove = xóa"
+                        "Ví dụ: công kích"
                     )
                     .setStyle(
                         TextInputStyle.Short
@@ -572,18 +687,22 @@ module.exports = {
                     "admin_modal_congphap"
                 )
                 .setTitle(
-                    "📖 QUẢN LÝ CÔNG PHÁP"
+                    "📖 THÊM CÔNG PHÁP"
                 );
 
             modal.addComponents(
                 new ActionRowBuilder()
-                    .addComponents(userIdInput),
-
+                    .addComponents(
+                        userIdInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(nameInput),
-
+                    .addComponents(
+                        nameInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(typeInput)
+                    .addComponents(
+                        typeInput
+                    )
             );
 
             return interaction.showModal(modal);
@@ -597,18 +716,16 @@ module.exports = {
             const danInput =
                 new TextInputBuilder()
                     .setCustomId("dan_name")
-                    .setLabel(
-                        "Tên đan dược"
-                    )
+                    .setLabel("Tên đan dược")
                     .setPlaceholder(
-                        "Ví dụ: Đan Đổi Linh Căn"
+                        "Ví dụ: Đan Đổi Thể Chất"
                     )
                     .setStyle(
                         TextInputStyle.Short
                     )
                     .setRequired(true);
 
-            const typeInput =
+            const danTypeInput =
                 new TextInputBuilder()
                     .setCustomId("dan_type")
                     .setLabel(
@@ -632,16 +749,21 @@ module.exports = {
 
             modal.addComponents(
                 new ActionRowBuilder()
-                    .addComponents(userIdInput),
-
+                    .addComponents(
+                        userIdInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(danInput),
-
+                    .addComponents(
+                        danInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(amountInput),
-
+                    .addComponents(
+                        amountInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(typeInput)
+                    .addComponents(
+                        danTypeInput
+                    )
             );
 
             return interaction.showModal(modal);
@@ -655,9 +777,7 @@ module.exports = {
             const itemInput =
                 new TextInputBuilder()
                     .setCustomId("item")
-                    .setLabel(
-                        "Tên pháp bảo"
-                    )
+                    .setLabel("Tên pháp bảo")
                     .setPlaceholder(
                         "Ví dụ: Tru Tiên Kiếm"
                     )
@@ -666,12 +786,10 @@ module.exports = {
                     )
                     .setRequired(true);
 
-            const amountItemInput =
+            const itemAmountInput =
                 new TextInputBuilder()
                     .setCustomId("amount")
-                    .setLabel(
-                        "Số lượng"
-                    )
+                    .setLabel("Số lượng")
                     .setPlaceholder(
                         "Ví dụ: 1"
                     )
@@ -690,13 +808,17 @@ module.exports = {
 
             modal.addComponents(
                 new ActionRowBuilder()
-                    .addComponents(userIdInput),
-
+                    .addComponents(
+                        userIdInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(itemInput),
-
+                    .addComponents(
+                        itemInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(amountItemInput)
+                    .addComponents(
+                        itemAmountInput
+                    )
             );
 
             return interaction.showModal(modal);
@@ -723,10 +845,10 @@ module.exports = {
                 new TextInputBuilder()
                     .setCustomId("reward")
                     .setLabel(
-                        "Phần thưởng"
+                        "Loại phần thưởng"
                     )
                     .setPlaceholder(
-                        "tuvi hoặc linhthach"
+                        "tuvi / linhthach / danduoc"
                     )
                     .setStyle(
                         TextInputStyle.Short
@@ -747,6 +869,20 @@ module.exports = {
                     )
                     .setRequired(true);
 
+            const danNameInput =
+                new TextInputBuilder()
+                    .setCustomId("dan_name")
+                    .setLabel(
+                        "Tên đan dược"
+                    )
+                    .setPlaceholder(
+                        "Chỉ nhập khi chọn danduoc"
+                    )
+                    .setStyle(
+                        TextInputStyle.Short
+                    )
+                    .setRequired(false);
+
             modal
                 .setCustomId(
                     "admin_modal_create_code"
@@ -757,13 +893,21 @@ module.exports = {
 
             modal.addComponents(
                 new ActionRowBuilder()
-                    .addComponents(codeInput),
-
+                    .addComponents(
+                        codeInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(rewardInput),
-
+                    .addComponents(
+                        rewardInput
+                    ),
                 new ActionRowBuilder()
-                    .addComponents(codeAmountInput)
+                    .addComponents(
+                        codeAmountInput
+                    ),
+                new ActionRowBuilder()
+                    .addComponents(
+                        danNameInput
+                    )
             );
 
             return interaction.showModal(modal);
@@ -784,7 +928,9 @@ module.exports = {
 
             modal.addComponents(
                 new ActionRowBuilder()
-                    .addComponents(userIdInput)
+                    .addComponents(
+                        userIdInput
+                    )
             );
 
             return interaction.showModal(modal);
@@ -798,7 +944,7 @@ module.exports = {
     },
 
     // =================================================
-    // MODAL
+    // HANDLE MODAL
     // =================================================
 
     async handleModal(interaction) {
@@ -817,24 +963,23 @@ module.exports = {
         const customId =
             interaction.customId;
 
-        const data = loadData();
+        const data =
+            loadData();
 
         // =================================================
-        // LẤY ID NGƯỜI CHƠI
+        // ID NGƯỜI CHƠI
         // =================================================
 
-        const id =
-            interaction.fields
-                .getTextInputValue("user_id")
-                .trim();
+        let id = null;
 
-        if (!id) {
-            return interaction.reply({
-                content:
-                    "❌ ID người chơi không hợp lệ!",
-                ephemeral: true
-            });
-        }
+        try {
+            id =
+                interaction.fields
+                    .getTextInputValue(
+                        "user_id"
+                    )
+                    .trim();
+        } catch {}
 
         // =================================================
         // CỘNG / TRỪ TU VI
@@ -846,13 +991,22 @@ module.exports = {
             customId ===
                 "admin_modal_remove_tuvi"
         ) {
-            const amountText =
-                interaction.fields
-                    .getTextInputValue("amount")
-                    .trim();
+            if (!id) {
+                return interaction.reply({
+                    content:
+                        "❌ ID người chơi không hợp lệ!",
+                    ephemeral: true
+                });
+            }
 
             const amount =
-                Number(amountText);
+                Number(
+                    interaction.fields
+                        .getTextInputValue(
+                            "amount"
+                        )
+                        .trim()
+                );
 
             if (
                 !Number.isFinite(amount) ||
@@ -865,102 +1019,75 @@ module.exports = {
                 });
             }
 
-            createUser(data, id);
-
-            let player =
-                db.getPlayer(id);
-
-            if (!player) {
-                try {
-                    const user =
-                        await interaction.client.users.fetch(
-                            id
-                        );
-
-                    player =
-                        db.createPlayer(
-                            id,
-                            user.username
-                        );
-                } catch {
-                    player = null;
-                }
-            }
+            createUser(
+                data,
+                id
+            );
 
             const oldTuvi =
                 Number(
-                    player?.tuvi ??
                     data.users[id].tuvi
                 ) || 0;
 
-            let newTuvi;
-
-            if (
+            const newTuvi =
                 customId ===
                 "admin_modal_add_tuvi"
-            ) {
-                newTuvi =
-                    oldTuvi + amount;
-            } else {
-                newTuvi =
-                    Math.max(
+                    ? oldTuvi + amount
+                    : Math.max(
                         0,
                         oldTuvi - amount
                     );
-            }
 
-            const realmInfo =
-                getRealmInfo(newTuvi);
+            const info =
+                getRealmInfo(
+                    newTuvi
+                );
 
             data.users[id].tuvi =
                 newTuvi;
 
             data.users[id].realm =
-                realmInfo.realmId;
+                info.realmId;
+
+            data.users[id].canhGioi =
+                info.realmName;
+
+            data.users[id].tang =
+                info.tier;
 
             saveData(data);
 
-            if (player) {
-                db.updatePlayer(
-                    id,
-                    {
-                        tuvi: newTuvi,
-                        canhGioi:
-                            realmInfo.realmName,
-                        realm:
-                            realmInfo.realmId,
-                        tang:
-                            realmInfo.tier
-                    }
+            try {
+                if (db.getPlayer(id)) {
+                    db.updatePlayer(
+                        id,
+                        {
+                            tuvi: newTuvi,
+                            realm: info.realmId,
+                            tang: info.tier,
+                            canhGioi:
+                                info.realmName
+                        }
+                    );
+                }
+            } catch (error) {
+                console.log(
+                    "⚠️ Không cập nhật database chính:",
+                    error.message
                 );
             }
 
-            const isAdd =
-                customId ===
-                "admin_modal_add_tuvi";
-
-            const embed =
-                new EmbedBuilder()
-                    .setColor(
-                        isAdd
-                            ? 0x2ecc71
-                            : 0xe74c3c
-                    )
-                    .setTitle(
-                        isAdd
-                            ? "✨ CỘNG TU VI THÀNH CÔNG"
-                            : "❌ TRỪ TU VI THÀNH CÔNG"
-                    )
-                    .setDescription(
-                        `👤 **Người chơi:** <@${id}>\n\n` +
-                        `${isAdd ? "✨ **Đã cộng:** +" : "❌ **Đã trừ:** -"}${amount.toLocaleString()}\n` +
-                        `📊 **Tu Vi:** ${newTuvi.toLocaleString()}\n` +
-                        `🌱 **Cảnh giới:** ${realmInfo.realmName}\n` +
-                        `🏯 **Tầng:** ${realmInfo.tier}`
-                    );
-
             return interaction.reply({
-                embeds: [embed],
+                content:
+                    `${
+                        customId ===
+                        "admin_modal_add_tuvi"
+                            ? "✨ Đã cộng"
+                            : "❌ Đã trừ"
+                    } **${amount.toLocaleString()} Tu Vi** cho <@${id}>.\n\n` +
+                    `✨ **Tu Vi:** ${newTuvi.toLocaleString()}\n` +
+                    `🌱 **Cảnh giới:** ${info.realmName}\n` +
+                    `🏯 **Tầng:** ${info.tier}`,
                 ephemeral: true
             });
         }
@@ -975,13 +1102,22 @@ module.exports = {
             customId ===
                 "admin_modal_remove_linhthach"
         ) {
-            const amountText =
-                interaction.fields
-                    .getTextInputValue("amount")
-                    .trim();
+            if (!id) {
+                return interaction.reply({
+                    content:
+                        "❌ ID người chơi không hợp lệ!",
+                    ephemeral: true
+                });
+            }
 
             const amount =
-                Number(amountText);
+                Number(
+                    interaction.fields
+                        .getTextInputValue(
+                            "amount"
+                        )
+                        .trim()
+                );
 
             if (
                 !Number.isFinite(amount) ||
@@ -994,46 +1130,43 @@ module.exports = {
                 });
             }
 
-            createUser(data, id);
+            createUser(
+                data,
+                id
+            );
 
             const old =
                 Number(
-                    data.users[id].linhthach
+                    data.users[id]
+                        .linhthach
                 ) || 0;
 
-            let value;
-
-            if (
+            const value =
                 customId ===
                 "admin_modal_add_linhthach"
-            ) {
-                value =
-                    old + amount;
-            } else {
-                value =
-                    Math.max(
+                    ? old + amount
+                    : Math.max(
                         0,
                         old - amount
                     );
-            }
 
-            data.users[id].linhthach =
+            data.users[id]
+                .linhthach =
                 value;
 
             saveData(data);
 
-            const player =
-                db.getPlayer(id);
-
-            if (player) {
-                db.updatePlayer(
-                    id,
-                    {
-                        linhThach:
-                            value
-                    }
-                );
-            }
+            try {
+                if (db.getPlayer(id)) {
+                    db.updatePlayer(
+                        id,
+                        {
+                            linhThach:
+                                value
+                        }
+                    );
+                }
+            } catch {}
 
             return interaction.reply({
                 content:
@@ -1043,7 +1176,7 @@ module.exports = {
                             ? "💰 Đã cộng"
                             : "💸 Đã trừ"
                     } **${amount.toLocaleString()} Linh Thạch** cho <@${id}>.\n\n` +
-                    `💎 **Linh Thạch:** ${value.toLocaleString()}`,
+                    `💎 **Số dư:** ${value.toLocaleString()}`,
                 ephemeral: true
             });
         }
@@ -1056,27 +1189,41 @@ module.exports = {
             customId ===
             "admin_modal_set_realm"
         ) {
-            const realmText =
-                interaction.fields
-                    .getTextInputValue("realm")
-                    .trim();
+            if (!id) {
+                return interaction.reply({
+                    content:
+                        "❌ ID người chơi không hợp lệ!",
+                    ephemeral: true
+                });
+            }
 
             const realmId =
-                Number(realmText);
+                Number(
+                    interaction.fields
+                        .getTextInputValue(
+                            "realm"
+                        )
+                        .trim()
+                );
 
             if (
-                !Number.isInteger(realmId) ||
+                !Number.isInteger(
+                    realmId
+                ) ||
                 realmId < 0 ||
                 realmId >= realms.length
             ) {
                 return interaction.reply({
                     content:
-                        "❌ Cảnh giới phải từ **0 đến 17**!",
+                        "❌ Cảnh giới phải từ 0 đến 17!",
                     ephemeral: true
                 });
             }
 
-            createUser(data, id);
+            createUser(
+                data,
+                id
+            );
 
             const realm =
                 realms[realmId];
@@ -1084,22 +1231,10 @@ module.exports = {
             data.users[id].realm =
                 realmId;
 
+            data.users[id].canhGioi =
+                realm.name;
+
             saveData(data);
-
-            const player =
-                db.getPlayer(id);
-
-            if (player) {
-                db.updatePlayer(
-                    id,
-                    {
-                        realm:
-                            realmId,
-                        canhGioi:
-                            realm.name
-                    }
-                );
-            }
 
             return interaction.reply({
                 content:
@@ -1137,13 +1272,11 @@ module.exports = {
                 data.relationships = {};
             }
 
-            if (type === "add") {
-                if (
-                    !data.relationships[id]
-                ) {
-                    data.relationships[id] = [];
-                }
+            if (!data.relationships[id]) {
+                data.relationships[id] = [];
+            }
 
+            if (type === "add") {
                 if (
                     !data.relationships[id]
                         .includes(partnerId)
@@ -1162,17 +1295,13 @@ module.exports = {
             }
 
             if (type === "remove") {
-                if (
+                data.relationships[id] =
                     data.relationships[id]
-                ) {
-                    data.relationships[id] =
-                        data.relationships[id]
-                            .filter(
-                                x =>
-                                    x !==
-                                    partnerId
-                            );
-                }
+                        .filter(
+                            x =>
+                                x !==
+                                partnerId
+                        );
 
                 saveData(data);
 
@@ -1200,64 +1329,36 @@ module.exports = {
         ) {
             const name =
                 interaction.fields
-                    .getTextInputValue("name")
+                    .getTextInputValue(
+                        "name"
+                    )
                     .trim();
 
             const type =
                 interaction.fields
-                    .getTextInputValue("type")
-                    .trim()
-                    .toLowerCase();
+                    .getTextInputValue(
+                        "type"
+                    )
+                    .trim();
 
-            createUser(data, id);
+            createUser(
+                data,
+                id
+            );
 
-            if (type === "add") {
-                data.users[id]
-                    .congphap
-                    .push({
-                        name,
-                        type
-                    });
-
-                saveData(data);
-
-                return interaction.reply({
-                    content:
-                        `📖 Đã thêm công pháp **${name}** cho <@${id}>.`,
-                    ephemeral: true
+            data.users[id]
+                .congphap
+                .push({
+                    name,
+                    type
                 });
-            }
 
-            if (type === "remove") {
-                const before =
-                    data.users[id]
-                        .congphap.length;
-
-                data.users[id].congphap =
-                    data.users[id]
-                        .congphap
-                        .filter(
-                            x =>
-                                x.name !==
-                                name
-                        );
-
-                saveData(data);
-
-                return interaction.reply({
-                    content:
-                        before !==
-                        data.users[id]
-                            .congphap.length
-                            ? `❌ Đã xóa công pháp **${name}** của <@${id}>.`
-                            : `⚠️ Không tìm thấy công pháp **${name}**.`,
-                    ephemeral: true
-                });
-            }
+            saveData(data);
 
             return interaction.reply({
                 content:
-                    "❌ Type phải là `add` hoặc `remove`.",
+                    `📖 Đã thêm công pháp **${name}** cho <@${id}>.\n` +
+                    `⚔️ Loại: **${type}**`,
                 ephemeral: true
             });
         }
@@ -1277,12 +1378,14 @@ module.exports = {
                     )
                     .trim();
 
-            const amountText =
-                interaction.fields
-                    .getTextInputValue(
-                        "amount"
-                    )
-                    .trim();
+            const amount =
+                Number(
+                    interaction.fields
+                        .getTextInputValue(
+                            "amount"
+                        )
+                        .trim()
+                );
 
             const type =
                 interaction.fields
@@ -1291,9 +1394,6 @@ module.exports = {
                     )
                     .trim()
                     .toLowerCase();
-
-            const amount =
-                Number(amountText);
 
             if (
                 !Number.isInteger(amount) ||
@@ -1306,22 +1406,24 @@ module.exports = {
                 });
             }
 
-            createUser(data, id);
+            createUser(
+                data,
+                id
+            );
 
             if (type === "add") {
-                if (
-                    !data.users[id]
-                        .dan[danName]
-                ) {
-                    data.users[id]
-                        .dan[danName] = 0;
-                }
-
                 data.users[id]
-                    .dan[danName] +=
-                    amount;
-            } else if (type === "remove") {
-                data.users[id].dan[danName] =
+                    .dan[danName] =
+                    Number(
+                        data.users[id]
+                            .dan[danName] ||
+                        0
+                    ) + amount;
+            } else if (
+                type === "remove"
+            ) {
+                data.users[id]
+                    .dan[danName] =
                     Math.max(
                         0,
                         Number(
@@ -1366,15 +1468,14 @@ module.exports = {
                     )
                     .trim();
 
-            const amountText =
-                interaction.fields
-                    .getTextInputValue(
-                        "amount"
-                    )
-                    .trim();
-
             const amount =
-                Number(amountText);
+                Number(
+                    interaction.fields
+                        .getTextInputValue(
+                            "amount"
+                        )
+                        .trim()
+                );
 
             if (
                 !Number.isInteger(amount) ||
@@ -1387,19 +1488,18 @@ module.exports = {
                 });
             }
 
-            createUser(data, id);
-
-            if (
-                !data.users[id]
-                    .trangbi[item]
-            ) {
-                data.users[id]
-                    .trangbi[item] = 0;
-            }
+            createUser(
+                data,
+                id
+            );
 
             data.users[id]
-                .trangbi[item] +=
-                amount;
+                .trangbi[item] =
+                Number(
+                    data.users[id]
+                        .trangbi[item] ||
+                    0
+                ) + amount;
 
             saveData(data);
 
@@ -1420,25 +1520,45 @@ module.exports = {
         ) {
             const code =
                 interaction.fields
-                    .getTextInputValue("code")
+                    .getTextInputValue(
+                        "code"
+                    )
                     .trim()
                     .toUpperCase();
 
             const reward =
                 interaction.fields
-                    .getTextInputValue("reward")
+                    .getTextInputValue(
+                        "reward"
+                    )
                     .trim()
                     .toLowerCase();
 
-            const amountText =
-                interaction.fields
-                    .getTextInputValue(
-                        "code_amount"
-                    )
-                    .trim();
-
             const amount =
-                Number(amountText);
+                Number(
+                    interaction.fields
+                        .getTextInputValue(
+                            "code_amount"
+                        )
+                        .trim()
+                );
+
+            let danName = "";
+
+            try {
+                danName =
+                    interaction.fields
+                        .getTextInputValue(
+                            "dan_name"
+                        )
+                        .trim();
+            } catch {
+                danName = "";
+            }
+
+            // ---------------------------------------------
+            // KIỂM TRA CODE
+            // ---------------------------------------------
 
             if (
                 !code ||
@@ -1451,16 +1571,29 @@ module.exports = {
                 });
             }
 
+            // ---------------------------------------------
+            // KIỂM TRA PHẦN THƯỞNG
+            // ---------------------------------------------
+
             if (
                 reward !== "tuvi" &&
-                reward !== "linhthach"
+                reward !== "linhthach" &&
+                reward !== "danduoc"
             ) {
                 return interaction.reply({
                     content:
-                        "❌ Phần thưởng phải là `tuvi` hoặc `linhthach`.",
+                        "❌ Loại phần thưởng không hợp lệ!\n\n" +
+                        "Bạn chỉ được nhập:\n" +
+                        "✨ `tuvi`\n" +
+                        "💰 `linhthach`\n" +
+                        "💊 `danduoc`",
                     ephemeral: true
                 });
             }
+
+            // ---------------------------------------------
+            // KIỂM TRA SỐ LƯỢNG
+            // ---------------------------------------------
 
             if (
                 !Number.isFinite(amount) ||
@@ -1469,6 +1602,21 @@ module.exports = {
                 return interaction.reply({
                     content:
                         "❌ Số lượng phần thưởng không hợp lệ!",
+                    ephemeral: true
+                });
+            }
+
+            // ---------------------------------------------
+            // KIỂM TRA TÊN ĐAN
+            // ---------------------------------------------
+
+            if (
+                reward === "danduoc" &&
+                !danName
+            ) {
+                return interaction.reply({
+                    content:
+                        "❌ Khi chọn `danduoc`, bạn phải nhập tên đan dược!",
                     ephemeral: true
                 });
             }
@@ -1484,12 +1632,25 @@ module.exports = {
                 });
             }
 
+            // ---------------------------------------------
+            // LƯU CODE
+            // ---------------------------------------------
+
             codes[code] = {
-                reward,
-                amount,
+                reward: reward,
+                amount: amount,
+
+                // Chỉ có giá trị khi reward = danduoc
+                danName:
+                    reward === "danduoc"
+                        ? danName
+                        : null,
+
                 usedBy: [],
+
                 createdBy:
                     interaction.user.id,
+
                 createdAt:
                     Date.now()
             };
@@ -1502,22 +1663,45 @@ module.exports = {
                 });
             }
 
+            // ---------------------------------------------
+            // HIỂN THỊ
+            // ---------------------------------------------
+
+            let rewardText = "";
+
+            if (
+                reward === "tuvi"
+            ) {
+                rewardText =
+                    `✨ **Tu Vi:** ${amount.toLocaleString()}`;
+            }
+
+            if (
+                reward === "linhthach"
+            ) {
+                rewardText =
+                    `💰 **Linh Thạch:** ${amount.toLocaleString()}`;
+            }
+
+            if (
+                reward === "danduoc"
+            ) {
+                rewardText =
+                    `💊 **Đan Dược:** ${danName}\n` +
+                    `📦 **Số lượng:** ${amount.toLocaleString()}`;
+            }
+
             return interaction.reply({
                 content:
                     `🔑 **TẠO CODE THÀNH CÔNG**\n\n` +
-                    `🎁 **Code:** \`${code}\`\n` +
-                    `💎 **Phần thưởng:** ${
-                        reward === "tuvi"
-                            ? "✨ Tu Vi"
-                            : "💰 Linh Thạch"
-                    }\n` +
-                    `📦 **Số lượng:** ${amount.toLocaleString()}`,
+                    `🎁 **Code:** \`${code}\`\n\n` +
+                    `${rewardText}`,
                 ephemeral: true
             });
         }
 
         // =================================================
-        // RESET NHÂN VẬT
+        // RESET
         // =================================================
 
         if (
@@ -1540,22 +1724,24 @@ module.exports = {
 
             saveData(data);
 
-            const player =
-                db.getPlayer(id);
+            try {
+                const player =
+                    db.getPlayer(id);
 
-            if (player) {
-                db.updatePlayer(
-                    id,
-                    {
-                        tuvi: 0,
-                        realm: 0,
-                        tang: 1,
-                        canhGioi:
-                            "Phàm Nhân",
-                        linhThach: 0
-                    }
-                );
-            }
+                if (player) {
+                    db.updatePlayer(
+                        id,
+                        {
+                            tuvi: 0,
+                            realm: 0,
+                            tang: 1,
+                            canhGioi:
+                                "Phàm Nhân",
+                            linhThach: 0
+                        }
+                    );
+                }
+            } catch {}
 
             return interaction.reply({
                 content:
@@ -1563,10 +1749,6 @@ module.exports = {
                 ephemeral: true
             });
         }
-
-        // =================================================
-        // KHÔNG TÌM THẤY
-        // =================================================
 
         return interaction.reply({
             content:
