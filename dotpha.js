@@ -56,7 +56,12 @@ const LOI_KIEP = [
 // ⚙️ CẤU HÌNH
 // =====================================================
 
+// Sát thương gốc 3%
 const BASE_DAMAGE_PERCENT = 0.03;
+
+// 🔥 Lôi Kiếp chỉ còn 30% sát thương cũ
+const LIGHTNING_DAMAGE_REDUCTION = 0.3;
+
 const REALM_POWER_STEP = 0.45;
 const TIER_POWER_STEP = 0.05;
 
@@ -72,6 +77,7 @@ const sessions = new Map();
 // =====================================================
 
 function getRealmIndex(player) {
+
     const index = realms.findIndex(
         r => r.name === player.canhGioi
     );
@@ -80,6 +86,7 @@ function getRealmIndex(player) {
 }
 
 function getTier(player) {
+
     return Math.max(
         1,
         Number(player.tang || 1)
@@ -87,17 +94,21 @@ function getTier(player) {
 }
 
 function getLightning(index) {
+
     return LOI_KIEP[index - 1];
 }
 
 function randomInt(min, max) {
+
     return Math.floor(
         Math.random() * (max - min + 1)
     ) + min;
 }
 
 function formatNumber(number) {
-    return Number(number || 0).toLocaleString("vi-VN");
+
+    return Number(number || 0)
+        .toLocaleString("vi-VN");
 }
 
 // =====================================================
@@ -106,32 +117,50 @@ function formatNumber(number) {
 
 function calculateLightningDamage(player, index) {
 
-    const lightning = getLightning(index);
+    const lightning =
+        getLightning(index);
 
     if (!lightning) return 0;
 
-    const realmIndex = getRealmIndex(player);
-    const tier = getTier(player);
+    const realmIndex =
+        getRealmIndex(player);
 
-    const maxHp = Math.max(
-        1,
-        Number(player.maxHp || player.hp || 1)
-    );
+    const tier =
+        getTier(player);
+
+    const maxHp =
+        Math.max(
+            1,
+            Number(
+                player.maxHp ||
+                player.hp ||
+                1
+            )
+        );
 
     // Cảnh giới càng cao → lôi càng mạnh
     const realmMultiplier =
-        1 + realmIndex * REALM_POWER_STEP;
+        1 +
+        realmIndex *
+        REALM_POWER_STEP;
 
     // Tầng càng cao → lôi càng mạnh
     const tierMultiplier =
-        1 + (tier - 1) * TIER_POWER_STEP;
+        1 +
+        (tier - 1) *
+        TIER_POWER_STEP;
+
+    // =================================================
+    // 💥 GIẢM CÒN 30% SÁT THƯƠNG
+    // =================================================
 
     const damage =
         maxHp *
         BASE_DAMAGE_PERCENT *
         realmMultiplier *
         tierMultiplier *
-        lightning.multiplier;
+        lightning.multiplier *
+        LIGHTNING_DAMAGE_REDUCTION;
 
     return Math.max(
         1,
@@ -140,23 +169,25 @@ function calculateLightningDamage(player, index) {
 }
 
 // =====================================================
-// 🎲 TỶ LỆ CHỐNG CHỊU
+// 🛡️ TỶ LỆ CHỐNG CHỊU
+// Không còn random để quyết định thành bại.
+// Giữ hàm để giao diện vẫn hiển thị.
 // =====================================================
 
 function getResistanceRate(player, index) {
 
-    const realmIndex = getRealmIndex(player);
-    const tier = getTier(player);
+    const realmIndex =
+        getRealmIndex(player);
 
-    // Cảnh giới càng cao càng khó
+    const tier =
+        getTier(player);
+
     const realmPenalty =
         realmIndex * 1.5;
 
-    // Tầng càng cao càng khó
     const tierPenalty =
         (tier - 1) * 0.5;
 
-    // Đạo càng cao càng khó
     const lightningPenalty =
         (index - 1) * 4;
 
@@ -166,7 +197,6 @@ function getResistanceRate(player, index) {
         tierPenalty -
         lightningPenalty;
 
-    // Luôn nằm trong 1-100%
     rate = Math.max(
         1,
         Math.min(100, rate)
@@ -204,8 +234,8 @@ function createPrepareEmbed(player) {
             "⚡ Thiên Đạo sẽ giáng xuống",
             "🔥 **9 đạo Lôi Kiếp liên tiếp**.",
             "",
-            "🎲 Mỗi đạo sẽ random **1–100**.",
-            "📊 So sánh với tỷ lệ chống chịu.",
+            "🛡️ Lôi Kiếp không còn random thành bại.",
+            "💥 Sát thương Lôi Kiếp đã giảm còn **30%**.",
             "",
             "📈 Cảnh giới càng cao",
             "→ Lôi Kiếp càng mạnh.",
@@ -213,13 +243,14 @@ function createPrepareEmbed(player) {
             "📈 Đạo càng cao",
             "→ Sát thương càng lớn.",
             "",
-            `💀 Thất bại → mất **${formatNumber(MIN_LOST_TUVI)}–${formatNumber(MAX_LOST_TUVI)} Tu Vi**.`,
+            `💀 Nếu HP về 0 → mất **${formatNumber(MIN_LOST_TUVI)}–${formatNumber(MAX_LOST_TUVI)} Tu Vi**.`,
             "",
             "✨ Vượt qua đủ 9 đạo",
             "→ **Đột phá thành công!**"
         ].join("\n"))
         .setFooter({
-            text: "🌌 Hồng Hoang Đại Lục • Cửu Đạo Lôi Kiếp"
+            text:
+                "🌌 Hồng Hoang Đại Lục • Cửu Đạo Lôi Kiếp"
         });
 }
 
@@ -306,16 +337,15 @@ function createLightningEmbed(player, index) {
             `🌌 **${realm.name}**`,
             `🌱 Tầng **${tier}**`,
             "",
-            `🎲 Tỷ lệ chống chịu: **${rate}%**`,
+            `🛡️ Tỷ lệ chống chịu: **${rate}%**`,
             `💥 Sát thương: **-${formatNumber(damage)} HP**`,
             `❤️ HP: **${formatNumber(hp)} / ${formatNumber(maxHp)}**`,
             "",
             "━━━━━━━━━━━━━━━━━━━━",
             `⚡ Tiến độ: **${index}/9**`,
             "",
-            index >= 7
-                ? "☠️ **Lôi Kiếp cuối cực kỳ nguy hiểm!**"
-                : "🔥 Hãy chuẩn bị chống chịu đạo lôi tiếp theo."
+            "🔒 Không random thành bại.",
+            "💥 Lôi Kiếp chỉ gây **30% sát thương cũ**."
         ].join("\n"))
         .setFooter({
             text:
@@ -361,9 +391,7 @@ async function failBreakthrough(
     player,
     userId,
     index,
-    damage,
-    roll,
-    rate
+    damage
 ) {
 
     const lightning =
@@ -384,7 +412,11 @@ async function failBreakthrough(
     const currentTuVi =
         Math.max(
             0,
-            Number(player.tuvi || 0)
+            Number(
+                player.tuvi ??
+                player.tuVi ??
+                0
+            )
         );
 
     const newTuVi =
@@ -412,14 +444,15 @@ async function failBreakthrough(
     const embed =
         new EmbedBuilder()
             .setColor(0xed4245)
-            .setTitle("💥 ĐỘ KIẾP THẤT BẠI")
+            .setTitle(
+                "💥 ĐỘ KIẾP THẤT BẠI"
+            )
             .setDescription([
                 `${lightning.emoji} **${lightning.name}** đã đánh bại ngươi!`,
                 "",
                 `⚡ Thất bại tại **đạo ${index}/9**.`,
                 "",
-                `🎲 Kết quả random: **${roll}/100**`,
-                `🛡️ Tỷ lệ thành công: **${rate}%**`,
+                "🔒 Không có random tỷ lệ.",
                 "",
                 `💥 Sát thương: **-${formatNumber(damage)} HP**`,
                 `❤️ HP còn lại: **${formatNumber(newHp)}**`,
@@ -431,7 +464,8 @@ async function failBreakthrough(
                 "🧘 Hãy tu luyện thêm rồi thử lại."
             ].join("\n"))
             .setFooter({
-                text: "🌩️ Thiên kiếp đã kết thúc."
+                text:
+                    "🌩️ Thiên kiếp đã kết thúc."
             });
 
     await interaction.update({
@@ -483,7 +517,9 @@ async function completeBreakthrough(
             embeds: [
                 new EmbedBuilder()
                     .setColor(0xf1c40f)
-                    .setTitle("👑 ĐẠI ĐẠO TỐI CAO")
+                    .setTitle(
+                        "👑 ĐẠI ĐẠO TỐI CAO"
+                    )
                     .setDescription([
                         "🌩️ Ngươi đã vượt qua",
                         "",
@@ -572,7 +608,9 @@ async function completeBreakthrough(
     const embed =
         new EmbedBuilder()
             .setColor(0x57f287)
-            .setTitle("🌩️ CỬU KIẾP VƯỢT QUA!")
+            .setTitle(
+                "🌩️ CỬU KIẾP VƯỢT QUA!"
+            )
             .setDescription([
                 "╔════════════════════════╗",
                 "    ⚡ **ĐỘT PHÁ THÀNH CÔNG**",
@@ -597,7 +635,11 @@ async function completeBreakthrough(
                 `⚔️ Công tổng: **${formatNumber(newCong)}**`,
                 `🛡️ Thủ tổng: **${formatNumber(newThu)}**`,
                 "",
-                `🌱 Tu Vi: **${formatNumber(player.tuvi)}**`
+                `🌱 Tu Vi: **${formatNumber(
+                    player.tuvi ??
+                    player.tuVi ??
+                    0
+                )}**`
             ].join("\n"))
             .setFooter({
                 text:
@@ -626,18 +668,11 @@ async function processLightning(
 
     if (!lightning) return;
 
-    // 🎲 RANDOM 1-100
-    const roll =
-        randomInt(1, 100);
+    // =================================================
+    // 🔒 ĐÃ TẮT RANDOM
+    // Không còn roll 1-100.
+    // =================================================
 
-    // 📊 TỶ LỆ THÀNH CÔNG
-    const rate =
-        getResistanceRate(
-            player,
-            index
-        );
-
-    // 💥 SÁT THƯƠNG
     const damage =
         calculateLightningDamage(
             player,
@@ -657,28 +692,17 @@ async function processLightning(
         );
 
     // =================================================
-    // 🎲 RANDOM 1-100
-    //
-    // roll <= rate
-    // → THÀNH CÔNG
-    //
-    // roll > rate
-    // → THẤT BẠI
+    // ❗ CHỈ THẤT BẠI KHI HP VỀ 0
     // =================================================
 
-    if (
-        roll > rate ||
-        newHp <= 0
-    ) {
+    if (newHp <= 0) {
 
         return failBreakthrough(
             interaction,
             player,
             userId,
             index,
-            damage,
-            roll,
-            rate
+            damage
         );
     }
 
@@ -762,24 +786,18 @@ module.exports = {
         if (!player) {
 
             return interaction.reply({
-
                 content:
                     "⚠️ Hãy dùng `/batdau` trước.",
-
                 ephemeral: true
-
             });
         }
 
         if (sessions.has(userId)) {
 
             return interaction.reply({
-
                 content:
                     "🌩️ **Bạn đang trong quá trình Độ Kiếp!**",
-
                 ephemeral: true
-
             });
         }
 
@@ -804,7 +822,9 @@ module.exports = {
 
                     new EmbedBuilder()
                         .setColor(0xf1c40f)
-                        .setTitle("👑 ĐẠI ĐẠO TỐI CAO")
+                        .setTitle(
+                            "👑 ĐẠI ĐẠO TỐI CAO"
+                        )
                         .setDescription([
                             "🌌 Bạn đã đạt",
                             "",
@@ -816,7 +836,6 @@ module.exports = {
                 ],
 
                 ephemeral: true
-
             });
         }
 
@@ -844,7 +863,6 @@ module.exports = {
                 ],
 
                 fetchReply: true
-
             });
 
         // =================================================
@@ -853,9 +871,7 @@ module.exports = {
 
         const collector =
             message.createMessageComponentCollector({
-
                 time: SESSION_TIME
-
             });
 
         collector.on(
@@ -868,12 +884,9 @@ module.exports = {
                 ) {
 
                     return buttonInteraction.reply({
-
                         content:
                             "🚫 Đây không phải Lôi Kiếp của bạn!",
-
                         ephemeral: true
-
                     });
                 }
 
@@ -900,8 +913,8 @@ module.exports = {
                                 "❌ Không tìm thấy nhân vật.",
 
                             embeds: [],
-                            components: []
 
+                            components: []
                         });
                     }
 
@@ -920,7 +933,6 @@ module.exports = {
                                 1
                             )
                         ]
-
                     });
                 }
 
@@ -942,8 +954,8 @@ module.exports = {
                             "🛑 **Đã hủy Độ Kiếp.**\n🌩️ Thiên kiếp tạm thời tan biến.",
 
                         embeds: [],
-                        components: []
 
+                        components: []
                     });
                 }
 
@@ -962,7 +974,9 @@ module.exports = {
 
                     const index =
                         Number(
-                            parts[parts.length - 1]
+                            parts[
+                                parts.length - 1
+                            ]
                         );
 
                     const session =
@@ -971,12 +985,9 @@ module.exports = {
                     if (!session) {
 
                         return buttonInteraction.reply({
-
                             content:
                                 "⏰ Phiên Độ Kiếp đã hết hạn.",
-
                             ephemeral: true
-
                         });
                     }
 
@@ -995,8 +1006,8 @@ module.exports = {
                                 "⏰ **Độ Kiếp đã hết thời gian!**",
 
                             embeds: [],
-                            components: []
 
+                            components: []
                         });
                     }
 
@@ -1014,25 +1025,21 @@ module.exports = {
                                 "❌ Không tìm thấy nhân vật.",
 
                             ephemeral: true
-
                         });
                     }
 
                     try {
 
                         await processLightning(
-
                             buttonInteraction,
                             currentPlayer,
                             userId,
                             index
-
                         );
 
                         if (
                             !sessions.has(userId)
                         ) {
-
                             collector.stop("finished");
                         }
 
@@ -1059,13 +1066,13 @@ module.exports = {
                                         "❌ Độ Kiếp xảy ra lỗi. Hãy thử lại.",
 
                                     ephemeral: true
-
                                 });
                             }
 
                         } catch (e) {
 
                             console.error(e);
+
                         }
                     }
                 }
@@ -1098,6 +1105,7 @@ module.exports = {
                             "⏰ **Độ Kiếp đã hết thời gian!**\n🌩️ Thiên kiếp đã tan.",
 
                         embeds: [],
+
                         components: []
 
                     });
