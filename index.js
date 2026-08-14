@@ -78,7 +78,6 @@ const commandFiles = fs
 
 for (const file of commandFiles) {
     try {
-
         const command = require(`./${file}`);
 
         if (!command.data || !command.execute) {
@@ -103,10 +102,8 @@ for (const file of commandFiles) {
         console.log(`✅ Đã tải /${name}`);
 
     } catch (error) {
-
         console.error(`❌ Lỗi tải ${file}:`);
         console.error(error);
-
     }
 }
 
@@ -115,7 +112,6 @@ for (const file of commandFiles) {
 // ==========================================
 
 client.once("ready", () => {
-
     console.log("");
     console.log("====================================");
     console.log("🌌 HỒNG HOANG ĐẠI LỤC");
@@ -125,7 +121,6 @@ client.once("ready", () => {
     console.log(`🧬 Thể Chất: ${THE_CHAT.length}`);
     console.log("====================================");
     console.log("🟢 Bot đang hoạt động.");
-
 });
 
 // ==========================================
@@ -133,7 +128,6 @@ client.once("ready", () => {
 // ==========================================
 
 client.on("interactionCreate", async interaction => {
-
     try {
 
         // ==================================
@@ -147,6 +141,30 @@ client.on("interactionCreate", async interaction => {
         ) {
 
             const customId = interaction.customId;
+
+            // ==================================
+            // 🏯 HỆ THỐNG BÁCH THÁP
+            // ==================================
+
+            if (
+                interaction.isButton() &&
+                customId.startsWith("thap_")
+            ) {
+
+                const thap = client.commands.get("thap");
+
+                if (thap?.buttonHandler) {
+                    return await thap.buttonHandler(
+                        interaction
+                    );
+                }
+
+                return interaction.reply({
+                    content:
+                        "❌ Không tải được hệ thống Bách Tháp.",
+                    ephemeral: true
+                });
+            }
 
             // ==================================
             // DANH SÁCH LINH CĂN
@@ -194,7 +212,6 @@ client.on("interactionCreate", async interaction => {
                         `⭐ Cấp: ${item.rank}\n` +
                         `🌀 Tu luyện: x${item.train}\n` +
                         `🎲 Độ hiếm: ${item.rate}\n\n`;
-
                 });
 
                 // Discord giới hạn Embed Description
@@ -269,7 +286,6 @@ client.on("interactionCreate", async interaction => {
                         `⚔️ Lực chiến: +${item.power}\n` +
                         `🌀 Tu luyện: x${item.train}\n` +
                         `🎲 Độ hiếm: ${item.rate}\n\n`;
-
                 });
 
                 if (text.length > 3900) {
@@ -295,46 +311,6 @@ client.on("interactionCreate", async interaction => {
             }
 
             // ==================================
-            // 🏯 TÔNG MÔN
-            // ==================================
-
-            if (
-                customId.startsWith("tm_")
-            ) {
-
-                const tongmon =
-                    client.commands.get("tongmon");
-
-                // Button
-                if (
-                    interaction.isButton() &&
-                    tongmon?.buttonHandler
-                ) {
-
-                    return await tongmon.buttonHandler(
-                        interaction
-                    );
-                }
-
-                // Select Menu
-                if (
-                    interaction.isStringSelectMenu() &&
-                    tongmon?.selectHandler
-                ) {
-
-                    return await tongmon.selectHandler(
-                        interaction
-                    );
-                }
-
-                return interaction.reply({
-                    content:
-                        "❌ Không tải được hệ thống Tông Môn.",
-                    ephemeral: true
-                });
-            }
-
-            // ==================================
             // MENU HỒNG HOANG / PVP
             // ==================================
 
@@ -343,15 +319,12 @@ client.on("interactionCreate", async interaction => {
                 customId.startsWith("pvp_")
             ) {
 
-                const menu =
-                    client.commands.get("menu");
+                const menu = client.commands.get("menu");
 
                 if (menu?.handleComponent) {
-
                     return await menu.handleComponent(
                         interaction
                     );
-
                 }
 
                 return interaction.reply({
@@ -371,15 +344,12 @@ client.on("interactionCreate", async interaction => {
                 customId === "admin_menu"
             ) {
 
-                const admin =
-                    client.commands.get("admin");
+                const admin = client.commands.get("admin");
 
                 if (admin?.handleSelect) {
-
                     return await admin.handleSelect(
                         interaction
                     );
-
                 }
 
                 return interaction.reply({
@@ -396,38 +366,7 @@ client.on("interactionCreate", async interaction => {
 
         if (interaction.isModalSubmit()) {
 
-            // ==================================
-            // 🏯 TÔNG MÔN MODAL
-            // ==================================
-
-            if (
-                interaction.customId.startsWith("tm_")
-            ) {
-
-                const tongmon =
-                    client.commands.get("tongmon");
-
-                if (tongmon?.modalHandler) {
-
-                    return await tongmon.modalHandler(
-                        interaction
-                    );
-
-                }
-
-                return interaction.reply({
-                    content:
-                        "❌ Không tải được hệ thống Tông Môn.",
-                    ephemeral: true
-                });
-            }
-
-            // ==================================
-            // ADMIN MODAL
-            // ==================================
-
-            const admin =
-                client.commands.get("admin");
+            const admin = client.commands.get("admin");
 
             if (
                 interaction.customId.startsWith(
@@ -456,13 +395,11 @@ client.on("interactionCreate", async interaction => {
             return;
         }
 
-        const command =
-            client.commands.get(
-                interaction.commandName
-            );
+        const command = client.commands.get(
+            interaction.commandName
+        );
 
         if (!command) {
-
             return interaction.reply({
                 content:
                     "❌ Lệnh này chưa được tải.",
@@ -496,19 +433,15 @@ client.on("interactionCreate", async interaction => {
                 interaction.deferred
             ) {
 
-                await interaction.followUp(
-                    message
-                );
+                await interaction.followUp(message);
 
             } else {
 
-                await interaction.reply(
-                    message
-                );
+                await interaction.reply(message);
+
             }
 
         } catch {}
-
     }
 });
 
@@ -523,5 +456,4 @@ client.login(TOKEN).catch(error => {
     );
 
     console.error(error);
-
 });
