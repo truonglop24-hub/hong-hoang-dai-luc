@@ -3,51 +3,43 @@ const {
     EmbedBuilder,
     ActionRowBuilder,
     ButtonBuilder,
-    ButtonStyle
+    ButtonStyle,
+    StringSelectMenuBuilder,
+    ModalBuilder,
+    TextInputBuilder,
+    TextInputStyle
 } = require("discord.js");
 
 const fs = require("fs");
 const path = require("path");
-
 const database = require("./database");
 
 // =====================================================
-// 🗄️ DATABASE GIA TỘC
+// DATABASE
 // =====================================================
 
 const DATA_DIR = "/app/data";
 const FILE = path.join(DATA_DIR, "giatoc.json");
 
 if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, {
-        recursive: true
-    });
+    fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
 let giaTocs = {};
 
 function loadData() {
     try {
-        if (!fs.existsSync(FILE)) {
-            giaTocs = {};
-            saveData();
-            return;
+        if (fs.existsSync(FILE)) {
+            giaTocs = JSON.parse(
+                fs.readFileSync(FILE, "utf8")
+            );
         }
 
-        giaTocs =
-            JSON.parse(
-                fs.readFileSync(
-                    FILE,
-                    "utf8"
-                )
-            );
-
-    } catch (error) {
-        console.error(
-            "❌ Lỗi đọc giatoc.json:",
-            error
-        );
-
+        if (!giaTocs || typeof giaTocs !== "object") {
+            giaTocs = {};
+        }
+    } catch (e) {
+        console.error("Lỗi đọc giatoc:", e);
         giaTocs = {};
     }
 }
@@ -56,67 +48,44 @@ function saveData() {
     try {
         fs.writeFileSync(
             FILE,
-            JSON.stringify(
-                giaTocs,
-                null,
-                2
-            ),
+            JSON.stringify(giaTocs, null, 2),
             "utf8"
         );
-    } catch (error) {
-        console.error(
-            "❌ Lỗi lưu giatoc.json:",
-            error
-        );
+    } catch (e) {
+        console.error("Lỗi lưu giatoc:", e);
     }
 }
 
 loadData();
 
 // =====================================================
-// ⚙️ CẤU HÌNH
+// CONFIG
 // =====================================================
 
 const MAX_LEVEL = 20;
+const BASE_MEMBER = 10;
+const CREATE_COST = 5000;
 
-const BASE_MAX_MEMBER = 10;
-
-const BASE_CREATE_COST = 5000;
-
-const BASE_UPGRADE_COST = 10000;
-
-const DONATE_EXP_RATE = 1;
-
-// =====================================================
-// 🔧 HELPER
-// =====================================================
-
-function getPlayer(userId) {
-    return database.getPlayer(userId);
+function fmt(n) {
+    return Number(n || 0).toLocaleString("vi-VN");
 }
 
-function formatNumber(number) {
-    return Number(
-        number || 0
-    ).toLocaleString("vi-VN");
+function player(id) {
+    return database.getPlayer(id);
 }
 
-function safeName(name) {
-
+function cleanName(name) {
     return String(name || "")
         .trim()
         .replace(/\s+/g, " ")
         .slice(0, 32);
 }
 
-function normalizeName(name) {
-
-    return safeName(name)
-        .toLowerCase();
+function keyName(name) {
+    return cleanName(name).toLowerCase();
 }
 
-function getGuildData(guildId) {
-
+function guildData(guildId) {
     if (!giaTocs[guildId]) {
         giaTocs[guildId] = {};
     }
@@ -124,156 +93,229 @@ function getGuildData(guildId) {
     return giaTocs[guildId];
 }
 
-function getGiaToc(
-    guildId,
-    name
-) {
-
-    const data =
-        getGuildData(guildId);
-
-    const key =
-        normalizeName(name);
-
-    return data[key] || null;
+function maxMembers(level) {
+    return BASE_MEMBER + (level - 1) * 5;
 }
 
-function getUserGiaToc(
-    guildId,
-    userId
-) {
+function upgradeCost(level) {
+    return Math.floor(
+        10000 * Math.pow(1.7, level - 1)
+    );
+}
 
-    const data =
-        getGuildData(guildId);
+// =====================================================
+// TÌM GIA TỘC
+// =====================================================
 
-    for (const key of Object.keys(data)) {
+function getGiaToc(guildId, name) {
+    return guildData(guildId)[keyName(name)] || null;
+}
 
-        const giaToc =
-            data[key];
+function findById(guildId, id) {
+    return Object.values(guildData(guildId))
+        .find(g => g.id === id);
+}
 
-        if (
-            Array.isArray(
-                giaToc.members
-            ) &&
-            giaToc.members.some(
-                m => m.id === userId
-            )
-        ) {
-            return giaToc;
-        }
+function getUserGiaToc(guildId, userId) {
+    return Object.values(guildData(guildId))
+        .find(g =>
+            Array.isArray(g.members) &&
+            g.members.some(m => m.id === userId)
+        ) || null;
+}
+
+// =====================================================
+// KHỞI TẠO DỮ LIỆU MỚI
+// =====================================================
+
+function initGiaToc(g) {
+
+    if (!Array.isArray(g.members)) {
+        g.members = [];
     }
 
-    return null;
+    if (!g.level) g.level = 1;
+    if (!g.exp) g.exp = 0;
+    if (!g.treasury) g.treasury = 0;
+
+    if (!g.war) {
+        g.war = {
+            active: false,
+            enemyId: null,
+            enemyName: null,
+            ourScore: 0,
+            enemyScore: 0,
+            startedAt: 0,
+            lastAttack: 0
+        };
+    }
+
+    if (!g.quest) {
+        g.quest = {
+            name: "Nhiệm vụ gia tộc",
+            description: "Đóng góp Linh Thạch",
+            progress: 0,
+            target: 100000,
+            reward: 10000,
+            claimed: false
+        };
+    }
+
+    if (!g.treasuryItems) {
+        g.treasuryItems = {
+            linhThach: 0,
+            danDuoc: {},
+            phapBao: {},
+            congPhap: {}
+        };
+    }
+
+    if (!g.territory) {
+        g.territory = {
+            level: 1,
+            hp: 10000,
+            defense: 100,
+            production: 100,
+            combat: 100
+        };
+    }
+
+    if (!g.skills) {
+        g.skills = {
+            hoGia: 1,
+            chienY: 1,
+            tuLinh: 1,
+            taiVan: 1,
+            hoToc: 1,
+            chienHon: 1
+        };
+    }
+
+    if (!Array.isArray(g.logs)) {
+        g.logs = [];
+    }
+
+    return g;
 }
 
-function getMaxMembers(level) {
+// =====================================================
+// LOG
+// =====================================================
 
-    return (
-        BASE_MAX_MEMBER +
-        (level - 1) * 5
-    );
+function log(g, text) {
+
+    initGiaToc(g);
+
+    g.logs.unshift({
+        text,
+        time: Date.now()
+    });
+
+    if (g.logs.length > 50) {
+        g.logs = g.logs.slice(0, 50);
+    }
 }
 
-function getUpgradeCost(level) {
+// =====================================================
+// CHỨC VỤ
+// =====================================================
 
-    return Math.floor(
-        BASE_UPGRADE_COST *
-        Math.pow(
-            1.7,
-            level - 1
-        )
-    );
+function rolePower(role) {
+
+    const roles = {
+        "Tộc Trưởng": 100,
+        "Phó Tộc Trưởng": 80,
+        "Trưởng Lão": 60,
+        "Hộ Pháp": 40,
+        "Thành Viên": 10
+    };
+
+    return roles[role] || 0;
 }
 
-function getCreateCost() {
+function roleEmoji(role) {
 
-    return BASE_CREATE_COST;
+    if (role === "Tộc Trưởng") return "👑";
+    if (role === "Phó Tộc Trưởng") return "💎";
+    if (role === "Trưởng Lão") return "⚜️";
+    if (role === "Hộ Pháp") return "🛡️";
+
+    return "👤";
 }
 
-function calculatePower(
-    giaToc
-) {
+function memberOf(g, id) {
+    return g.members.find(m => m.id === id);
+}
 
-    let power = 0;
+function canManage(g, id, power) {
 
-    for (
-        const member
-        of giaToc.members
-    ) {
+    const m = memberOf(g, id);
 
-        const player =
-            getPlayer(member.id);
+    if (!m) return false;
 
-        if (!player) continue;
+    return rolePower(m.role) >= power;
+}
 
-        const cong =
-            Number(
-                player.cong || 0
-            );
+// =====================================================
+// LỰC CHIẾN
+// =====================================================
 
-        const thu =
-            Number(
-                player.thu || 0
-            );
+function power(g) {
 
-        const hp =
-            Number(
-                player.maxHp ||
-                player.hp ||
-                0
-            );
+    let total = 0;
 
-        const linhLuc =
-            Number(
-                player.linhLuc || 0
-            );
+    for (const m of g.members) {
 
-        power +=
-            cong +
-            thu +
+        const p = player(m.id);
+
+        if (!p) continue;
+
+        total +=
+            Number(p.cong || 0) +
+            Number(p.thu || 0) +
             Math.floor(
-                hp / 10
+                Number(
+                    p.maxHp ||
+                    p.hp ||
+                    0
+                ) / 10
             ) +
-            linhLuc;
+            Number(p.linhLuc || 0);
     }
 
-    return Math.floor(
-        power *
-        giaToc.level
-    );
+    total *= g.level;
+
+    total +=
+        Number(g.territory.combat || 0);
+
+    total +=
+        Number(g.skills.chienHon || 0) * 500;
+
+    total +=
+        Number(g.skills.chienY || 0) * 300;
+
+    return Math.floor(total);
 }
 
 // =====================================================
-// 🏠 TẠO GIA TỘC
+// TẠO GIA TỘC
 // =====================================================
 
-async function createGiaToc(
-    interaction,
-    name
-) {
+async function createGiaToc(interaction, name) {
 
-    const userId =
-        interaction.user.id;
+    const uid = interaction.user.id;
+    const p = player(uid);
 
-    const player =
-        getPlayer(userId);
-
-    if (!player) {
-
+    if (!p) {
         return interaction.reply({
-            content:
-                "⚠️ Hãy dùng `/batdau` trước.",
+            content: "⚠️ Hãy dùng `/batdau` trước.",
             ephemeral: true
         });
     }
 
-    const cleanName =
-        safeName(name);
+    name = cleanName(name);
 
-    if (
-        cleanName.length < 3
-    ) {
-
+    if (name.length < 3) {
         return interaction.reply({
             content:
                 "❌ Tên Gia Tộc phải có ít nhất 3 ký tự.",
@@ -281,13 +323,10 @@ async function createGiaToc(
         });
     }
 
-    if (
-        getUserGiaToc(
-            interaction.guildId,
-            userId
-        )
-    ) {
-
+    if (getUserGiaToc(
+        interaction.guildId,
+        uid
+    )) {
         return interaction.reply({
             content:
                 "❌ Bạn đã thuộc một Gia Tộc.",
@@ -295,16 +334,12 @@ async function createGiaToc(
         });
     }
 
-    const guildData =
-        getGuildData(
-            interaction.guildId
-        );
+    const data =
+        guildData(interaction.guildId);
 
-    const key =
-        normalizeName(cleanName);
+    const key = keyName(name);
 
-    if (guildData[key]) {
-
+    if (data[key]) {
         return interaction.reply({
             content:
                 "❌ Gia Tộc này đã tồn tại.",
@@ -312,138 +347,383 @@ async function createGiaToc(
         });
     }
 
-    const cost =
-        getCreateCost();
-
     const linhThach =
-        Number(
-            player.linhThach || 0
-        );
+        Number(p.linhThach || 0);
 
-    if (
-        linhThach < cost
-    ) {
-
+    if (linhThach < CREATE_COST) {
         return interaction.reply({
             content:
-                `💎 Bạn cần **${formatNumber(cost)} Linh Thạch** để sáng lập Gia Tộc.`,
+                `💎 Cần **${fmt(CREATE_COST)} Linh Thạch**.`,
             ephemeral: true
         });
     }
 
-    const giaToc = {
+    const g = {
+        id: `GT_${Date.now()}_${uid}`,
+        name,
+        owner: uid,
+        level: 1,
+        exp: 0,
+        treasury: 0,
+        createdAt: Date.now(),
 
-        id:
-            `GT_${Date.now()}_${userId}`,
+        members: [{
+            id: uid,
+            role: "Tộc Trưởng",
+            joinedAt: Date.now()
+        }],
 
-        name:
-            cleanName,
+        war: {
+            active: false,
+            enemyId: null,
+            enemyName: null,
+            ourScore: 0,
+            enemyScore: 0,
+            startedAt: 0,
+            lastAttack: 0
+        },
 
-        owner:
-            userId,
+        quest: {
+            name: "Nhiệm vụ gia tộc",
+            description: "Đóng góp Linh Thạch",
+            progress: 0,
+            target: 100000,
+            reward: 10000,
+            claimed: false
+        },
 
-        level:
-            1,
+        treasuryItems: {
+            linhThach: 0,
+            danDuoc: {},
+            phapBao: {},
+            congPhap: {}
+        },
 
-        exp:
-            0,
+        territory: {
+            level: 1,
+            hp: 10000,
+            defense: 100,
+            production: 100,
+            combat: 100
+        },
 
-        treasury:
-            0,
+        skills: {
+            hoGia: 1,
+            chienY: 1,
+            tuLinh: 1,
+            taiVan: 1,
+            hoToc: 1,
+            chienHon: 1
+        },
 
-        createdAt:
-            Date.now(),
-
-        members: [
-            {
-                id:
-                    userId,
-
-                role:
-                    "Tộc Trưởng",
-
-                joinedAt:
-                    Date.now()
-            }
-        ]
+        logs: []
     };
 
-    guildData[key] =
-        giaToc;
+    data[key] = g;
 
-    database.updatePlayer(
-        userId,
-        {
-            linhThach:
-                linhThach - cost
-        }
+    database.updatePlayer(uid, {
+        linhThach:
+            linhThach - CREATE_COST
+    });
+
+    log(
+        g,
+        `🏠 <@${uid}> đã sáng lập Gia Tộc.`
     );
 
     saveData();
 
-    return sendGiaTocPanel(
+    return showMenu(
         interaction,
-        giaToc,
-        "🎉 GIA TỘC ĐÃ ĐƯỢC SÁNG LẬP"
+        g
     );
 }
 
 // =====================================================
-// 📊 PANEL GIA TỘC
+// EMBED CHÍNH
 // =====================================================
 
-async function sendGiaTocPanel(
-    interaction,
-    giaToc,
-    title = "🏠 GIA TỘC"
-) {
+function mainEmbed(g) {
 
-    const maxMember =
-        getMaxMembers(
-            giaToc.level
+    initGiaToc(g);
+
+    return new EmbedBuilder()
+        .setColor(0x8e44ad)
+        .setTitle(
+            `🏯 GIA TỘC • ${g.name}`
+        )
+        .setDescription([
+            "━━━━━━━━━━━━━━━━━━━━",
+            `👑 **Tộc Trưởng:** <@${g.owner}>`,
+            `⭐ **Cấp:** ${g.level}/${MAX_LEVEL}`,
+            `✨ **EXP:** ${fmt(g.exp)}`,
+            "",
+            `👥 **Thành viên:** ${g.members.length}/${maxMembers(g.level)}`,
+            `⚔️ **Lực chiến:** ${fmt(power(g))}`,
+            `💎 **Tài khố:** ${fmt(g.treasury)}`,
+            "",
+            `🗺️ **Lãnh địa:** Cấp ${g.territory.level}`,
+            `❤️ **HP lãnh địa:** ${fmt(g.territory.hp)}`,
+            "",
+            "━━━━━━━━━━━━━━━━━━━━",
+            "🌌 *Gia tộc hưng thịnh — vạn thế trường tồn.*"
+        ].join("\n"))
+        .setFooter({
+            text:
+                "Hồng Hoang Đại Lục • Hệ thống Gia Tộc"
+        });
+}
+
+// =====================================================
+// MENU
+// =====================================================
+
+function menuRow1(g) {
+
+    return new ActionRowBuilder()
+        .addComponents(
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_info_${g.id}`
+                )
+                .setLabel("Thông tin")
+                .setEmoji("🏯")
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_member_${g.id}`
+                )
+                .setLabel("Thành viên")
+                .setEmoji("👥")
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_war_${g.id}`
+                )
+                .setLabel("Chiến tranh")
+                .setEmoji("⚔️")
+                .setStyle(ButtonStyle.Danger),
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_quest_${g.id}`
+                )
+                .setLabel("Nhiệm vụ")
+                .setEmoji("📜")
+                .setStyle(ButtonStyle.Success)
         );
+}
 
-    const power =
-        calculatePower(
-            giaToc
+function menuRow2(g) {
+
+    return new ActionRowBuilder()
+        .addComponents(
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_treasure_${g.id}`
+                )
+                .setLabel("Kho báu")
+                .setEmoji("💎")
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_territory_${g.id}`
+                )
+                .setLabel("Lãnh địa")
+                .setEmoji("🗺️")
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_skill_${g.id}`
+                )
+                .setLabel("Kỹ năng")
+                .setEmoji("🌟")
+                .setStyle(ButtonStyle.Success),
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_rank_${g.id}`
+                )
+                .setLabel("BXH")
+                .setEmoji("🏆")
+                .setStyle(ButtonStyle.Secondary)
         );
+}
 
-    const owner =
-        giaToc.members.find(
-            m =>
-                m.id ===
-                giaToc.owner
+function menuRow3(g) {
+
+    return new ActionRowBuilder()
+        .addComponents(
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_manage_${g.id}`
+                )
+                .setLabel("Quản lý")
+                .setEmoji("👑")
+                .setStyle(ButtonStyle.Secondary),
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_upgrade_${g.id}`
+                )
+                .setLabel("Nâng cấp")
+                .setEmoji("📈")
+                .setStyle(ButtonStyle.Success),
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_log_${g.id}`
+                )
+                .setLabel("Nhật ký")
+                .setEmoji("📖")
+                .setStyle(ButtonStyle.Secondary),
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `gt_refresh_${g.id}`
+                )
+                .setLabel("Làm mới")
+                .setEmoji("🔄")
+                .setStyle(ButtonStyle.Secondary)
         );
+}
 
-    const embed =
-        new EmbedBuilder()
-            .setColor(0x5865F2)
-            .setTitle(
-                `${title} • ${giaToc.name}`
-            )
-            .setDescription([
-                "━━━━━━━━━━━━━━━━━━━━",
-                `🏠 **${giaToc.name}**`,
-                "",
-                `👑 Tộc Trưởng: <@${giaToc.owner}>`,
-                `⭐ Cấp Gia Tộc: **${giaToc.level}/${MAX_LEVEL}**`,
-                `✨ EXP: **${formatNumber(giaToc.exp)}**`,
-                "",
-                `👥 Thành viên: **${giaToc.members.length}/${maxMember}**`,
-                `⚔️ Lực chiến: **${formatNumber(power)}**`,
-                `💎 Tài khố: **${formatNumber(giaToc.treasury)}**`,
-                "",
-                "━━━━━━━━━━━━━━━━━━━━",
-                "🌟 **Phúc lợi Gia Tộc**",
-                `👥 Sức chứa: **${maxMember} người**`,
-                `📈 Cấp độ: **${giaToc.level}**`,
-                "",
-                "🏯 *Đoàn kết đồng lòng — gia tộc hưng thịnh.*"
-            ].join("\n"))
-            .setFooter({
-                text:
-                    "🌌 Hồng Hoang Đại Lục • Gia Tộc"
+// =====================================================
+// HIỂN THỊ MENU
+// =====================================================
+
+async function showMenu(interaction, g) {
+
+    initGiaToc(g);
+
+    return interaction.reply({
+        embeds: [mainEmbed(g)],
+        components: [
+            menuRow1(g),
+            menuRow2(g),
+            menuRow3(g)
+        ],
+        fetchReply: true
+    }).then(message => {
+
+        const collector =
+            message.createMessageComponentCollector({
+                time: 15 * 60 * 1000
             });
+
+        collector.on(
+            "collect",
+            async i => {
+
+                if (
+                    i.user.id !==
+                    interaction.user.id
+                ) {
+                    return i.reply({
+                        content:
+                            "🚫 Đây không phải menu Gia Tộc của bạn.",
+                        ephemeral: true
+                    });
+                }
+
+                const current =
+                    findById(
+                        interaction.guildId,
+                        g.id
+                    );
+
+                if (!current) {
+                    return i.reply({
+                        content:
+                            "❌ Gia Tộc không tồn tại.",
+                        ephemeral: true
+                    });
+                }
+
+                initGiaToc(current);
+
+                await handleButton(
+                    i,
+                    current
+                );
+            }
+        );
+    });
+}
+
+// =====================================================
+// THÀNH VIÊN
+// =====================================================
+
+async function showMembers(i, g) {
+
+    const lines =
+        g.members.map(
+            (m, index) =>
+                `${index + 1}. ${roleEmoji(m.role)} <@${m.id}> — **${m.role}**`
+        );
+
+    return i.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setColor(0x3498db)
+                .setTitle(
+                    `👥 THÀNH VIÊN • ${g.name}`
+                )
+                .setDescription(
+                    lines.join("\n") ||
+                    "📭 Chưa có thành viên."
+                )
+                .setFooter({
+                    text:
+                        `${g.members.length}/${maxMembers(g.level)} thành viên`
+                })
+        ],
+        ephemeral: true
+    });
+}
+
+// =====================================================
+// CHIẾN TRANH
+// =====================================================
+
+async function showWar(i, g) {
+
+    let enemy = null;
+
+    if (g.war.enemyId) {
+        enemy =
+            findById(
+                i.guildId,
+                g.war.enemyId
+            );
+    }
+
+    const desc = [
+        `⚔️ **Gia Tộc:** ${g.name}`,
+        "",
+        `🔥 Trạng thái: ${
+            g.war.active
+                ? "ĐANG CHIẾN"
+                : "ĐANG HÒA BÌNH"
+        }`,
+        `⚔️ Điểm ta: **${fmt(g.war.ourScore)}**`,
+        `💀 Điểm địch: **${fmt(g.war.enemyScore)}**`
+    ];
+
+    if (enemy) {
+        desc.push(
+            "",
+            `🎯 Đối thủ: **${enemy.name}**`
+        );
+    }
 
     const row =
         new ActionRowBuilder()
@@ -451,276 +731,347 @@ async function sendGiaTocPanel(
 
                 new ButtonBuilder()
                     .setCustomId(
-                        `gt_members_${giaToc.id}`
+                        `gt_attack_${g.id}`
                     )
-                    .setLabel(
-                        "Thành viên"
-                    )
-                    .setEmoji("👥")
+                    .setLabel("Tấn công")
+                    .setEmoji("⚔️")
                     .setStyle(
-                        ButtonStyle.Primary
+                        ButtonStyle.Danger
                     ),
 
                 new ButtonBuilder()
                     .setCustomId(
-                        `gt_upgrade_${giaToc.id}`
+                        `gt_declare_${g.id}`
                     )
-                    .setLabel(
-                        "Nâng cấp"
-                    )
-                    .setEmoji("📈")
+                    .setLabel("Tuyên chiến")
+                    .setEmoji("🔥")
                     .setStyle(
-                        ButtonStyle.Success
-                    ),
-
-                new ButtonBuilder()
-                    .setCustomId(
-                        `gt_refresh_${giaToc.id}`
+                        ButtonStyle.Danger
                     )
-                    .setLabel(
-                        "Làm mới"
-                    )
-                    .setEmoji("🔄")
-                    .setStyle(
-                        ButtonStyle.Secondary
-                    )
-
             );
 
-    const message =
-        await interaction.reply({
-            embeds: [embed],
-            components: [row],
-            fetchReply: true
-        });
-
-    const collector =
-        message.createMessageComponentCollector({
-            time:
-                10 * 60 * 1000
-        });
-
-    collector.on(
-        "collect",
-        async button => {
-
-            if (
-                button.user.id !==
-                interaction.user.id
-            ) {
-
-                return button.reply({
-                    content:
-                        "🚫 Đây không phải bảng Gia Tộc của bạn.",
-                    ephemeral: true
-                });
-            }
-
-            const id =
-                button.customId;
-
-            if (
-                id ===
-                `gt_refresh_${giaToc.id}`
-            ) {
-
-                const current =
-                    findGiaTocById(
-                        interaction.guildId,
-                        giaToc.id
-                    );
-
-                if (!current) {
-
-                    return button.reply({
-                        content:
-                            "❌ Gia Tộc không còn tồn tại.",
-                        ephemeral: true
-                    });
-                }
-
-                const newEmbed =
-                    createGiaTocEmbed(
-                        current
-                    );
-
-                return button.update({
-                    embeds: [newEmbed],
-                    components: [row]
-                });
-            }
-
-            if (
-                id ===
-                `gt_members_${giaToc.id}`
-            ) {
-
-                const current =
-                    findGiaTocById(
-                        interaction.guildId,
-                        giaToc.id
-                    );
-
-                const lines =
-                    current.members
-                        .map(
-                            (member, index) =>
-                                `${index + 1}. ${roleEmoji(member.role)} <@${member.id}> — **${member.role}**`
-                        );
-
-                return button.reply({
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor(
-                                0x5865F2
-                            )
-                            .setTitle(
-                                `👥 THÀNH VIÊN • ${current.name}`
-                            )
-                            .setDescription(
-                                lines.join("\n") ||
-                                "📭 Chưa có thành viên."
-                            )
-                            .setFooter({
-                                text:
-                                    `${current.members.length}/${getMaxMembers(current.level)} thành viên`
-                            })
-                    ],
-                    ephemeral: true
-                });
-            }
-
-            if (
-                id ===
-                `gt_upgrade_${giaToc.id}`
-            ) {
-
-                const current =
-                    findGiaTocById(
-                        interaction.guildId,
-                        giaToc.id
-                    );
-
-                if (
-                    current.owner !==
-                    button.user.id
-                ) {
-
-                    return button.reply({
-                        content:
-                            "👑 Chỉ **Tộc Trưởng** mới được nâng cấp Gia Tộc.",
-                        ephemeral: true
-                    });
-                }
-
-                const result =
-                    upgradeGiaToc(
-                        button.user.id,
-                        current
-                    );
-
-                if (!result.ok) {
-
-                    return button.reply({
-                        content:
-                            result.message,
-                        ephemeral: true
-                    });
-                }
-
-                const newEmbed =
-                    createGiaTocEmbed(
-                        current
-                    );
-
-                return button.update({
-                    embeds: [newEmbed],
-                    components: [row]
-                });
-            }
-        }
-    );
+    return i.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setColor(0xe74c3c)
+                .setTitle(
+                    "⚔️ CHIẾN TRANH GIA TỘC"
+                )
+                .setDescription(
+                    desc.join("\n")
+                )
+        ],
+        components: [row],
+        ephemeral: true
+    });
 }
 
-function createGiaTocEmbed(
-    giaToc
-) {
+// =====================================================
+// NHIỆM VỤ
+// =====================================================
 
-    const maxMember =
-        getMaxMembers(
-            giaToc.level
-        );
+async function showQuest(i, g) {
 
-    const power =
-        calculatePower(
-            giaToc
-        );
+    const q = g.quest;
 
-    return new EmbedBuilder()
-        .setColor(0x5865F2)
-        .setTitle(
-            `🏠 GIA TỘC • ${giaToc.name}`
+    return i.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setColor(0x2ecc71)
+                .setTitle(
+                    `📜 NHIỆM VỤ GIA TỘC • ${g.name}`
+                )
+                .setDescription([
+                    `📜 **${q.name}**`,
+                    "",
+                    q.description,
+                    "",
+                    `📊 Tiến độ: **${fmt(q.progress)}/${fmt(q.target)}**`,
+                    `🎁 Phần thưởng: **${fmt(q.reward)} Linh Thạch**`,
+                    "",
+                    q.claimed
+                        ? "✅ Đã nhận thưởng."
+                        : q.progress >= q.target
+                            ? "🎉 Đã hoàn thành! Hãy nhận thưởng."
+                            : "🔥 Tiếp tục đóng góp để hoàn thành."
+                ].join("\n"))
+        ],
+        components: [
+            new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(
+                            `gt_claimquest_${g.id}`
+                        )
+                        .setLabel(
+                            "Nhận thưởng"
+                        )
+                        .setEmoji("🎁")
+                        .setStyle(
+                            ButtonStyle.Success
+                        )
+                )
+        ],
+        ephemeral: true
+    });
+}
+
+// =====================================================
+// KHO BÁU
+// =====================================================
+
+async function showTreasure(i, g) {
+
+    return i.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setColor(0xf1c40f)
+                .setTitle(
+                    `💎 KHO BÁU GIA TỘC • ${g.name}`
+                )
+                .setDescription([
+                    `💎 Linh Thạch trong kho: **${fmt(g.treasuryItems.linhThach)}**`,
+                    "",
+                    "🌿 Đan dược: Chưa có",
+                    "⚔️ Pháp bảo: Chưa có",
+                    "📖 Công pháp: Chưa có",
+                    "",
+                    "💡 Thành viên có thể đóng góp Linh Thạch vào Tài Khố."
+                ].join("\n"))
+        ],
+        ephemeral: true
+    });
+}
+
+// =====================================================
+// LÃNH ĐỊA
+// =====================================================
+
+async function showTerritory(i, g) {
+
+    const t = g.territory;
+
+    return i.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setColor(0x27ae60)
+                .setTitle(
+                    `🗺️ LÃNH ĐỊA • ${g.name}`
+                )
+                .setDescription([
+                    `🏯 Cấp lãnh địa: **${t.level}/10**`,
+                    `❤️ HP: **${fmt(t.hp)}**`,
+                    `🛡️ Phòng thủ: **${fmt(t.defense)}**`,
+                    `⚔️ Chiến lực: **${fmt(t.combat)}**`,
+                    `🌾 Sản xuất: **${fmt(t.production)}**`
+                ].join("\n"))
+        ],
+        components: [
+            new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(
+                            `gt_upgrade_territory_${g.id}`
+                        )
+                        .setLabel(
+                            "Nâng cấp lãnh địa"
+                        )
+                        .setEmoji("🏯")
+                        .setStyle(
+                            ButtonStyle.Success
+                        )
+                )
+        ],
+        ephemeral: true
+    });
+}
+
+// =====================================================
+// KỸ NĂNG
+// =====================================================
+
+async function showSkills(i, g) {
+
+    const s = g.skills;
+
+    return i.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setColor(0x9b59b6)
+                .setTitle(
+                    `🌟 KỸ NĂNG GIA TỘC • ${g.name}`
+                )
+                .setDescription([
+                    `🛡️ **Hộ Gia:** cấp ${s.hoGia}`,
+                    `⚔️ **Chiến Ý:** cấp ${s.chienY}`,
+                    `🌌 **Tụ Linh:** cấp ${s.tuLinh}`,
+                    `💰 **Tài Vận:** cấp ${s.taiVan}`,
+                    `🏯 **Hộ Tộc:** cấp ${s.hoToc}`,
+                    `🔥 **Chiến Hồn:** cấp ${s.chienHon}`,
+                    "",
+                    "Kỹ năng càng cao, phúc lợi và chiến lực Gia Tộc càng lớn."
+                ].join("\n"))
+        ],
+        components: [
+            new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(
+                            `gt_skillup_${g.id}`
+                        )
+                        .setLabel(
+                            "Nâng kỹ năng"
+                        )
+                        .setEmoji("⬆️")
+                        .setStyle(
+                            ButtonStyle.Success
+                        )
+                )
+        ],
+        ephemeral: true
+    });
+}
+
+// =====================================================
+// QUẢN LÝ
+// =====================================================
+
+async function showManage(i, g) {
+
+    if (!canManage(
+        g,
+        i.user.id,
+        60
+    )) {
+        return i.reply({
+            content:
+                "🚫 Bạn không có quyền quản lý Gia Tộc.",
+            ephemeral: true
+        });
+    }
+
+    const select =
+        new StringSelectMenuBuilder()
+            .setCustomId(
+                `gt_role_${g.id}`
+            )
+            .setPlaceholder(
+                "👑 Chọn thành viên để quản lý"
+            )
+            .addOptions(
+                g.members
+                    .slice(0, 25)
+                    .map(m => ({
+                        label:
+                            `@${m.id}`.slice(0, 100),
+                        description:
+                            m.role,
+                        value:
+                            m.id
+                    }))
+            );
+
+    return i.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setColor(0xe67e22)
+                .setTitle(
+                    `👑 QUẢN LÝ GIA TỘC • ${g.name}`
+                )
+                .setDescription([
+                    "Chọn thành viên bên dưới để thay đổi chức vụ.",
+                    "",
+                    "👑 Tộc Trưởng",
+                    "💎 Phó Tộc Trưởng",
+                    "⚜️ Trưởng Lão",
+                    "🛡️ Hộ Pháp",
+                    "👤 Thành Viên"
+                ].join("\n"))
+        ],
+        components: [
+            new ActionRowBuilder()
+                .addComponents(select)
+        ],
+        ephemeral: true
+    });
+}
+
+// =====================================================
+// NHẬT KÝ
+// =====================================================
+
+async function showLogs(i, g) {
+
+    const lines =
+        g.logs
+            .slice(0, 15)
+            .map(x =>
+                `• ${x.text}`
+            );
+
+    return i.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setColor(0x95a5a6)
+                .setTitle(
+                    `📖 NHẬT KÝ • ${g.name}`
+                )
+                .setDescription(
+                    lines.join("\n") ||
+                    "📭 Chưa có hoạt động."
+                )
+        ],
+        ephemeral: true
+    });
+}
+
+// =====================================================
+// BXH
+// =====================================================
+
+async function showRank(i) {
+
+    const ranking =
+        Object.values(
+            guildData(i.guildId)
         )
-        .setDescription([
-            "━━━━━━━━━━━━━━━━━━━━",
-            `👑 Tộc Trưởng: <@${giaToc.owner}>`,
-            `⭐ Cấp: **${giaToc.level}/${MAX_LEVEL}**`,
-            `✨ EXP: **${formatNumber(giaToc.exp)}**`,
-            "",
-            `👥 Thành viên: **${giaToc.members.length}/${maxMember}**`,
-            `⚔️ Lực chiến: **${formatNumber(power)}**`,
-            `💎 Tài khố: **${formatNumber(giaToc.treasury)}**`,
-            "",
-            "━━━━━━━━━━━━━━━━━━━━",
-            "🔥 Gia Tộc đang phát triển!"
-        ].join("\n"))
-        .setFooter({
-            text:
-                "Hồng Hoang Đại Lục • Gia Tộc"
-        });
-}
+        .sort(
+            (a, b) =>
+                power(b) - power(a)
+        )
+        .slice(0, 10);
 
-function roleEmoji(role) {
-
-    if (
-        role === "Tộc Trưởng"
-    ) return "👑";
-
-    if (
-        role === "Trưởng Lão"
-    ) return "⚜️";
-
-    return "👤";
-}
-
-function findGiaTocById(
-    guildId,
-    id
-) {
-
-    const data =
-        getGuildData(guildId);
-
-    return Object.values(data)
-        .find(
-            g => g.id === id
+    const lines =
+        ranking.map(
+            (g, n) =>
+                `${n < 3
+                    ? ["🥇", "🥈", "🥉"][n]
+                    : "🏅"} **${n + 1}. ${g.name}** — ⚔️ ${fmt(power(g))}`
         );
+
+    return i.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setColor(0xf1c40f)
+                .setTitle(
+                    "🏆 BXH GIA TỘC"
+                )
+                .setDescription(
+                    lines.join("\n") ||
+                    "📭 Chưa có Gia Tộc."
+                )
+        ],
+        ephemeral: true
+    });
 }
 
 // =====================================================
-// 📈 NÂNG CẤP
+// NÂNG CẤP GIA TỘC
 // =====================================================
 
-function upgradeGiaToc(
-    userId,
-    giaToc
-) {
+function upgradeGiaToc(uid, g) {
 
-    if (
-        giaToc.level >=
-        MAX_LEVEL
-    ) {
-
+    if (g.level >= MAX_LEVEL) {
         return {
             ok: false,
             message:
@@ -728,11 +1079,9 @@ function upgradeGiaToc(
         };
     }
 
-    const player =
-        getPlayer(userId);
+    const p = player(uid);
 
-    if (!player) {
-
+    if (!p) {
         return {
             ok: false,
             message:
@@ -741,37 +1090,30 @@ function upgradeGiaToc(
     }
 
     const cost =
-        getUpgradeCost(
-            giaToc.level
-        );
+        upgradeCost(g.level);
 
-    const linhThach =
-        Number(
-            player.linhThach || 0
-        );
+    const ls =
+        Number(p.linhThach || 0);
 
-    if (
-        linhThach < cost
-    ) {
-
+    if (ls < cost) {
         return {
             ok: false,
             message:
-                `💎 Cần **${formatNumber(cost)} Linh Thạch** để nâng cấp.`
+                `💎 Cần ${fmt(cost)} Linh Thạch.`
         };
     }
 
-    database.updatePlayer(
-        userId,
-        {
-            linhThach:
-                linhThach - cost
-        }
+    database.updatePlayer(uid, {
+        linhThach: ls - cost
+    });
+
+    g.level++;
+    g.exp = 0;
+
+    log(
+        g,
+        `📈 Gia Tộc đã tăng lên cấp ${g.level}.`
     );
-
-    giaToc.level++;
-
-    giaToc.exp = 0;
 
     saveData();
 
@@ -781,20 +1123,14 @@ function upgradeGiaToc(
 }
 
 // =====================================================
-// 💎 ĐÓNG GÓP
+// ĐÓNG GÓP
 // =====================================================
 
-function donate(
-    userId,
-    giaToc,
-    amount
-) {
+function donate(uid, g, amount) {
 
-    const player =
-        getPlayer(userId);
+    const p = player(uid);
 
-    if (!player) {
-
+    if (!p) {
         return {
             ok: false,
             message:
@@ -802,307 +1138,732 @@ function donate(
         };
     }
 
-    amount =
-        Math.floor(
-            Number(amount)
-        );
-
-    if (
-        !Number.isSafeInteger(
-            amount
-        ) ||
-        amount <= 0
-    ) {
-
-        return {
-            ok: false,
-            message:
-                "❌ Số Linh Thạch không hợp lệ."
-        };
-    }
-
-    const linhThach =
-        Number(
-            player.linhThach || 0
-        );
-
-    if (
-        linhThach < amount
-    ) {
-
-        return {
-            ok: false,
-            message:
-                "💎 Bạn không đủ Linh Thạch."
-        };
-    }
-
-    database.updatePlayer(
-        userId,
-        {
-            linhThach:
-                linhThach - amount
-        }
+    amount = Math.floor(
+        Number(amount)
     );
 
-    giaToc.treasury +=
-        amount;
+    if (
+        !Number.isSafeInteger(amount) ||
+        amount <= 0
+    ) {
+        return {
+            ok: false,
+            message:
+                "❌ Số lượng không hợp lệ."
+        };
+    }
 
-    giaToc.exp +=
-        amount *
-        DONATE_EXP_RATE;
+    const ls =
+        Number(p.linhThach || 0);
+
+    if (ls < amount) {
+        return {
+            ok: false,
+            message:
+                "💎 Không đủ Linh Thạch."
+        };
+    }
+
+    database.updatePlayer(uid, {
+        linhThach: ls - amount
+    });
+
+    g.treasury += amount;
+    g.treasuryItems.linhThach += amount;
+
+    g.exp += amount;
+
+    g.quest.progress += amount;
+
+    log(
+        g,
+        `💎 <@${uid}> đã đóng góp ${fmt(amount)} Linh Thạch.`
+    );
 
     saveData();
 
     return {
-        ok: true,
-        amount
+        ok: true
     };
 }
 
 // =====================================================
-// 🏆 BXH
+// TẤN CÔNG
 // =====================================================
 
-function getRanking(
-    guildId
-) {
+async function attackWar(i, g) {
 
-    return Object.values(
-        getGuildData(guildId)
-    )
-        .sort(
-            (a, b) =>
-                calculatePower(b) -
-                calculatePower(a)
+    if (!g.war.active) {
+        return i.reply({
+            content:
+                "🕊️ Gia Tộc hiện không trong chiến tranh.",
+            ephemeral: true
+        });
+    }
+
+    const enemy =
+        findById(
+            i.guildId,
+            g.war.enemyId
         );
+
+    if (!enemy) {
+        return i.reply({
+            content:
+                "❌ Không tìm thấy đối thủ.",
+            ephemeral: true
+        });
+    }
+
+    const now = Date.now();
+
+    if (
+        now - g.war.lastAttack <
+        30000
+    ) {
+        const left =
+            Math.ceil(
+                (
+                    30000 -
+                    (
+                        now -
+                        g.war.lastAttack
+                    )
+                ) / 1000
+            );
+
+        return i.reply({
+            content:
+                `⏳ Hãy chờ **${left}s**.`,
+            ephemeral: true
+        });
+    }
+
+    const myPower =
+        power(g);
+
+    const enemyPower =
+        power(enemy);
+
+    const damage =
+        Math.max(
+            100,
+            Math.floor(
+                myPower *
+                (
+                    0.05 +
+                    Math.random() * 0.1
+                )
+            )
+        );
+
+    g.war.ourScore += damage;
+    g.war.lastAttack = now;
+
+    enemy.war.enemyScore += damage;
+
+    if (
+        enemy.war.enemyScore >=
+        enemy.territory.hp
+    ) {
+        g.war.active = false;
+        enemy.war.active = false;
+
+        log(
+            g,
+            `🏆 Gia Tộc đã đánh bại ${enemy.name}.`
+        );
+
+        log(
+            enemy,
+            `💀 Lãnh địa đã thất thủ trước ${g.name}.`
+        );
+    }
+
+    saveData();
+
+    return i.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setColor(0xe74c3c)
+                .setTitle(
+                    "⚔️ TẤN CÔNG THÀNH CÔNG"
+                )
+                .setDescription([
+                    `⚔️ Bạn gây **${fmt(damage)} sát thương**.`,
+                    "",
+                    `🔥 Điểm Gia Tộc: **${fmt(g.war.ourScore)}**`,
+                    `💀 Điểm đối thủ: **${fmt(g.war.enemyScore)}**`,
+                    "",
+                    `⚡ Lực chiến ta: **${fmt(myPower)}**`,
+                    `🛡️ Lực chiến địch: **${fmt(enemyPower)}**`
+                ].join("\n"))
+        ],
+        ephemeral: true
+    });
 }
 
 // =====================================================
-// 🚀 COMMAND
+// CLAIM QUEST
 // =====================================================
 
-const command =
-    new SlashCommandBuilder()
-        .setName("giatoc")
-        .setDescription(
-            "🏠 Hệ thống Gia Tộc"
-        )
+async function claimQuest(i, g) {
 
-        .addSubcommand(
-            sub =>
-                sub
-                    .setName("tao")
-                    .setDescription(
-                        "🏠 Sáng lập Gia Tộc"
-                    )
-                    .addStringOption(
-                        option =>
-                            option
-                                .setName("ten")
-                                .setDescription(
-                                    "Tên Gia Tộc"
-                                )
-                                .setRequired(true)
-                    )
-        )
+    const q = g.quest;
 
-        .addSubcommand(
-            sub =>
-                sub
-                    .setName("xem")
-                    .setDescription(
-                        "🏠 Xem Gia Tộc của bạn"
-                    )
-        )
+    if (q.claimed) {
+        return i.reply({
+            content:
+                "❌ Nhiệm vụ đã nhận thưởng.",
+            ephemeral: true
+        });
+    }
 
-        .addSubcommand(
-            sub =>
-                sub
-                    .setName("tim")
-                    .setDescription(
-                        "🔎 Tìm Gia Tộc"
-                    )
-                    .addStringOption(
-                        option =>
-                            option
-                                .setName("ten")
-                                .setDescription(
-                                    "Tên Gia Tộc"
-                                )
-                                .setRequired(true)
-                    )
-        )
+    if (q.progress < q.target) {
+        return i.reply({
+            content:
+                `❌ Chưa hoàn thành nhiệm vụ.\nTiến độ: ${fmt(q.progress)}/${fmt(q.target)}`,
+            ephemeral: true
+        });
+    }
 
-        .addSubcommand(
-            sub =>
-                sub
-                    .setName("xinvao")
-                    .setDescription(
-                        "🤝 Xin gia nhập Gia Tộc"
-                    )
-                    .addStringOption(
-                        option =>
-                            option
-                                .setName("ten")
-                                .setDescription(
-                                    "Tên Gia Tộc"
-                                )
-                                .setRequired(true)
-                    )
-        )
+    q.claimed = true;
 
-        .addSubcommand(
-            sub =>
-                sub
-                    .setName("roi")
-                    .setDescription(
-                        "🚪 Rời Gia Tộc"
-                    )
-        )
+    g.treasury += q.reward;
 
-        .addSubcommand(
-            sub =>
-                sub
-                    .setName("thanhvien")
-                    .setDescription(
-                        "👥 Xem thành viên"
-                    )
-        )
+    log(
+        g,
+        `🎁 Gia Tộc đã nhận ${fmt(q.reward)} Linh Thạch từ nhiệm vụ.`
+    );
 
-        .addSubcommand(
-            sub =>
-                sub
-                    .setName("donggop")
-                    .setDescription(
-                        "💎 Đóng góp Linh Thạch"
-                    )
-                    .addIntegerOption(
-                        option =>
-                            option
-                                .setName("so_luong")
-                                .setDescription(
-                                    "Số Linh Thạch"
-                                )
-                                .setMinValue(1)
-                                .setRequired(true)
-                    )
-        )
+    saveData();
 
-        .addSubcommand(
-            sub =>
-                sub
-                    .setName("nangcap")
-                    .setDescription(
-                        "📈 Nâng cấp Gia Tộc"
-                    )
-        )
+    return i.reply({
+        content:
+            `🎉 Hoàn thành nhiệm vụ!\n💎 Gia Tộc nhận **${fmt(q.reward)} Linh Thạch**.`,
+        ephemeral: true
+    });
+}
 
-        .addSubcommand(
-            sub =>
-                sub
-                    .setName("top")
-                    .setDescription(
-                        "🏆 BXH Gia Tộc"
-                    )
+// =====================================================
+// NÂNG LÃNH ĐỊA
+// =====================================================
+
+async function upgradeTerritory(i, g) {
+
+    if (!canManage(
+        g,
+        i.user.id,
+        60
+    )) {
+        return i.reply({
+            content:
+                "🚫 Bạn không có quyền.",
+            ephemeral: true
+        });
+    }
+
+    const t =
+        g.territory;
+
+    if (t.level >= 10) {
+        return i.reply({
+            content:
+                "🏯 Lãnh địa đã đạt cấp tối đa.",
+            ephemeral: true
+        });
+    }
+
+    const cost =
+        20000 *
+        t.level;
+
+    if (g.treasury < cost) {
+        return i.reply({
+            content:
+                `💎 Tài khố cần **${fmt(cost)}**.`,
+            ephemeral: true
+        });
+    }
+
+    g.treasury -= cost;
+
+    t.level++;
+
+    t.hp +=
+        5000 * t.level;
+
+    t.defense +=
+        100 * t.level;
+
+    t.combat +=
+        150 * t.level;
+
+    t.production +=
+        100 * t.level;
+
+    log(
+        g,
+        `🏯 Lãnh địa đã nâng lên cấp ${t.level}.`
+    );
+
+    saveData();
+
+    return i.reply({
+        content:
+            `🏯 Lãnh địa đã đạt **cấp ${t.level}**!`,
+        ephemeral: true
+    });
+}
+
+// =====================================================
+// NÂNG KỸ NĂNG
+// =====================================================
+
+async function upgradeSkill(i, g) {
+
+    if (!canManage(
+        g,
+        i.user.id,
+        60
+    )) {
+        return i.reply({
+            content:
+                "🚫 Bạn không có quyền.",
+            ephemeral: true
+        });
+    }
+
+    const skill =
+        "chienHon";
+
+    const level =
+        Number(
+            g.skills[skill] || 1
         );
 
+    if (level >= 10) {
+        return i.reply({
+            content:
+                "🌟 Kỹ năng đã đạt cấp tối đa.",
+            ephemeral: true
+        });
+    }
+
+    const cost =
+        15000 * level;
+
+    if (g.treasury < cost) {
+        return i.reply({
+            content:
+                `💎 Cần ${fmt(cost)} Linh Thạch trong Tài Khố.`,
+            ephemeral: true
+        });
+    }
+
+    g.treasury -= cost;
+    g.skills[skill] = level + 1;
+
+    log(
+        g,
+        `🌟 Chiến Hồn đã tăng lên cấp ${level + 1}.`
+    );
+
+    saveData();
+
+    return i.reply({
+        content:
+            `🌟 **Chiến Hồn** đã tăng lên cấp **${level + 1}**!`,
+        ephemeral: true
+    });
+}
+
 // =====================================================
-// ⚡ EXECUTE
+// XỬ LÝ BUTTON
 // =====================================================
 
-async function execute(
-    interaction
-) {
+async function handleButton(i, g) {
 
-    try {
+    const id = i.customId;
 
-        const action =
-            interaction.options
-                .getSubcommand();
+    if (
+        id === `gt_info_${g.id}` ||
+        id === `gt_refresh_${g.id}`
+    ) {
 
-        const guildId =
-            interaction.guildId;
+        return i.update({
+            embeds: [mainEmbed(g)],
+            components: [
+                menuRow1(g),
+                menuRow2(g),
+                menuRow3(g)
+            ]
+        });
+    }
 
-        if (!guildId) {
+    if (
+        id === `gt_member_${g.id}`
+    ) {
+        return showMembers(i, g);
+    }
 
-            return interaction.reply({
+    if (
+        id === `gt_war_${g.id}`
+    ) {
+        return showWar(i, g);
+    }
+
+    if (
+        id === `gt_quest_${g.id}`
+    ) {
+        return showQuest(i, g);
+    }
+
+    if (
+        id === `gt_treasure_${g.id}`
+    ) {
+        return showTreasure(i, g);
+    }
+
+    if (
+        id === `gt_territory_${g.id}`
+    ) {
+        return showTerritory(i, g);
+    }
+
+    if (
+        id === `gt_skill_${g.id}`
+    ) {
+        return showSkills(i, g);
+    }
+
+    if (
+        id === `gt_rank_${g.id}`
+    ) {
+        return showRank(i);
+    }
+
+    if (
+        id === `gt_manage_${g.id}`
+    ) {
+        return showManage(i, g);
+    }
+
+    if (
+        id === `gt_log_${g.id}`
+    ) {
+        return showLogs(i, g);
+    }
+
+    if (
+        id === `gt_upgrade_${g.id}`
+    ) {
+
+        if (g.owner !== i.user.id) {
+            return i.reply({
                 content:
-                    "❌ Lệnh này chỉ dùng được trong server.",
+                    "👑 Chỉ Tộc Trưởng mới được nâng cấp.",
                 ephemeral: true
             });
         }
 
-        const userId =
+        const result =
+            upgradeGiaToc(
+                i.user.id,
+                g
+            );
+
+        if (!result.ok) {
+            return i.reply({
+                content: result.message,
+                ephemeral: true
+            });
+        }
+
+        return i.update({
+            embeds: [mainEmbed(g)],
+            components: [
+                menuRow1(g),
+                menuRow2(g),
+                menuRow3(g)
+            ]
+        });
+    }
+
+    if (
+        id === `gt_attack_${g.id}`
+    ) {
+        return attackWar(i, g);
+    }
+
+    if (
+        id === `gt_claimquest_${g.id}`
+    ) {
+        return claimQuest(i, g);
+    }
+
+    if (
+        id === `gt_upgrade_territory_${g.id}`
+    ) {
+        return upgradeTerritory(i, g);
+    }
+
+    if (
+        id === `gt_skillup_${g.id}`
+    ) {
+        return upgradeSkill(i, g);
+    }
+
+    if (
+        id === `gt_declare_${g.id}`
+    ) {
+        return declareWar(i, g);
+    }
+}
+
+// =====================================================
+// TUYÊN CHIẾN
+// =====================================================
+
+async function declareWar(i, g) {
+
+    if (!canManage(
+        g,
+        i.user.id,
+        60
+    )) {
+        return i.reply({
+            content:
+                "🚫 Chỉ Trưởng Lão trở lên mới có quyền tuyên chiến.",
+            ephemeral: true
+        });
+    }
+
+    const others =
+        Object.values(
+            guildData(i.guildId)
+        ).filter(
+            x => x.id !== g.id
+        );
+
+    if (!others.length) {
+        return i.reply({
+            content:
+                "❌ Chưa có Gia Tộc khác để tuyên chiến.",
+            ephemeral: true
+        });
+    }
+
+    const options =
+        others.slice(0, 25)
+            .map(x => ({
+                label:
+                    x.name.slice(0, 100),
+                description:
+                    `⚔️ ${fmt(power(x))} lực chiến`,
+                value:
+                    x.id
+            }));
+
+    const select =
+        new StringSelectMenuBuilder()
+            .setCustomId(
+                `gt_choosewar_${g.id}`
+            )
+            .setPlaceholder(
+                "⚔️ Chọn Gia Tộc đối thủ"
+            )
+            .addOptions(options);
+
+    return i.reply({
+        content:
+            "⚔️ **Chọn Gia Tộc muốn tuyên chiến:**",
+        components: [
+            new ActionRowBuilder()
+                .addComponents(select)
+        ],
+        ephemeral: true
+    });
+}
+
+// =====================================================
+// SLASH COMMAND
+// =====================================================
+
+const data =
+    new SlashCommandBuilder()
+        .setName("giatoc")
+        .setDescription(
+            "🏯 Hệ thống Gia Tộc Hồng Hoang"
+        )
+
+        .addSubcommand(
+            s => s
+                .setName("tao")
+                .setDescription(
+                    "🏠 Sáng lập Gia Tộc"
+                )
+                .addStringOption(
+                    o => o
+                        .setName("ten")
+                        .setDescription(
+                            "Tên Gia Tộc"
+                        )
+                        .setRequired(true)
+                )
+        )
+
+        .addSubcommand(
+            s => s
+                .setName("xem")
+                .setDescription(
+                    "🏯 Mở menu Gia Tộc"
+                )
+        )
+
+        .addSubcommand(
+            s => s
+                .setName("tim")
+                .setDescription(
+                    "🔎 Tìm Gia Tộc"
+                )
+                .addStringOption(
+                    o => o
+                        .setName("ten")
+                        .setDescription(
+                            "Tên Gia Tộc"
+                        )
+                        .setRequired(true)
+                )
+        )
+
+        .addSubcommand(
+            s => s
+                .setName("xinvao")
+                .setDescription(
+                    "🤝 Gia nhập Gia Tộc"
+                )
+                .addStringOption(
+                    o => o
+                        .setName("ten")
+                        .setDescription(
+                            "Tên Gia Tộc"
+                        )
+                        .setRequired(true)
+                )
+        )
+
+        .addSubcommand(
+            s => s
+                .setName("roi")
+                .setDescription(
+                    "🚪 Rời Gia Tộc"
+                )
+        )
+
+        .addSubcommand(
+            s => s
+                .setName("donggop")
+                .setDescription(
+                    "💎 Đóng góp Linh Thạch"
+                )
+                .addIntegerOption(
+                    o => o
+                        .setName("so_luong")
+                        .setDescription(
+                            "Số Linh Thạch"
+                        )
+                        .setMinValue(1)
+                        .setRequired(true)
+                )
+        )
+
+        .addSubcommand(
+            s => s
+                .setName("nangcap")
+                .setDescription(
+                    "📈 Nâng cấp Gia Tộc"
+                )
+        )
+
+        .addSubcommand(
+            s => s
+                .setName("top")
+                .setDescription(
+                    "🏆 BXH Gia Tộc"
+                )
+        );
+
+// =====================================================
+// EXECUTE
+// =====================================================
+
+async function execute(interaction) {
+
+    try {
+
+        if (!interaction.guildId) {
+            return interaction.reply({
+                content:
+                    "❌ Chỉ dùng trong server.",
+                ephemeral: true
+            });
+        }
+
+        const action =
+            interaction.options.getSubcommand();
+
+        const uid =
             interaction.user.id;
 
-        // ==========================================
-        // 🏠 TẠO
-        // ==========================================
-
-        if (
-            action === "tao"
-        ) {
-
-            const name =
-                interaction.options
-                    .getString("ten");
+        // TẠO
+        if (action === "tao") {
 
             return createGiaToc(
                 interaction,
-                name
+                interaction.options.getString(
+                    "ten"
+                )
             );
         }
 
-        // ==========================================
-        // 👤 GIA TỘC CỦA TÔI
-        // ==========================================
+        // XEM
+        if (action === "xem") {
 
-        if (
-            action === "xem"
-        ) {
-
-            const giaToc =
+            const g =
                 getUserGiaToc(
-                    guildId,
-                    userId
+                    interaction.guildId,
+                    uid
                 );
 
-            if (!giaToc) {
-
+            if (!g) {
                 return interaction.reply({
                     content:
-                        "📭 Bạn chưa thuộc Gia Tộc nào.\n\n🏠 Dùng `/giatoc tao` để sáng lập.",
+                        "📭 Bạn chưa thuộc Gia Tộc.\nDùng `/giatoc tao` để sáng lập.",
                     ephemeral: true
                 });
             }
 
-            return sendGiaTocPanel(
+            initGiaToc(g);
+
+            return showMenu(
                 interaction,
-                giaToc
+                g
             );
         }
 
-        // ==========================================
-        // 🔎 TÌM
-        // ==========================================
+        // TÌM
+        if (action === "tim") {
 
-        if (
-            action === "tim"
-        ) {
-
-            const name =
-                interaction.options
-                    .getString("ten");
-
-            const giaToc =
+            const g =
                 getGiaToc(
-                    guildId,
-                    name
+                    interaction.guildId,
+                    interaction.options.getString(
+                        "ten"
+                    )
                 );
 
-            if (!giaToc) {
-
+            if (!g) {
                 return interaction.reply({
                     content:
                         "❌ Không tìm thấy Gia Tộc.",
@@ -1110,32 +1871,27 @@ async function execute(
                 });
             }
 
+            initGiaToc(g);
+
             return interaction.reply({
                 embeds: [
-                    createGiaTocEmbed(
-                        giaToc
-                    )
+                    mainEmbed(g)
                 ]
             });
         }
 
-        // ==========================================
-        // 🤝 XIN VÀO
-        // ==========================================
+        // XIN VÀO
+        if (action === "xinvao") {
 
-        if (
-            action === "xinvao"
-        ) {
-
-            const giaToc =
+            const g =
                 getGiaToc(
-                    guildId,
-                    interaction.options
-                        .getString("ten")
+                    interaction.guildId,
+                    interaction.options.getString(
+                        "ten"
+                    )
                 );
 
-            if (!giaToc) {
-
+            if (!g) {
                 return interaction.reply({
                     content:
                         "❌ Không tìm thấy Gia Tộc.",
@@ -1145,11 +1901,10 @@ async function execute(
 
             if (
                 getUserGiaToc(
-                    guildId,
-                    userId
+                    interaction.guildId,
+                    uid
                 )
             ) {
-
                 return interaction.reply({
                     content:
                         "❌ Bạn đã thuộc một Gia Tộc.",
@@ -1158,12 +1913,9 @@ async function execute(
             }
 
             if (
-                giaToc.members.length >=
-                getMaxMembers(
-                    giaToc.level
-                )
+                g.members.length >=
+                maxMembers(g.level)
             ) {
-
                 return interaction.reply({
                     content:
                         "❌ Gia Tộc đã đầy.",
@@ -1171,104 +1923,35 @@ async function execute(
                 });
             }
 
-            giaToc.members.push({
-                id:
-                    userId,
-                role:
-                    "Thành Viên",
-                joinedAt:
-                    Date.now()
+            g.members.push({
+                id: uid,
+                role: "Thành Viên",
+                joinedAt: Date.now()
             });
 
-            saveData();
-
-            return interaction.reply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(
-                            0x57F287
-                        )
-                        .setTitle(
-                            "🎉 GIA NHẬP THÀNH CÔNG"
-                        )
-                        .setDescription([
-                            `🏠 Bạn đã gia nhập **${giaToc.name}**!`,
-                            "",
-                            `👑 Tộc Trưởng: <@${giaToc.owner}>`,
-                            `⭐ Cấp: **${giaToc.level}**`,
-                            "",
-                            "⚔️ Hãy cùng gia tộc phát triển!"
-                        ].join("\n"))
-                ]
-            });
-        }
-
-        // ==========================================
-        // 🚪 RỜI
-        // ==========================================
-
-        if (
-            action === "roi"
-        ) {
-
-            const giaToc =
-                getUserGiaToc(
-                    guildId,
-                    userId
-                );
-
-            if (!giaToc) {
-
-                return interaction.reply({
-                    content:
-                        "📭 Bạn không thuộc Gia Tộc nào.",
-                    ephemeral: true
-                });
-            }
-
-            if (
-                giaToc.owner ===
-                userId
-            ) {
-
-                return interaction.reply({
-                    content:
-                        "👑 Tộc Trưởng không thể rời Gia Tộc.\nHãy chuyển quyền trước.",
-                    ephemeral: true
-                });
-            }
-
-            giaToc.members =
-                giaToc.members.filter(
-                    m =>
-                        m.id !==
-                        userId
-                );
+            log(
+                g,
+                `🤝 <@${uid}> đã gia nhập Gia Tộc.`
+            );
 
             saveData();
 
             return interaction.reply({
                 content:
-                    `🚪 Bạn đã rời **${giaToc.name}**.`
+                    `🎉 Bạn đã gia nhập **${g.name}**!`
             });
         }
 
-        // ==========================================
-        // 👥 THÀNH VIÊN
-        // ==========================================
+        // RỜI
+        if (action === "roi") {
 
-        if (
-            action === "thanhvien"
-        ) {
-
-            const giaToc =
+            const g =
                 getUserGiaToc(
-                    guildId,
-                    userId
+                    interaction.guildId,
+                    uid
                 );
 
-            if (!giaToc) {
-
+            if (!g) {
                 return interaction.reply({
                     content:
                         "📭 Bạn chưa thuộc Gia Tộc.",
@@ -1276,45 +1959,42 @@ async function execute(
                 });
             }
 
-            const lines =
-                giaToc.members
-                    .map(
-                        (member, index) =>
-                            `${index + 1}. ${roleEmoji(member.role)} <@${member.id}> — ${member.role}`
-                    );
+            if (g.owner === uid) {
+                return interaction.reply({
+                    content:
+                        "👑 Tộc Trưởng không thể rời Gia Tộc.",
+                    ephemeral: true
+                });
+            }
+
+            g.members =
+                g.members.filter(
+                    m => m.id !== uid
+                );
+
+            log(
+                g,
+                `🚪 <@${uid}> đã rời Gia Tộc.`
+            );
+
+            saveData();
 
             return interaction.reply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(
-                            0x5865F2
-                        )
-                        .setTitle(
-                            `👥 THÀNH VIÊN • ${giaToc.name}`
-                        )
-                        .setDescription(
-                            lines.join("\n")
-                        )
-                ]
+                content:
+                    `🚪 Bạn đã rời **${g.name}**.`
             });
         }
 
-        // ==========================================
-        // 💎 ĐÓNG GÓP
-        // ==========================================
+        // ĐÓNG GÓP
+        if (action === "donggop") {
 
-        if (
-            action === "donggop"
-        ) {
-
-            const giaToc =
+            const g =
                 getUserGiaToc(
-                    guildId,
-                    userId
+                    interaction.guildId,
+                    uid
                 );
 
-            if (!giaToc) {
-
+            if (!g) {
                 return interaction.reply({
                     content:
                         "📭 Bạn chưa thuộc Gia Tộc.",
@@ -1323,63 +2003,36 @@ async function execute(
             }
 
             const amount =
-                interaction.options
-                    .getInteger(
-                        "so_luong"
-                    );
+                interaction.options.getInteger(
+                    "so_luong"
+                );
 
             const result =
                 donate(
-                    userId,
-                    giaToc,
+                    uid,
+                    g,
                     amount
                 );
 
-            if (!result.ok) {
-
-                return interaction.reply({
-                    content:
-                        result.message,
-                    ephemeral: true
-                });
-            }
-
             return interaction.reply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(
-                            0x57F287
-                        )
-                        .setTitle(
-                            "💎 ĐÓNG GÓP THÀNH CÔNG"
-                        )
-                        .setDescription([
-                            `🏠 Gia Tộc: **${giaToc.name}**`,
-                            "",
-                            `💎 Đã đóng góp: **${formatNumber(amount)}**`,
-                            `🏦 Tài khố: **${formatNumber(giaToc.treasury)}**`,
-                            `✨ EXP Gia Tộc: **+${formatNumber(amount)}**`
-                        ].join("\n"))
-                ]
+                content:
+                    result.ok
+                        ? `💎 Đã đóng góp **${fmt(amount)} Linh Thạch** cho Gia Tộc.`
+                        : result.message,
+                ephemeral: true
             });
         }
 
-        // ==========================================
-        // 📈 NÂNG CẤP
-        // ==========================================
+        // NÂNG CẤP
+        if (action === "nangcap") {
 
-        if (
-            action === "nangcap"
-        ) {
-
-            const giaToc =
+            const g =
                 getUserGiaToc(
-                    guildId,
-                    userId
+                    interaction.guildId,
+                    uid
                 );
 
-            if (!giaToc) {
-
+            if (!g) {
                 return interaction.reply({
                     content:
                         "📭 Bạn chưa thuộc Gia Tộc.",
@@ -1387,26 +2040,21 @@ async function execute(
                 });
             }
 
-            if (
-                giaToc.owner !==
-                userId
-            ) {
-
+            if (g.owner !== uid) {
                 return interaction.reply({
                     content:
-                        "👑 Chỉ Tộc Trưởng được nâng cấp.",
+                        "👑 Chỉ Tộc Trưởng mới được nâng cấp.",
                     ephemeral: true
                 });
             }
 
             const result =
                 upgradeGiaToc(
-                    userId,
-                    giaToc
+                    uid,
+                    g
                 );
 
             if (!result.ok) {
-
                 return interaction.reply({
                     content:
                         result.message,
@@ -1414,77 +2062,15 @@ async function execute(
                 });
             }
 
-            return interaction.reply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(
-                            0x57F287
-                        )
-                        .setTitle(
-                            "📈 GIA TỘC ĐÃ NÂNG CẤP"
-                        )
-                        .setDescription([
-                            `🏠 **${giaToc.name}**`,
-                            "",
-                            `⭐ Cấp mới: **${giaToc.level}**`,
-                            `👥 Sức chứa: **${getMaxMembers(giaToc.level)} người**`,
-                            "",
-                            "🔥 Gia Tộc ngày càng hưng thịnh!"
-                        ].join("\n"))
-                ]
-            });
+            return showMenu(
+                interaction,
+                g
+            );
         }
 
-        // ==========================================
-        // 🏆 TOP
-        // ==========================================
-
-        if (
-            action === "top"
-        ) {
-
-            const ranking =
-                getRanking(
-                    guildId
-                );
-
-            if (
-                ranking.length === 0
-            ) {
-
-                return interaction.reply({
-                    content:
-                        "📭 Server chưa có Gia Tộc nào.",
-                    ephemeral: true
-                });
-            }
-
-            const lines =
-                ranking
-                    .slice(0, 10)
-                    .map(
-                        (g, index) =>
-                            `${index === 0 ? "👑" : index === 1 ? "🥈" : index === 2 ? "🥉" : "🏅"} **${index + 1}. ${g.name}** — ⚔️ ${formatNumber(calculatePower(g))}`
-                    );
-
-            return interaction.reply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(
-                            0xF1C40F
-                        )
-                        .setTitle(
-                            "🏆 BXH GIA TỘC"
-                        )
-                        .setDescription(
-                            lines.join("\n")
-                        )
-                        .setFooter({
-                            text:
-                                "Top 10 Gia Tộc mạnh nhất"
-                        })
-                ]
-            });
+        // TOP
+        if (action === "top") {
+            return showRank(interaction);
         }
 
     } catch (error) {
@@ -1498,16 +2084,15 @@ async function execute(
             interaction.replied ||
             interaction.deferred
         ) {
-
             return interaction.editReply({
                 content:
-                    "❌ Gia Tộc xảy ra lỗi khi thực hiện chức năng."
+                    "❌ Gia Tộc xảy ra lỗi."
             });
         }
 
         return interaction.reply({
             content:
-                "❌ Gia Tộc xảy ra lỗi khi thực hiện chức năng.",
+                "❌ Gia Tộc xảy ra lỗi.",
             ephemeral: true
         });
     }
@@ -1518,16 +2103,15 @@ async function execute(
 // =====================================================
 
 module.exports = {
-
-    data:
-        command,
-
+    data,
     execute,
-
     getUserGiaToc,
-
     getGiaToc,
-
-    getRanking
-
+    getRanking: guildId =>
+        Object.values(
+            guildData(guildId)
+        ).sort(
+            (a, b) =>
+                power(b) - power(a)
+        )
 };
