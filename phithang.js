@@ -9,7 +9,7 @@ const {
 } = require("./database");
 
 // =====================================================
-// 🌌 LỆNH /PHITHANG
+// ☁️ /PHITHANG
 // =====================================================
 
 const data = new SlashCommandBuilder()
@@ -24,72 +24,54 @@ async function execute(interaction) {
 
     try {
 
-        const userId =
-            interaction.user.id;
-
-        const player =
-            getPlayer(userId);
+        const userId = interaction.user.id;
+        const player = getPlayer(userId);
 
         // =================================================
-        // ❌ CHƯA ĐĂNG KÝ
+        // ❌ CHƯA CÓ NHÂN VẬT
         // =================================================
 
         if (!player) {
+            return interaction.reply({
+                content:
+                    "❌ Bạn chưa có nhân vật!\n" +
+                    "Hãy sử dụng lệnh **/batdau** trước.",
+                ephemeral: true
+            });
+        }
+
+        // =================================================
+        // ☁️ ĐÃ PHI THĂNG
+        // =================================================
+
+        if (player.tienGioi === true) {
 
             return interaction.reply({
                 content:
-                    "❌ Bạn chưa đăng ký tu tiên!\n" +
-                    "Hãy sử dụng lệnh đăng ký trước.",
+                    "☁️ **Bạn đã phi thăng Tiên Giới!**",
                 ephemeral: true
             });
 
         }
 
         // =================================================
-        // 🌌 KIỂM TRA ĐÃ PHI THĂNG
-        // =================================================
-
-        if (
-            player.tienGioi === true
-        ) {
-
-            return interaction.reply({
-                content:
-                    "☁️ **Bạn đã phi thăng Tiên Giới rồi!**",
-                ephemeral: true
-            });
-
-        }
-
-        // =================================================
-        // ⚡ KIỂM TRA CẢNH GIỚI
+        // ⚡ KIỂM TRA ĐỘ KIẾP
         // =================================================
 
         const canhGioi =
-            String(
-                player.canhGioi || ""
-            ).trim();
+            String(player.canhGioi || "").trim();
 
-        if (
-            canhGioi !== "Độ Kiếp"
-        ) {
+        if (canhGioi !== "Độ Kiếp") {
 
             return interaction.reply({
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle("❌ CHƯA ĐỦ TU VI")
+                        .setTitle("☁️ PHI THĂNG TIÊN GIỚI")
                         .setDescription(
-                            [
-                                "☁️ **Phi Thăng Tiên Giới**",
-                                "",
-                                `⚡ Cảnh giới hiện tại: **${canhGioi || "Không rõ"}**`,
-                                "",
-                                "🔒 Yêu cầu:",
-                                "⚡ Cảnh giới **Độ Kiếp**",
-                                "🔑 Có **Chìa Khóa Tiên Giới ×1**",
-                                "",
-                                "📜 Hãy tiếp tục tu luyện và đột phá!"
-                            ].join("\n")
+                            "Bạn chưa đủ cảnh giới để phi thăng.\n\n" +
+                            `⚡ Cảnh giới hiện tại: **${canhGioi || "Không rõ"}**\n\n` +
+                            "🔒 Yêu cầu:\n" +
+                            "⚡ **Độ Kiếp**"
                         )
                         .setColor(0xff0000)
                 ],
@@ -99,109 +81,70 @@ async function execute(interaction) {
         }
 
         // =================================================
-        // 🎒 KIỂM TRA TÚI ĐỒ
+        // 🎒 ĐẢM BẢO TÚI ĐỒ
         // =================================================
 
-        if (
-            !player.tuiDo
-        ) {
-
+        if (!player.tuiDo) {
             player.tuiDo = {
                 danDuoc: [],
                 vatPham: [],
                 linhThu: []
             };
-
         }
 
-        if (
-            !Array.isArray(
-                player.tuiDo.vatPham
-            )
-        ) {
-
+        if (!Array.isArray(player.tuiDo.vatPham)) {
             player.tuiDo.vatPham = [];
-
         }
+
+        const vatPham = player.tuiDo.vatPham;
 
         // =================================================
         // 🔑 TÌM CHÌA KHÓA
         // =================================================
 
-        const keyName =
-            "🔑 Chìa Khóa Tiên Giới";
+        const keyIndex = vatPham.findIndex(item => {
 
-        const inventory =
-            player.tuiDo.vatPham;
+            if (typeof item === "string") {
+                return (
+                    item === "🔑 Chìa Khóa Tiên Giới" ||
+                    item === "Chìa Khóa Tiên Giới"
+                );
+            }
 
-        let keyIndex = -1;
+            if (item && typeof item === "object") {
+                return (
+                    item.id === "chia_khoa_tien_gioi" ||
+                    item.name === "🔑 Chìa Khóa Tiên Giới" ||
+                    item.ten === "🔑 Chìa Khóa Tiên Giới" ||
+                    item.name === "Chìa Khóa Tiên Giới" ||
+                    item.ten === "Chìa Khóa Tiên Giới"
+                );
+            }
 
-        // -------------------------------------------------
-        // Hỗ trợ cả dạng:
-        // "🔑 Chìa Khóa Tiên Giới"
-        // -------------------------------------------------
-
-        keyIndex =
-            inventory.findIndex(
-                item => {
-
-                    if (
-                        typeof item === "string"
-                    ) {
-
-                        return (
-                            item === keyName
-                        );
-
-                    }
-
-                    if (
-                        item &&
-                        typeof item === "object"
-                    ) {
-
-                        return (
-                            item.name === keyName ||
-                            item.ten === keyName ||
-                            item.id === "chia_khoa_tien_gioi"
-                        );
-
-                    }
-
-                    return false;
-
-                }
-            );
+            return false;
+        });
 
         // =================================================
         // ❌ KHÔNG CÓ CHÌA
         // =================================================
 
-        if (
-            keyIndex === -1
-        ) {
+        if (keyIndex === -1) {
 
             return interaction.reply({
                 embeds: [
                     new EmbedBuilder()
                         .setTitle("🔒 CHƯA THỂ PHI THĂNG")
                         .setDescription(
-                            [
-                                "☁️ **Cổng Tiên Giới đã xuất hiện!**",
-                                "",
-                                "⚡ Cảnh giới: **Độ Kiếp** ✅",
-                                "🔑 Chìa Khóa Tiên Giới: **❌ Chưa có**",
-                                "",
-                                "📜 Cách nhận Chìa Khóa Tiên Giới:",
-                                "",
-                                "⚔️ **Đánh Boss**",
-                                "Có cơ hội nhận được chìa khóa.",
-                                "",
-                                "🛒 **Cửa hàng**",
-                                "Giá: **1.000.000.000 Linh Thạch**",
-                                "",
-                                "🔑 Hãy lấy chìa khóa rồi quay lại sử dụng `/phithang`."
-                            ].join("\n")
+                            "Bạn đã đạt **Độ Kiếp** nhưng vẫn thiếu vật phẩm.\n\n" +
+                            "⚡ Cảnh giới: **Độ Kiếp** ✅\n" +
+                            "🔑 Chìa Khóa Tiên Giới: **❌ Chưa có**\n\n" +
+                            "📜 **Cách nhận chìa khóa:**\n\n" +
+                            "⚔️ Đánh Boss\n" +
+                            "→ Có cơ hội nhận được Chìa Khóa Tiên Giới.\n\n" +
+                            "🛒 Cửa hàng\n" +
+                            "→ Giá: **1.000.000.000 Linh Thạch**\n\n" +
+                            "Sau khi có chìa khóa, sử dụng lại:\n" +
+                            "**/phithang**"
                         )
                         .setColor(0xffcc00)
                 ],
@@ -211,83 +154,64 @@ async function execute(interaction) {
         }
 
         // =================================================
-        // 🗝️ TRỪ CHÌA KHÓA
+        // 🔑 TRỪ 1 CHÌA KHÓA
         // =================================================
 
-        inventory.splice(
-            keyIndex,
-            1
-        );
+        vatPham.splice(keyIndex, 1);
 
         // =================================================
         // ☁️ PHI THĂNG
         // =================================================
 
-        updatePlayer(
-            userId,
-            {
-                tienGioi: true,
-
-                tuiDo: {
-                    ...player.tuiDo,
-                    vatPham: inventory
-                }
+        updatePlayer(userId, {
+            tienGioi: true,
+            tuiDo: {
+                ...player.tuiDo,
+                vatPham: vatPham
             }
-        );
+        });
 
         // =================================================
-        // 🌌 THÔNG BÁO
+        // ✨ THÔNG BÁO
         // =================================================
 
-        const embed =
-            new EmbedBuilder()
-                .setTitle(
-                    "☁️✨ PHI THĂNG THÀNH CÔNG ✨☁️"
-                )
-                .setDescription(
-                    [
-                        "╔════════════════════╗",
-                        "      🌌 **TIÊN GIỚI** 🌌",
-                        "╚════════════════════╝",
-                        "",
-                        `⚔️ **${interaction.user.username}**`,
-                        "",
-                        "⚡ Cảnh giới: **Độ Kiếp**",
-                        "🔑 Chìa khóa: **Đã sử dụng ×1**",
-                        "",
-                        "🌠 **CỔNG TIÊN GIỚI ĐÃ MỞ!**",
-                        "",
-                        "☁️ Mây tiên vạn dặm trải dài.",
-                        "🌌 Tiên khí tràn ngập thiên địa.",
-                        "✨ Con đường tiên đạo chính thức bắt đầu!",
-                        "",
-                        "━━━━━━━━━━━━━━━━━━━━",
-                        "",
-                        "🎉 **Chúc mừng đạo hữu đã phi thăng!**",
-                        "",
-                        "⚔️ Từ đây, con đường tu luyện",
-                        "sẽ bước sang một tầng trời mới."
-                    ].join("\n")
-                )
-                .setColor(0x00ccff)
-                .setFooter({
-                    text:
-                        "🌌 Hồng Hoang Đại Lục • Tiên Giới"
-                })
-                .setTimestamp();
+        const embed = new EmbedBuilder()
+            .setTitle("☁️✨ PHI THĂNG THÀNH CÔNG ✨☁️")
+            .setDescription(
+                "╔══════════════════════════╗\n" +
+                "       🌌 **TIÊN GIỚI** 🌌\n" +
+                "╚══════════════════════════╝\n\n" +
+
+                `⚔️ **${interaction.user.username}**\n\n` +
+
+                "⚡ Cảnh giới: **Độ Kiếp**\n" +
+                "🔑 Chìa khóa: **Đã sử dụng ×1**\n\n" +
+
+                "🌠 **CỔNG TIÊN GIỚI ĐÃ MỞ!**\n\n" +
+
+                "☁️ Tiên Vân vạn dặm trải dài.\n" +
+                "🌌 Tiên khí tràn ngập thiên địa.\n" +
+                "✨ Một tầng trời mới đã mở ra trước mắt đạo hữu.\n\n" +
+
+                "━━━━━━━━━━━━━━━━━━━━\n\n" +
+
+                "🎉 **Chúc mừng đạo hữu phi thăng thành công!**\n\n" +
+
+                "🌟 Từ giờ, ngươi đã chính thức bước vào **Tiên Giới**."
+            )
+            .setColor(0x00ccff)
+            .setFooter({
+                text: "🌌 Hồng Hoang Đại Lục • Tiên Giới"
+            })
+            .setTimestamp();
 
         return interaction.reply({
-            embeds: [
-                embed
-            ]
+            embeds: [embed]
         });
 
     } catch (error) {
 
-        console.error(
-            "❌ Lỗi /phithang:",
-            error
-        );
+        console.error("❌ Lỗi /phithang:", error);
 
         if (
             interaction.replied ||
@@ -303,7 +227,6 @@ async function execute(interaction) {
         });
 
     }
-
 }
 
 // =====================================================
