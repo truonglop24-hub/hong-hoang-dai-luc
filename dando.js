@@ -12,7 +12,7 @@ const {
 } = require("./thechat");
 
 // =====================================================
-// HỖ TRỢ CHUẨN HÓA TÊN ĐAN
+// CHUẨN HÓA TEXT
 // =====================================================
 
 function normalizeText(text) {
@@ -24,6 +24,95 @@ function normalizeText(text) {
         .replace(/\s+/g, " ")
         .trim()
         .toLowerCase();
+}
+
+// =====================================================
+// KIỂM TRA ĐAN CÓ CHỨA LOẠI ĐƯỢC CHỌN KHÔNG
+// =====================================================
+
+function containsDan(item, danNhap) {
+
+    const itemParts =
+        String(item || "")
+            .split(",")
+            .map(x => normalizeText(x))
+            .filter(Boolean);
+
+    const input =
+        normalizeText(danNhap);
+
+    return itemParts.some(part => {
+
+        return (
+            part === input ||
+            part.includes(input) ||
+            input.includes(part)
+        );
+    });
+}
+
+// =====================================================
+// XÓA ĐÚNG 1 LOẠI ĐAN ĐÃ DÙNG
+//
+// Ví dụ:
+// "Đan đổi linh căn,đan đổi thể chất"
+//
+// dùng "Đan đổi linh căn"
+//
+// còn lại:
+// "đan đổi thể chất"
+// =====================================================
+
+function consumeDan(list, index, danNhap) {
+
+    const item =
+        String(list[index] || "").trim();
+
+    const input =
+        normalizeText(danNhap);
+
+    const parts =
+        item
+            .split(",")
+            .map(x => x.trim())
+            .filter(Boolean);
+
+    // Nếu chỉ có một loại
+    if (parts.length <= 1) {
+        list.splice(index, 1);
+        return;
+    }
+
+    // Tìm phần cần xóa
+    const removeIndex =
+        parts.findIndex(part => {
+
+            const normalized =
+                normalizeText(part);
+
+            return (
+                normalized === input ||
+                normalized.includes(input) ||
+                input.includes(normalized)
+            );
+        });
+
+    // Không tìm thấy
+    if (removeIndex === -1) {
+        return;
+    }
+
+    // Xóa đúng loại đã dùng
+    parts.splice(removeIndex, 1);
+
+    // Nếu không còn gì
+    if (parts.length === 0) {
+        list.splice(index, 1);
+        return;
+    }
+
+    // Còn loại khác thì giữ lại
+    list[index] = parts.join(",");
 }
 
 // =====================================================
@@ -46,6 +135,10 @@ module.exports = {
 
         try {
 
+            // =================================================
+            // 👤 NGƯỜI CHƠI
+            // =================================================
+
             const userId =
                 interaction.user.id;
 
@@ -53,6 +146,7 @@ module.exports = {
                 getPlayer(userId);
 
             if (!p) {
+
                 return interaction.reply({
                     content:
                         "⚠️ Hãy dùng `/batdau` trước.",
@@ -60,12 +154,17 @@ module.exports = {
                 });
             }
 
+            // =================================================
+            // 🧪 TÊN ĐAN NHẬP
+            // =================================================
+
             const danNhap =
                 interaction.options
                     .getString("dan")
                     .trim();
 
             if (!danNhap) {
+
                 return interaction.reply({
                     content:
                         "❌ Vui lòng nhập tên đan dược.",
@@ -73,11 +172,15 @@ module.exports = {
                 });
             }
 
+            const danNhapLower =
+                normalizeText(danNhap);
+
             // =================================================
             // 📦 KIỂM TRA TÚI
             // =================================================
 
             if (!p.tuiDo) {
+
                 return interaction.reply({
                     content:
                         "❌ Không tìm thấy túi đồ.",
@@ -85,7 +188,12 @@ module.exports = {
                 });
             }
 
-            if (!Array.isArray(p.tuiDo.danDuoc)) {
+            if (
+                !Array.isArray(
+                    p.tuiDo.danDuoc
+                )
+            ) {
+
                 return interaction.reply({
                     content:
                         "❌ Túi đan dược đang trống.",
@@ -94,21 +202,26 @@ module.exports = {
             }
 
             const list =
-                p.tuiDo.danDuoc;
+                [...p.tuiDo.danDuoc];
 
             // =================================================
             // 🔎 TÌM ĐAN
-            // Không phân biệt hoa/thường,
-            // dấu và khoảng trắng.
+            //
+            // Có thể tìm trong:
+            //
+            // Đan đổi linh căn
+            //
+            // hoặc:
+            //
+            // Đan đổi linh căn,đan đổi thể chất
             // =================================================
-
-            const danNhapChuan =
-                normalizeText(danNhap);
 
             const index =
                 list.findIndex(item =>
-                    normalizeText(item) ===
-                    danNhapChuan
+                    containsDan(
+                        item,
+                        danNhap
+                    )
                 );
 
             if (index === -1) {
@@ -121,24 +234,85 @@ module.exports = {
             }
 
             const tenDan =
-                String(list[index]).trim();
-
-            const tenDanLower =
-                normalizeText(tenDan);
+                String(
+                    list[index]
+                ).trim();
 
             // =================================================
-            // 🧪 ĐAN LINH LỰC
+            // 🧪 XÁC ĐỊNH LOẠI ĐAN THEO
+            // THỨ NGƯỜI CHƠI NHẬP
+            // =================================================
+
+            const isLinhLuc =
+                danNhapLower.includes(
+                    "dan linh luc"
+                ) ||
+                danNhapLower.includes(
+                    "linh luc"
+                );
+
+            const isKinhNghiem =
+                danNhapLower.includes(
+                    "dan kinh nghiem"
+                ) ||
+                danNhapLower.includes(
+                    "kinh nghiem"
+                );
+
+            const isLinhCan =
+                danNhapLower.includes(
+                    "dan doi linh can"
+                ) ||
+                danNhapLower.includes(
+                    "doi linh can"
+                );
+
+            const isTheChat =
+                danNhapLower.includes(
+                    "dan doi the chat"
+                ) ||
+                danNhapLower.includes(
+                    "doi the chat"
+                );
+
+            // =================================================
+            // 🔴 NẾU KHÔNG NHẬN DIỆN ĐƯỢC
+            // KHÔNG TRỪ ĐAN
             // =================================================
 
             if (
-                tenDanLower.includes("dan linh luc")
+                !isLinhLuc &&
+                !isKinhNghiem &&
+                !isLinhCan &&
+                !isTheChat
             ) {
 
-                list.splice(index, 1);
+                return interaction.reply({
+                    content:
+                        `⚠️ **${danNhap}** chưa được khai báo hiệu ứng.\n` +
+                        `📦 Đan dược **không bị mất**.`,
+                    ephemeral: true
+                });
+            }
+
+            // =================================================
+            // 🔥 ĐAN LINH LỰC
+            // =================================================
+
+            if (isLinhLuc) {
+
+                const newList =
+                    [...list];
+
+                consumeDan(
+                    newList,
+                    index,
+                    danNhap
+                );
 
                 const linhLucMoi =
-                    (Number(p.linhLuc) || 0) +
-                    100;
+                    (Number(p.linhLuc) || 0)
+                    + 100;
 
                 updatePlayer(
                     userId,
@@ -149,31 +323,36 @@ module.exports = {
                         tuiDo: {
                             ...p.tuiDo,
                             danDuoc:
-                                list
+                                newList
                         }
                     }
                 );
 
                 return interaction.reply(
-                    `🧪 Đã sử dụng **${tenDan}**.\n` +
+                    `🧪 Đã sử dụng **${danNhap}**.\n\n` +
                     `🔥 Linh lực **+100**.\n` +
                     `💠 Linh lực hiện tại: **${linhLucMoi}**`
                 );
             }
 
             // =================================================
-            // 📖 ĐAN KINH NGHIỆM
+            // ✨ ĐAN KINH NGHIỆM
             // =================================================
 
-            if (
-                tenDanLower.includes("dan kinh nghiem")
-            ) {
+            if (isKinhNghiem) {
 
-                list.splice(index, 1);
+                const newList =
+                    [...list];
+
+                consumeDan(
+                    newList,
+                    index,
+                    danNhap
+                );
 
                 const kinhNghiemMoi =
-                    (Number(p.kinhNghiem) || 0) +
-                    100;
+                    (Number(p.kinhNghiem) || 0)
+                    + 100;
 
                 updatePlayer(
                     userId,
@@ -184,13 +363,13 @@ module.exports = {
                         tuiDo: {
                             ...p.tuiDo,
                             danDuoc:
-                                list
+                                newList
                         }
                     }
                 );
 
                 return interaction.reply(
-                    `🧪 Đã sử dụng **${tenDan}**.\n` +
+                    `🧪 Đã sử dụng **${danNhap}**.\n\n` +
                     `✨ Kinh nghiệm **+100**.\n` +
                     `📖 Kinh nghiệm hiện tại: **${kinhNghiemMoi}**`
                 );
@@ -200,11 +379,7 @@ module.exports = {
             // 🧬 ĐAN ĐỔI LINH CĂN
             // =================================================
 
-            if (
-                tenDanLower.includes(
-                    "dan doi linh can"
-                )
-            ) {
+            if (isLinhCan) {
 
                 const linhCanCu =
                     p.linhCan;
@@ -212,8 +387,16 @@ module.exports = {
                 const linhCanMoi =
                     generateLinhCan();
 
-                // Trừ đúng 1 viên
-                list.splice(index, 1);
+                const newList =
+                    [...list];
+
+                // Chỉ xóa "Đan đổi linh căn"
+                // nếu item có cả hai loại
+                consumeDan(
+                    newList,
+                    index,
+                    danNhap
+                );
 
                 updatePlayer(
                     userId,
@@ -224,30 +407,21 @@ module.exports = {
                         tuiDo: {
                             ...p.tuiDo,
                             danDuoc:
-                                list
+                                newList
                         }
                     }
                 );
 
                 let message =
-                    `🧪 Đã sử dụng **${tenDan}**!\n\n` +
+                    `🧪 Đã sử dụng **${danNhap}**!\n\n` +
                     `🧬 **LINH CĂN ĐÃ ĐƯỢC THAY ĐỔI**\n\n`;
 
-                if (linhCanCu) {
-
-                    message +=
-                        `🔻 Linh căn cũ:\n` +
-                        `**${
-                            linhCanCu.ten ||
-                            "Không rõ"
-                        }**\n\n`;
-
-                } else {
-
-                    message +=
-                        `🔻 Linh căn cũ:\n` +
-                        `**Chưa có**\n\n`;
-                }
+                message +=
+                    `🔻 Linh căn cũ:\n` +
+                    `**${
+                        linhCanCu?.ten ||
+                        "Chưa có"
+                    }**\n\n`;
 
                 message +=
                     `🔺 Linh căn mới:\n` +
@@ -258,58 +432,8 @@ module.exports = {
 
                     `📜 ${linhCanMoi.moTa}`;
 
-                return interaction.reply(message);
-            }
-
-            // =================================================
-            // 🧬 ĐAN ĐỔI LINH CĂN - TÊN KHÁC
-            // =================================================
-
-            if (
-                tenDanLower.includes(
-                    "doi linh can"
-                )
-            ) {
-
-                const linhCanCu =
-                    p.linhCan;
-
-                const linhCanMoi =
-                    generateLinhCan();
-
-                list.splice(index, 1);
-
-                updatePlayer(
-                    userId,
-                    {
-                        linhCan:
-                            linhCanMoi,
-
-                        tuiDo: {
-                            ...p.tuiDo,
-                            danDuoc:
-                                list
-                        }
-                    }
-                );
-
                 return interaction.reply(
-                    `🧪 Đã sử dụng **${tenDan}**!\n\n` +
-
-                    `🧬 **LINH CĂN ĐÃ ĐƯỢC THAY ĐỔI**\n\n` +
-
-                    `🔻 Cũ: **${
-                        linhCanCu?.ten ||
-                        "Chưa có"
-                    }**\n\n` +
-
-                    `🔺 Mới: **${linhCanMoi.ten}**\n` +
-
-                    `🏆 Phẩm cấp: **${linhCanMoi.phamCap}**\n` +
-
-                    `🌟 Thuộc tính: **${linhCanMoi.thuocTinh}**\n\n` +
-
-                    `📜 ${linhCanMoi.moTa}`
+                    message
                 );
             }
 
@@ -317,41 +441,52 @@ module.exports = {
             // 💠 ĐAN ĐỔI THỂ CHẤT
             // =================================================
 
-            if (
-                tenDanLower.includes(
-                    "dan doi the chat"
-                ) ||
-                tenDanLower.includes(
-                    "doi the chat"
-                )
-            ) {
+            if (isTheChat) {
+
+                const newList =
+                    [...list];
+
+                // =================================================
+                // 🔎 XÁC ĐỊNH PHẦN TÊN THỂ CHẤT
+                //
+                // Ví dụ:
+                //
+                // Đan đổi thể chất
+                //
+                // Đan đổi thể chất - Hỗn Độn Thánh Thể
+                // =================================================
+
+                let phanSau = "";
 
                 const marker =
-                    tenDanLower.includes(
+                    danNhapLower.includes(
                         "dan doi the chat"
                     )
                         ? "dan doi the chat"
                         : "doi the chat";
 
-                // Lấy phần tên thể chất phía sau
                 const viTri =
-                    tenDanLower.indexOf(
+                    danNhapLower.indexOf(
                         marker
                     );
 
-                const phanSau =
-                    tenDan
-                        .slice(
-                            viTri +
-                            marker.length
-                        )
-                        .replace(
-                            /^[\s:：\-–—]+/,
-                            ""
-                        )
-                        .trim();
+                if (viTri !== -1) {
 
-                let theChatMoi = null;
+                    phanSau =
+                        danNhap
+                            .slice(
+                                viTri +
+                                marker.length
+                            )
+                            .replace(
+                                /^[\s:：\-–—]+/,
+                                ""
+                            )
+                            .trim();
+                }
+
+                let theChatMoi =
+                    null;
 
                 // =================================================
                 // 🔎 TÌM THEO ID
@@ -369,7 +504,9 @@ module.exports = {
                         );
 
                     const timThay =
-                        getTheChat(idTim);
+                        getTheChat(
+                            idTim
+                        );
 
                     if (timThay) {
                         theChatMoi =
@@ -388,7 +525,8 @@ module.exports = {
 
                     const {
                         THE_CHAT
-                    } = require("./thechat");
+                    } =
+                        require("./thechat");
 
                     theChatMoi =
                         THE_CHAT.find(
@@ -403,7 +541,7 @@ module.exports = {
                 }
 
                 // =================================================
-                // 🎲 KHÔNG GHI THỂ CHẤT
+                // 🎲 KHÔNG CHỈ ĐỊNH
                 // RANDOM
                 // =================================================
 
@@ -414,10 +552,11 @@ module.exports = {
                 }
 
                 const theChatCu =
-                    p.theChat || null;
+                    p.theChat ||
+                    null;
 
                 // =================================================
-                // 📊 TÍNH CHỈ SỐ
+                // 📊 CHỈ SỐ THỂ CHẤT CŨ
                 // =================================================
 
                 const cuHp =
@@ -435,51 +574,87 @@ module.exports = {
                         theChatCu?.power
                     ) || 10;
 
+                // =================================================
+                // 📊 CHỈ SỐ THỂ CHẤT MỚI
+                // =================================================
+
                 const hpMoi =
                     Math.max(
                         1,
-                        (Number(p.hp) || 100) +
+
+                        (Number(p.hp) || 100)
+
+                        +
+
                         Number(
                             theChatMoi.hp || 0
-                        ) -
+                        )
+
+                        -
+
                         cuHp
                     );
 
                 const maxHpMoi =
                     Math.max(
                         1,
-                        (Number(p.maxHp) || 100) +
+
+                        (Number(p.maxHp) || 100)
+
+                        +
+
                         Number(
                             theChatMoi.hp || 0
-                        ) -
+                        )
+
+                        -
+
                         cuHp
                     );
 
                 const congMoi =
                     Math.max(
                         0,
-                        (Number(p.cong) || 10) +
+
+                        (Number(p.cong) || 10)
+
+                        +
+
                         Number(
                             theChatMoi.power || 0
-                        ) -
+                        )
+
+                        -
+
                         cuPower
                     );
 
                 const thuMoi =
                     Math.max(
                         0,
-                        (Number(p.thu) || 5) +
+
+                        (Number(p.thu) || 5)
+
+                        +
+
                         Number(
                             theChatMoi.defense || 0
-                        ) -
+                        )
+
+                        -
+
                         cuDefense
                     );
 
                 // =================================================
-                // 📦 TRỪ ĐÚNG 1 ĐAN
+                // 📦 TRỪ ĐÚNG ĐAN ĐỔI THỂ CHẤT
                 // =================================================
 
-                list.splice(index, 1);
+                consumeDan(
+                    newList,
+                    index,
+                    danNhap
+                );
 
                 // =================================================
                 // 💾 LƯU
@@ -507,13 +682,17 @@ module.exports = {
                         tuiDo: {
                             ...p.tuiDo,
                             danDuoc:
-                                list
+                                newList
                         }
                     }
                 );
 
+                // =================================================
+                // 📜 THÔNG BÁO
+                // =================================================
+
                 return interaction.reply(
-                    `🧪 Đã sử dụng **${tenDan}** thành công!\n\n` +
+                    `🧪 Đã sử dụng **${danNhap}** thành công!\n\n` +
 
                     `🧬 **THỂ CHẤT ĐÃ ĐƯỢC THAY ĐỔI**\n\n` +
 
@@ -535,7 +714,7 @@ module.exports = {
             }
 
             // =================================================
-            // ⚠️ ĐAN CHƯA CÓ HIỆU ỨNG
+            // ⚠️ KHÔNG CÓ HIỆU ỨNG
             // =================================================
 
             return interaction.reply({
@@ -552,6 +731,10 @@ module.exports = {
                 error
             );
 
+            // =================================================
+            // ❌ ĐÃ REPLY
+            // =================================================
+
             if (
                 interaction.replied ||
                 interaction.deferred
@@ -563,6 +746,10 @@ module.exports = {
                     ephemeral: true
                 });
             }
+
+            // =================================================
+            // ❌ CHƯA REPLY
+            // =================================================
 
             return interaction.reply({
                 content:
