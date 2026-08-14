@@ -9,6 +9,12 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
+const {
+    installPremiumUI,
+    premiumEmbed,
+    navigationRow
+} = require("./ui");
+
 // ==========================================
 // KIỂM TRA ENV
 // ==========================================
@@ -141,6 +147,43 @@ client.on("interactionCreate", async interaction => {
         ) {
 
             const customId = interaction.customId;
+
+            // ==================================
+            // PREMIUM UI - ĐIỀU HƯỚNG CHUNG
+            // ==================================
+
+            if (interaction.isButton()) {
+
+                if (customId === "ui_home") {
+                    const menu = client.commands.get("menu");
+
+                    if (menu?.execute) {
+                        return await menu.execute(interaction);
+                    }
+
+                    return interaction.reply({
+                        embeds: [
+                            premiumEmbed(
+                                "🌌 **Chào mừng đạo hữu đến với Hồng Hoang Đại Lục!**\n\n" +
+                                "✨ Hãy chọn một lệnh để bắt đầu hành trình chứng đạo.",
+                                "menu"
+                            )
+                        ],
+                        components: [navigationRow()],
+                        ephemeral: true
+                    });
+                }
+
+                if (customId === "ui_profile") {
+                    const command = client.commands.get("thongtin") || client.commands.get("tuvi");
+                    if (command?.execute) return await command.execute(interaction);
+                }
+
+                if (customId === "ui_help") {
+                    const command = client.commands.get("help");
+                    if (command?.execute) return await command.execute(interaction);
+                }
+            }
 
             // ==================================
             // DANH SÁCH LINH CĂN
@@ -381,6 +424,10 @@ client.on("interactionCreate", async interaction => {
                 ephemeral: true
             });
         }
+
+        // Tất cả Slash Command đều được bọc Premium UI.
+        // Nếu command đã có Embed/Button riêng thì vẫn giữ nguyên.
+        installPremiumUI(interaction, interaction.commandName);
 
         await command.execute(interaction);
 
