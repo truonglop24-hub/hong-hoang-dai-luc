@@ -5,7 +5,7 @@ const COOLDOWN = 15 * 1000;
 
 // =====================================================
 // ⚡ TỐC ĐỘ TU LUYỆN THEO CẢNH GIỚI
-// GIỮ NGUYÊN FILE CŨ → GIẢM 2 LẦN
+// Giữ tốc độ cũ → giảm 2 lần
 // =====================================================
 
 const CULTIVATION_SPEED = {
@@ -34,7 +34,6 @@ const CULTIVATION_SPEED = {
 // =====================================================
 
 function getCultivationSpeed(canhGioi) {
-
     const oldSpeed =
         CULTIVATION_SPEED[canhGioi] || 1;
 
@@ -58,7 +57,8 @@ module.exports = {
 
     async execute(interaction) {
 
-        const p = getPlayer(interaction.user.id);
+        const p =
+            getPlayer(interaction.user.id);
 
         // =================================================
         // ❌ CHƯA CÓ NHÂN VẬT
@@ -85,7 +85,7 @@ module.exports = {
         }
 
         // =================================================
-        // ⏳ COOLDOWN 15 GIÂY
+        // ⏳ COOLDOWN
         // =================================================
 
         const remaining =
@@ -113,7 +113,7 @@ module.exports = {
             Number(p.tang) || 1;
 
         // =================================================
-        // ⚡ TỐC ĐỘ SAU KHI GIẢM 2 LẦN
+        // ⚡ TỐC ĐỘ
         // =================================================
 
         const speed =
@@ -136,7 +136,6 @@ module.exports = {
                 ) || 0;
         }
 
-        // Ví dụ +20% = ×1.2
         const buffMultiplier =
             1 + (linhCanBuff / 100);
 
@@ -165,7 +164,7 @@ module.exports = {
                 Math.random() * 21
             ) + 10;
 
-        const tuVi =
+        const tuvi =
             Math.floor(
                 baseTuVi *
                 speed *
@@ -193,11 +192,11 @@ module.exports = {
         // =================================================
 
         const tuViHienTai =
-            (Number(p.tuVi) || 0) +
-            tuVi;
+            (Number(p.tuvi) || 0) +
+            tuvi;
 
         // =================================================
-        // 💾 LƯU DATABASE
+        // 💾 CẬP NHẬT DATABASE
         // =================================================
 
         updatePlayer(
@@ -207,7 +206,9 @@ module.exports = {
                     (Number(p.linhLuc) || 0) +
                     linhLuc,
 
-                tuVi:
+                // ⚔️ QUAN TRỌNG:
+                // Lưu Tu Vi vào trường "tuvi"
+                tuvi:
                     tuViHienTai,
 
                 kinhNghiem:
@@ -264,7 +265,7 @@ module.exports = {
                     {
                         name: "⚔️ Tu Vi",
                         value:
-                            `+**${format(tuVi)}**`,
+                            `+**${format(tuvi)}**`,
                         inline: true
                     },
 
