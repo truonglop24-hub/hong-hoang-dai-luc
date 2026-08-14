@@ -146,6 +146,62 @@ client.on("interactionCreate", async interaction => {
             const customId = interaction.customId;
 
             // ==================================
+            // 🏯 BÁCH THÁP HỒNG HOANG
+            // ==================================
+
+            if (customId.startsWith("thap_")) {
+
+                const thap =
+                    client.commands.get("thap");
+
+                if (!thap) {
+                    return interaction.reply({
+                        content:
+                            "❌ Không tải được hệ thống Bách Tháp.",
+                        ephemeral: true
+                    });
+                }
+
+                // BUTTON
+                if (interaction.isButton()) {
+
+                    if (
+                        typeof thap.buttonHandler ===
+                        "function"
+                    ) {
+                        return await thap.buttonHandler(
+                            interaction
+                        );
+                    }
+
+                    return interaction.reply({
+                        content:
+                            "❌ Bách Tháp chưa hỗ trợ nút này.",
+                        ephemeral: true
+                    });
+                }
+
+                // STRING SELECT MENU
+                if (interaction.isStringSelectMenu()) {
+
+                    if (
+                        typeof thap.selectHandler ===
+                        "function"
+                    ) {
+                        return await thap.selectHandler(
+                            interaction
+                        );
+                    }
+
+                    return interaction.reply({
+                        content:
+                            "❌ Bách Tháp chưa hỗ trợ menu này.",
+                        ephemeral: true
+                    });
+                }
+            }
+
+            // ==================================
             // 🏯 TÔNG MÔN
             // ==================================
 
