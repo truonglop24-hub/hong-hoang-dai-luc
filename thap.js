@@ -6,7 +6,7 @@ const {
     ButtonStyle
 } = require("discord.js");
 
-const database = require("./database (2)(10).js");
+const database = require("./database.js");
 
 // =====================================================
 // 🏯 BÁCH THÁP HỒNG HOANG
