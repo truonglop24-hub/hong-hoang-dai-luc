@@ -710,8 +710,28 @@ function generateShop() {
 }
 
 generateShop();
+// =====================================================
+// 🔑 CHÌA KHÓA TIÊN GIỚI
+// Yêu cầu: Độ Kiếp | Giá: 1.000.000.000 Linh Thạch
+// =====================================================
 
-
+addItem(
+    "tien",
+    "dacBiet",
+    "chia_khoa_tien_gioi",
+    "🔑 Chìa Khóa Tiên Giới",
+    9,
+    "🔴 Tiên",
+    1000000000,
+    {
+        cong: 0,
+        thu: 0,
+        hp: 0,
+        tuvi: 0,
+        linhLuc: 0,
+        moTa: "Dùng để mở Cổng Tiên Giới và phi thăng"
+    }
+);
 // =====================================================
 // 🔍 TÌM VẬT PHẨM
 // =====================================================
