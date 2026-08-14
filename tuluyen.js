@@ -3,29 +3,77 @@ const { getPlayer, updatePlayer } = require("./database");
 
 const COOLDOWN = 15 * 1000;
 
+// =====================================================
+// ⚡ TỐC ĐỘ TU LUYỆN THEO CẢNH GIỚI
+// GIỮ NGUYÊN FILE CŨ → GIẢM 2 LẦN
+// =====================================================
+
+const CULTIVATION_SPEED = {
+    "Phàm Nhân": 1,
+    "Luyện Khí": 5,
+    "Trúc Cơ": 15,
+    "Kim Đan": 40,
+    "Nguyên Anh": 100,
+    "Hóa Thần": 250,
+    "Luyện Hư": 600,
+    "Hợp Thể": 1500,
+    "Đại Thừa": 3500,
+    "Độ Kiếp": 8000,
+    "Tiên Nhân": 20000,
+    "Chân Tiên": 50000,
+    "Thiên Tiên": 120000,
+    "Huyền Tiên": 300000,
+    "Kim Tiên": 750000,
+    "Thánh Nhân": 2000000,
+    "Thiên Đạo": 10000000,
+    "Đại Đạo": 50000000
+};
+
+// =====================================================
+// ⚡ LẤY TỐC ĐỘ SAU KHI GIẢM 2 LẦN
+// =====================================================
+
+function getCultivationSpeed(canhGioi) {
+
+    const oldSpeed =
+        CULTIVATION_SPEED[canhGioi] || 1;
+
+    return Math.max(
+        1,
+        Math.floor(oldSpeed / 2)
+    );
+}
+
+// =====================================================
+// 📦 MODULE
+// =====================================================
+
 module.exports = {
 
     data: new SlashCommandBuilder()
         .setName("tuluyen")
-        .setDescription("🧘 Tu luyện để nhận linh lực và kinh nghiệm"),
+        .setDescription(
+            "🧘 Tu luyện để nhận linh lực, tu vi và kinh nghiệm"
+        ),
 
     async execute(interaction) {
 
         const p = getPlayer(interaction.user.id);
 
         // =================================================
-        // CHƯA CÓ NHÂN VẬT
+        // ❌ CHƯA CÓ NHÂN VẬT
         // =================================================
 
         if (!p) {
             return interaction.reply({
-                content: "⚠️ Hãy dùng `/batdau` trước.",
+                content:
+                    "⚠️ Hãy dùng `/batdau` trước.",
                 ephemeral: true
             });
         }
 
         // =================================================
-        // BẾ QUAN
+        // 🧘 ĐANG BẾ QUAN
         // =================================================
 
         if (p.beQuan) {
@@ -37,11 +85,12 @@ module.exports = {
         }
 
         // =================================================
-        // COOLDOWN 15 GIÂY
+        // ⏳ COOLDOWN 15 GIÂY
         // =================================================
 
         const remaining =
-            COOLDOWN - (Date.now() - (p.lastTrain || 0));
+            COOLDOWN -
+            (Date.now() - (p.lastTrain || 0));
 
         if (remaining > 0) {
             return interaction.reply({
@@ -54,7 +103,7 @@ module.exports = {
         }
 
         // =================================================
-        // CẢNH GIỚI
+        // 🌌 CẢNH GIỚI
         // =================================================
 
         const canhGioi =
@@ -64,15 +113,14 @@ module.exports = {
             Number(p.tang) || 1;
 
         // =================================================
-        // 🧘 TỐC ĐỘ TU LUYỆN BÌNH THƯỜNG
-        // Không nhân theo cảnh giới
+        // ⚡ TỐC ĐỘ SAU KHI GIẢM 2 LẦN
         // =================================================
 
-        const speed = 1;
+        const speed =
+            getCultivationSpeed(canhGioi);
 
         // =================================================
         // 🧬 LINH CĂN
-        // Linh căn vẫn được cộng % tốc độ
         // =================================================
 
         let linhCanBuff = 0;
@@ -88,12 +136,12 @@ module.exports = {
                 ) || 0;
         }
 
+        // Ví dụ +20% = ×1.2
         const buffMultiplier =
             1 + (linhCanBuff / 100);
 
         // =================================================
-        // 🔥 LINH LỰC
-        // Cơ bản: 20 - 50
+        // 🔥 TÍNH LINH LỰC
         // =================================================
 
         const baseLinhLuc =
@@ -109,8 +157,23 @@ module.exports = {
             );
 
         // =================================================
-        // ✨ KINH NGHIỆM
-        // Cơ bản: 10 - 30
+        // ⚔️ TÍNH TU VI
+        // =================================================
+
+        const baseTuVi =
+            Math.floor(
+                Math.random() * 21
+            ) + 10;
+
+        const tuVi =
+            Math.floor(
+                baseTuVi *
+                speed *
+                buffMultiplier
+            );
+
+        // =================================================
+        // ✨ TÍNH KINH NGHIỆM
         // =================================================
 
         const baseExp =
@@ -126,19 +189,30 @@ module.exports = {
             );
 
         // =================================================
-        // 💾 CẬP NHẬT DATA
+        // 📈 TU VI HIỆN TẠI
+        // =================================================
+
+        const tuViHienTai =
+            (Number(p.tuVi) || 0) +
+            tuVi;
+
+        // =================================================
+        // 💾 LƯU DATABASE
         // =================================================
 
         updatePlayer(
             interaction.user.id,
             {
                 linhLuc:
-                    (Number(p.linhLuc) || 0)
-                    + linhLuc,
+                    (Number(p.linhLuc) || 0) +
+                    linhLuc,
+
+                tuVi:
+                    tuViHienTai,
 
                 kinhNghiem:
-                    (Number(p.kinhNghiem) || 0)
-                    + exp,
+                    (Number(p.kinhNghiem) || 0) +
+                    exp,
 
                 lastTrain:
                     Date.now()
@@ -146,7 +220,7 @@ module.exports = {
         );
 
         // =================================================
-        // FORMAT SỐ
+        // 🔢 FORMAT SỐ
         // =================================================
 
         const format =
@@ -155,7 +229,7 @@ module.exports = {
                     .toLocaleString();
 
         // =================================================
-        // EMBED
+        // 📜 EMBED
         // =================================================
 
         const embed =
@@ -175,7 +249,7 @@ module.exports = {
                     `**${canhGioi} tầng ${tang}**\n` +
 
                     `⚡ **Tốc độ tu luyện:** ` +
-                    `**Bình thường ×1**`
+                    `**×${format(speed)}**`
                 )
 
                 .addFields(
@@ -188,6 +262,13 @@ module.exports = {
                     },
 
                     {
+                        name: "⚔️ Tu Vi",
+                        value:
+                            `+**${format(tuVi)}**`,
+                        inline: true
+                    },
+
+                    {
                         name: "✨ Kinh nghiệm",
                         value:
                             `+**${format(exp)}**`,
@@ -195,9 +276,18 @@ module.exports = {
                     },
 
                     {
+                        name: "📈 Tu Vi hiện tại",
+                        value:
+                            `**${format(
+                                tuViHienTai
+                            )}**`,
+                        inline: true
+                    },
+
+                    {
                         name: "🧬 Linh căn",
                         value:
-                            `+${linhCanBuff}%`,
+                            `+${linhCanBuff}% tốc độ`,
                         inline: true
                     }
 
@@ -209,7 +299,7 @@ module.exports = {
                 });
 
         // =================================================
-        // TRẢ KẾT QUẢ
+        // 📤 TRẢ KẾT QUẢ
         // =================================================
 
         return interaction.reply({
