@@ -16,11 +16,76 @@ const db = require("./database");
 const dataPath = path.join(__dirname, "data", "data.json");
 
 // =====================================================
+// DATABASE CODE
+// =====================================================
+
+const codePath = path.join(
+    __dirname,
+    "data",
+    "admin_codes.json"
+);
+
+function loadCodes() {
+
+    try {
+
+        if (!fs.existsSync(codePath)) {
+            return {};
+        }
+
+        return JSON.parse(
+            fs.readFileSync(
+                codePath,
+                "utf8"
+            )
+        );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Lỗi đọc admin_codes.json:",
+            error
+        );
+
+        return {};
+    }
+}
+
+function saveCodes(codes) {
+
+    try {
+
+        fs.writeFileSync(
+            codePath,
+            JSON.stringify(
+                codes,
+                null,
+                2
+            ),
+            "utf8"
+        );
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "❌ Lỗi lưu admin_codes.json:",
+            error
+        );
+
+        return false;
+    }
+}
+
+// =====================================================
 // DATABASE
 // =====================================================
 
 function loadData() {
+
     if (!fs.existsSync(dataPath)) {
+
         return {
             users: {},
             relationships: {}
@@ -28,14 +93,22 @@ function loadData() {
     }
 
     return JSON.parse(
-        fs.readFileSync(dataPath, "utf8")
+        fs.readFileSync(
+            dataPath,
+            "utf8"
+        )
     );
 }
 
 function saveData(data) {
+
     fs.writeFileSync(
         dataPath,
-        JSON.stringify(data, null, 2)
+        JSON.stringify(
+            data,
+            null,
+            2
+        )
     );
 }
 
@@ -46,25 +119,35 @@ function createUser(data, id) {
     }
 
     if (!data.users[id]) {
+
         data.users[id] = {
+
             tuvi: 0,
+
             linhthach: 0,
+
             realm: 0,
+
             congphap: [],
+
             dan: {},
+
             trangbi: {}
         };
     }
 
     if (!data.users[id].congphap) {
+
         data.users[id].congphap = [];
     }
 
     if (!data.users[id].dan) {
+
         data.users[id].dan = {};
     }
 
     if (!data.users[id].trangbi) {
+
         data.users[id].trangbi = {};
     }
 }
@@ -74,24 +157,114 @@ function createUser(data, id) {
 // =====================================================
 
 const realms = [
-    { id: 0, name: "Phàm Nhân", max: 1000 },
-    { id: 1, name: "Luyện Khí", max: 10000 },
-    { id: 2, name: "Trúc Cơ", max: 30000 },
-    { id: 3, name: "Kim Đan", max: 80000 },
-    { id: 4, name: "Nguyên Anh", max: 200000 },
-    { id: 5, name: "Hóa Thần", max: 500000 },
-    { id: 6, name: "Luyện Hư", max: 1000000 },
-    { id: 7, name: "Hợp Thể", max: 3000000 },
-    { id: 8, name: "Đại Thừa", max: 10000000 },
-    { id: 9, name: "Độ Kiếp", max: 30000000 },
-    { id: 10, name: "Tán Tiên", max: 100000000 },
-    { id: 11, name: "Chân Tiên", max: 500000000 },
-    { id: 12, name: "Kim Tiên", max: 1000000000 },
-    { id: 13, name: "Tiên Vương", max: 5000000000 },
-    { id: 14, name: "Tiên Đế", max: 30000000000 },
-    { id: 15, name: "Thánh Nhân", max: 100000000000 },
-    { id: 16, name: "Thiên Đạo", max: 10000000000000 },
-    { id: 17, name: "Đại Đạo", max: 99999999999999 }
+
+    {
+        id: 0,
+        name: "Phàm Nhân",
+        max: 1000
+    },
+
+    {
+        id: 1,
+        name: "Luyện Khí",
+        max: 10000
+    },
+
+    {
+        id: 2,
+        name: "Trúc Cơ",
+        max: 30000
+    },
+
+    {
+        id: 3,
+        name: "Kim Đan",
+        max: 80000
+    },
+
+    {
+        id: 4,
+        name: "Nguyên Anh",
+        max: 200000
+    },
+
+    {
+        id: 5,
+        name: "Hóa Thần",
+        max: 500000
+    },
+
+    {
+        id: 6,
+        name: "Luyện Hư",
+        max: 1000000
+    },
+
+    {
+        id: 7,
+        name: "Hợp Thể",
+        max: 3000000
+    },
+
+    {
+        id: 8,
+        name: "Đại Thừa",
+        max: 10000000
+    },
+
+    {
+        id: 9,
+        name: "Độ Kiếp",
+        max: 30000000
+    },
+
+    {
+        id: 10,
+        name: "Tiên Nhân",
+        max: 100000000
+    },
+
+    {
+        id: 11,
+        name: "Chân Tiên",
+        max: 500000000
+    },
+
+    {
+        id: 12,
+        name: "Thiên Tiên",
+        max: 1000000000
+    },
+
+    {
+        id: 13,
+        name: "Huyền Tiên",
+        max: 5000000000
+    },
+
+    {
+        id: 14,
+        name: "Kim Tiên",
+        max: 30000000000
+    },
+
+    {
+        id: 15,
+        name: "Thánh Nhân",
+        max: 100000000000
+    },
+
+    {
+        id: 16,
+        name: "Thiên Đạo",
+        max: 10000000000000
+    },
+
+    {
+        id: 17,
+        name: "Đại Đạo",
+        max: 99999999999999
+    }
 ];
 
 function getRealmInfo(tuvi) {
@@ -104,11 +277,14 @@ function getRealmInfo(tuvi) {
 
     let index =
         realms.findIndex(
-            r => value <= r.max
+            r =>
+                value <= r.max
         );
 
     if (index === -1) {
-        index = realms.length - 1;
+
+        index =
+            realms.length - 1;
     }
 
     const realm =
@@ -117,7 +293,8 @@ function getRealmInfo(tuvi) {
     let tier = 1;
 
     if (
-        index === realms.length - 1 &&
+        index ===
+        realms.length - 1 &&
         value >= realm.max
     ) {
 
@@ -138,19 +315,28 @@ function getRealmInfo(tuvi) {
 
         tier =
             Math.ceil(
-                (progress / range) * 10
+                (progress / range) *
+                10
             );
 
         tier =
             Math.max(
                 1,
-                Math.min(10, tier)
+                Math.min(
+                    10,
+                    tier
+                )
             );
     }
 
     return {
-        realmId: realm.id,
-        realmName: realm.name,
+
+        realmId:
+            realm.id,
+
+        realmName:
+            realm.name,
+
         tier
     };
 }
@@ -173,11 +359,11 @@ module.exports = {
 
     data: command,
 
-    async execute(interaction) {
+    // =================================================
+    // /ADMIN
+    // =================================================
 
-        // =================================================
-        // KIỂM TRA QUYỀN
-        // =================================================
+    async execute(interaction) {
 
         if (
             !interaction.member.permissions.has(
@@ -186,8 +372,10 @@ module.exports = {
         ) {
 
             return interaction.reply({
+
                 content:
                     "🚫 Bạn không có quyền sử dụng Admin Panel!",
+
                 ephemeral: true
             });
         }
@@ -198,109 +386,209 @@ module.exports = {
 
         const menu =
             new StringSelectMenuBuilder()
-                .setCustomId("admin_menu")
+                .setCustomId(
+                    "admin_menu"
+                )
                 .setPlaceholder(
                     "🛡️ Chọn chức năng quản trị..."
                 )
                 .addOptions([
 
                     {
-                        label: "Cộng Tu Vi",
+                        label:
+                            "Cộng Tu Vi",
+
                         description:
                             "Cộng tu vi cho người chơi",
-                        value: "add_tuvi",
-                        emoji: "✨"
+
+                        value:
+                            "add_tuvi",
+
+                        emoji:
+                            "✨"
                     },
 
                     {
-                        label: "Trừ Tu Vi",
+                        label:
+                            "Trừ Tu Vi",
+
                         description:
                             "Trừ tu vi của người chơi",
-                        value: "remove_tuvi",
-                        emoji: "❌"
+
+                        value:
+                            "remove_tuvi",
+
+                        emoji:
+                            "❌"
                     },
 
                     {
-                        label: "Cộng Linh Thạch",
+                        label:
+                            "Cộng Linh Thạch",
+
                         description:
                             "Cộng linh thạch",
-                        value: "add_linhthach",
-                        emoji: "💰"
+
+                        value:
+                            "add_linhthach",
+
+                        emoji:
+                            "💰"
                     },
 
                     {
-                        label: "Trừ Linh Thạch",
+                        label:
+                            "Trừ Linh Thạch",
+
                         description:
                             "Trừ linh thạch",
-                        value: "remove_linhthach",
-                        emoji: "💸"
+
+                        value:
+                            "remove_linhthach",
+
+                        emoji:
+                            "💸"
                     },
 
                     {
-                        label: "Thiết Lập Cảnh Giới",
+                        label:
+                            "Thiết Lập Cảnh Giới",
+
                         description:
                             "Thiết lập cảnh giới",
-                        value: "set_realm",
-                        emoji: "🌟"
+
+                        value:
+                            "set_realm",
+
+                        emoji:
+                            "🌟"
                     },
 
                     {
-                        label: "Đạo Lữ",
+                        label:
+                            "Đạo Lữ",
+
                         description:
                             "Thêm hoặc xóa đạo lữ",
-                        value: "daolu",
-                        emoji: "💞"
+
+                        value:
+                            "daolu",
+
+                        emoji:
+                            "💞"
                     },
 
                     {
-                        label: "Công Pháp",
+                        label:
+                            "Công Pháp",
+
                         description:
-                            "Thêm công pháp cho người chơi",
-                        value: "congphap",
-                        emoji: "📖"
+                            "Thêm hoặc xóa công pháp",
+
+                        value:
+                            "congphap",
+
+                        emoji:
+                            "📖"
                     },
 
                     {
-                        label: "Luyện Khí",
+                        label:
+                            "Đan Dược",
+
+                        description:
+                            "Thêm hoặc xóa đan dược",
+
+                        value:
+                            "danduoc",
+
+                        emoji:
+                            "💊"
+                    },
+
+                    {
+                        label:
+                            "Luyện Khí",
+
                         description:
                             "Trao pháp bảo / trang bị",
-                        value: "luyenkhi",
-                        emoji: "⚔️"
+
+                        value:
+                            "luyenkhi",
+
+                        emoji:
+                            "⚔️"
                     },
 
                     {
-                        label: "Reset Nhân Vật",
+                        label:
+                            "🔑 Tạo Code",
+
+                        description:
+                            "Tạo code nhận phần thưởng",
+
+                        value:
+                            "create_code",
+
+                        emoji:
+                            "🎁"
+                    },
+
+                    {
+                        label:
+                            "Reset Nhân Vật",
+
                         description:
                             "Xóa dữ liệu người chơi",
-                        value: "reset",
-                        emoji: "♻️"
+
+                        value:
+                            "reset",
+
+                        emoji:
+                            "♻️"
                     }
                 ]);
 
         const row =
             new ActionRowBuilder()
-                .addComponents(menu);
+                .addComponents(
+                    menu
+                );
 
         const embed =
             new EmbedBuilder()
-                .setColor(0x8e44ad)
+                .setColor(
+                    0x8e44ad
+                )
                 .setTitle(
                     "🛡️ HỒNG HOANG ĐẠI LỤC"
                 )
                 .setDescription(
+
                     "## ⚡ ADMIN PANEL\n\n" +
+
                     "Chào mừng đến với hệ thống quản trị.\n\n" +
+
                     "🔽 **Hãy chọn chức năng bên dưới để tiếp tục.**\n\n" +
+
                     "🔒 Chỉ thành viên có quyền **Administrator** mới có thể sử dụng."
                 )
                 .setFooter({
+
                     text:
                         `Admin: ${interaction.user.tag}`
                 });
 
         return interaction.reply({
-            embeds: [embed],
-            components: [row],
+
+            embeds: [
+                embed
+            ],
+
+            components: [
+                row
+            ],
+
             ephemeral: true
         });
     },
@@ -311,7 +599,6 @@ module.exports = {
 
     async handleSelect(interaction) {
 
-        // Kiểm tra quyền lần nữa
         if (
             !interaction.member.permissions.has(
                 PermissionFlagsBits.Administrator
@@ -319,8 +606,10 @@ module.exports = {
         ) {
 
             return interaction.reply({
+
                 content:
                     "🚫 Bạn không có quyền Admin!",
+
                 ephemeral: true
             });
         }
@@ -328,44 +617,54 @@ module.exports = {
         const action =
             interaction.values[0];
 
-        // =================================================
-        // TẠO MODAL
-        // =================================================
-
         const modal =
             new ModalBuilder();
 
         const userIdInput =
             new TextInputBuilder()
-                .setCustomId("user_id")
-                .setLabel("ID người chơi")
+                .setCustomId(
+                    "user_id"
+                )
+                .setLabel(
+                    "ID người chơi"
+                )
                 .setPlaceholder(
                     "Nhập ID Discord người chơi"
                 )
                 .setStyle(
                     TextInputStyle.Short
                 )
-                .setRequired(true);
+                .setRequired(
+                    true
+                );
 
         const amountInput =
             new TextInputBuilder()
-                .setCustomId("amount")
-                .setLabel("Số lượng")
+                .setCustomId(
+                    "amount"
+                )
+                .setLabel(
+                    "Số lượng"
+                )
                 .setPlaceholder(
                     "Ví dụ: 10000"
                 )
                 .setStyle(
                     TextInputStyle.Short
                 )
-                .setRequired(true);
+                .setRequired(
+                    true
+                );
 
         // =================================================
         // TU VI
         // =================================================
 
         if (
-            action === "add_tuvi" ||
-            action === "remove_tuvi"
+            action ===
+                "add_tuvi" ||
+            action ===
+                "remove_tuvi"
         ) {
 
             modal
@@ -373,8 +672,12 @@ module.exports = {
                     `admin_modal_${action}`
                 )
                 .setTitle(
-                    action === "add_tuvi"
+
+                    action ===
+                    "add_tuvi"
+
                         ? "✨ CỘNG TU VI"
+
                         : "❌ TRỪ TU VI"
                 );
 
@@ -401,8 +704,10 @@ module.exports = {
         // =================================================
 
         if (
-            action === "add_linhthach" ||
-            action === "remove_linhthach"
+            action ===
+                "add_linhthach" ||
+            action ===
+                "remove_linhthach"
         ) {
 
             modal
@@ -410,8 +715,12 @@ module.exports = {
                     `admin_modal_${action}`
                 )
                 .setTitle(
-                    action === "add_linhthach"
+
+                    action ===
+                    "add_linhthach"
+
                         ? "💰 CỘNG LINH THẠCH"
+
                         : "💸 TRỪ LINH THẠCH"
                 );
 
@@ -437,11 +746,16 @@ module.exports = {
         // CẢNH GIỚI
         // =================================================
 
-        if (action === "set_realm") {
+        if (
+            action ===
+            "set_realm"
+        ) {
 
             const realmInput =
                 new TextInputBuilder()
-                    .setCustomId("realm")
+                    .setCustomId(
+                        "realm"
+                    )
                     .setLabel(
                         "ID cảnh giới 0 - 17"
                     )
@@ -451,7 +765,9 @@ module.exports = {
                     .setStyle(
                         TextInputStyle.Short
                     )
-                    .setRequired(true);
+                    .setRequired(
+                        true
+                    );
 
             modal
                 .setCustomId(
@@ -483,7 +799,10 @@ module.exports = {
         // ĐẠO LỮ
         // =================================================
 
-        if (action === "daolu") {
+        if (
+            action ===
+            "daolu"
+        ) {
 
             const partnerInput =
                 new TextInputBuilder()
@@ -499,11 +818,15 @@ module.exports = {
                     .setStyle(
                         TextInputStyle.Short
                     )
-                    .setRequired(true);
+                    .setRequired(
+                        true
+                    );
 
             const typeInput =
                 new TextInputBuilder()
-                    .setCustomId("type")
+                    .setCustomId(
+                        "type"
+                    )
                     .setLabel(
                         "add hoặc remove"
                     )
@@ -513,7 +836,9 @@ module.exports = {
                     .setStyle(
                         TextInputStyle.Short
                     )
-                    .setRequired(true);
+                    .setRequired(
+                        true
+                    );
 
             modal
                 .setCustomId(
@@ -550,11 +875,16 @@ module.exports = {
         // CÔNG PHÁP
         // =================================================
 
-        if (action === "congphap") {
+        if (
+            action ===
+            "congphap"
+        ) {
 
             const nameInput =
                 new TextInputBuilder()
-                    .setCustomId("name")
+                    .setCustomId(
+                        "name"
+                    )
                     .setLabel(
                         "Tên công pháp"
                     )
@@ -564,44 +894,172 @@ module.exports = {
                     .setStyle(
                         TextInputStyle.Short
                     )
-                    .setRequired(true);
+                    .setRequired(
+                        true
+                    );
 
             const typeInput =
                 new TextInputBuilder()
-                    .setCustomId("type")
+                    .setCustomId(
+                        "type"
+                    )
                     .setLabel(
-                        "Loại công pháp"
+                        "add hoặc remove"
                     )
                     .setPlaceholder(
-                        "Ví dụ: Công pháp"
+                        "add = thêm | remove = xóa"
                     )
                     .setStyle(
                         TextInputStyle.Short
                     )
-                    .setRequired(true);
-                    // =================================================
+                    .setRequired(
+                        true
+                    );
+
+            modal
+                .setCustomId(
+                    "admin_modal_congphap"
+                )
+                .setTitle(
+                    "📖 QUẢN LÝ CÔNG PHÁP"
+                );
+
+            modal.addComponents(
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        userIdInput
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        nameInput
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        typeInput
+                    )
+            );
+
+            return interaction.showModal(
+                modal
+            );
+        }
+
+        // =================================================
+        // ĐAN DƯỢC
+        // =================================================
+
+        if (
+            action ===
+            "danduoc"
+        ) {
+
+            const danInput =
+                new TextInputBuilder()
+                    .setCustomId(
+                        "dan_name"
+                    )
+                    .setLabel(
+                        "Tên đan dược"
+                    )
+                    .setPlaceholder(
+                        "Ví dụ: Đan Đổi Linh Căn"
+                    )
+                    .setStyle(
+                        TextInputStyle.Short
+                    )
+                    .setRequired(
+                        true
+                    );
+
+            const typeInput =
+                new TextInputBuilder()
+                    .setCustomId(
+                        "dan_type"
+                    )
+                    .setLabel(
+                        "add hoặc remove"
+                    )
+                    .setPlaceholder(
+                        "add = thêm | remove = xóa"
+                    )
+                    .setStyle(
+                        TextInputStyle.Short
+                    )
+                    .setRequired(
+                        true
+                    );
+
+            modal
+                .setCustomId(
+                    "admin_modal_danduoc"
+                )
+                .setTitle(
+                    "💊 QUẢN LÝ ĐAN DƯỢC"
+                );
+
+            modal.addComponents(
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        userIdInput
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        danInput
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        amountInput
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        typeInput
+                    )
+            );
+
+            return interaction.showModal(
+                modal
+            );
+        }
+
+        // =================================================
         // LUYỆN KHÍ
         // =================================================
 
-        if (action === "luyenkhi") {
+        if (
+            action ===
+            "luyenkhi"
+        ) {
 
             const itemInput =
                 new TextInputBuilder()
-                    .setCustomId("item")
+                    .setCustomId(
+                        "item"
+                    )
                     .setLabel(
-                        "Tên pháp bảo / trang bị"
+                        "Tên pháp bảo"
                     )
                     .setPlaceholder(
-                        "Ví dụ: Thanh Vân Kiếm"
+                        "Ví dụ: Tru Tiên Kiếm"
                     )
                     .setStyle(
                         TextInputStyle.Short
                     )
-                    .setRequired(true);
+                    .setRequired(
+                        true
+                    );
 
-            const amountInput2 =
+            const amountItemInput =
                 new TextInputBuilder()
-                    .setCustomId("amount")
+                    .setCustomId(
+                        "amount"
+                    )
                     .setLabel(
                         "Số lượng"
                     )
@@ -611,14 +1069,16 @@ module.exports = {
                     .setStyle(
                         TextInputStyle.Short
                     )
-                    .setRequired(true);
+                    .setRequired(
+                        true
+                    );
 
             modal
                 .setCustomId(
                     "admin_modal_luyenkhi"
                 )
                 .setTitle(
-                    "⚔️ TRAO PHÁP BẢO"
+                    "⚔️ QUẢN LÝ LUYỆN KHÍ"
                 );
 
             modal.addComponents(
@@ -635,7 +1095,101 @@ module.exports = {
 
                 new ActionRowBuilder()
                     .addComponents(
-                        amountInput2
+                        amountItemInput
+                    )
+            );
+
+            return interaction.showModal(
+                modal
+            );
+        }
+
+        // =================================================
+        // TẠO CODE
+        // =================================================
+
+        if (
+            action ===
+            "create_code"
+        ) {
+
+            const codeInput =
+                new TextInputBuilder()
+                    .setCustomId(
+                        "code"
+                    )
+                    .setLabel(
+                        "Mã Code"
+                    )
+                    .setPlaceholder(
+                        "Ví dụ: HONGHOANG2026"
+                    )
+                    .setStyle(
+                        TextInputStyle.Short
+                    )
+                    .setRequired(
+                        true
+                    );
+
+            const rewardInput =
+                new TextInputBuilder()
+                    .setCustomId(
+                        "reward"
+                    )
+                    .setLabel(
+                        "Phần thưởng"
+                    )
+                    .setPlaceholder(
+                        "tuvi hoặc linhthach"
+                    )
+                    .setStyle(
+                        TextInputStyle.Short
+                    )
+                    .setRequired(
+                        true
+                    );
+
+            const codeAmountInput =
+                new TextInputBuilder()
+                    .setCustomId(
+                        "code_amount"
+                    )
+                    .setLabel(
+                        "Số lượng phần thưởng"
+                    )
+                    .setPlaceholder(
+                        "Ví dụ: 50000"
+                    )
+                    .setStyle(
+                        TextInputStyle.Short
+                    )
+                    .setRequired(
+                        true
+                    );
+
+            modal
+                .setCustomId(
+                    "admin_modal_create_code"
+                )
+                .setTitle(
+                    "🔑 TẠO CODE PHẦN THƯỞNG"
+                );
+
+            modal.addComponents(
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        codeInput
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        rewardInput
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        codeAmountInput
                     )
             );
 
@@ -648,7 +1202,10 @@ module.exports = {
         // RESET
         // =================================================
 
-        if (action === "reset") {
+        if (
+            action ===
+            "reset"
+        ) {
 
             modal
                 .setCustomId(
@@ -659,6 +1216,7 @@ module.exports = {
                 );
 
             modal.addComponents(
+
                 new ActionRowBuilder()
                     .addComponents(
                         userIdInput
@@ -669,14 +1227,7 @@ module.exports = {
                 modal
             );
         }
-
-        return interaction.reply({
-            content:
-                "❌ Chức năng không tồn tại.",
-            ephemeral: true
-        });
-    },
-
+    };
     // =====================================================
     // XỬ LÝ MODAL
     // =====================================================
@@ -703,15 +1254,6 @@ module.exports = {
             loadData();
 
         // =================================================
-        // LẤY USER ID
-        // =================================================
-
-        const id =
-            interaction.fields.getTextInputValue(
-                "user_id"
-            ).trim();
-
-        // =================================================
         // CỘNG / TRỪ TU VI
         // =================================================
 
@@ -723,14 +1265,14 @@ module.exports = {
         ) {
 
             const amountText =
-                interaction.fields.getTextInputValue(
-                    "amount"
-                ).trim();
+                interaction.fields
+                    .getTextInputValue(
+                        "amount"
+                    )
+                    .trim();
 
             const amount =
-                Number(
-                    amountText
-                );
+                Number(amountText);
 
             if (
                 !Number.isFinite(amount) ||
@@ -739,7 +1281,7 @@ module.exports = {
 
                 return interaction.reply({
                     content:
-                        "❌ Số lượng Tu Vi không hợp lệ.",
+                        "❌ Số Tu Vi không hợp lệ!",
                     ephemeral: true
                 });
             }
@@ -756,7 +1298,6 @@ module.exports = {
             let player =
                 db.getPlayer(id);
 
-            // Nếu chưa có trong database chính
             if (!player) {
 
                 try {
@@ -779,7 +1320,7 @@ module.exports = {
             }
 
             // =============================================
-            // TU VI HIỆN TẠI
+            // TU VI CŨ
             // =============================================
 
             const oldTuvi =
@@ -878,26 +1419,16 @@ module.exports = {
                     )
                     .setDescription(
                         `👤 **Người chơi:** <@${id}>\n\n` +
-
-                        `${isAdd ? "✨" : "❌"} **${isAdd ? "Đã cộng" : "Đã trừ"}:** ` +
-                        `${amount.toLocaleString()}\n\n` +
-
-                        `📊 **Tu Vi:** ` +
-                        `${newTuvi.toLocaleString()}\n` +
-
-                        `🌱 **Cảnh giới:** ` +
-                        `${realmInfo.realmName}\n` +
-
-                        `🏯 **Tầng:** ` +
-                        `${realmInfo.tier}`
-                    )
-                    .setFooter({
-                        text:
-                            `Admin: ${interaction.user.tag}`
-                    });
+                        `${isAdd ? "✨ **Đã cộng:** +" : "❌ **Đã trừ:** -"}${amount.toLocaleString()}\n` +
+                        `📊 **Tu Vi:** ${newTuvi.toLocaleString()}\n` +
+                        `🌱 **Cảnh giới:** ${realmInfo.realmName}\n` +
+                        `🏯 **Tầng:** ${realmInfo.tier}`
+                    );
 
             return interaction.reply({
-                embeds: [embed],
+                embeds: [
+                    embed
+                ],
                 ephemeral: true
             });
         }
@@ -914,14 +1445,14 @@ module.exports = {
         ) {
 
             const amountText =
-                interaction.fields.getTextInputValue(
-                    "amount"
-                ).trim();
+                interaction.fields
+                    .getTextInputValue(
+                        "amount"
+                    )
+                    .trim();
 
             const amount =
-                Number(
-                    amountText
-                );
+                Number(amountText);
 
             if (
                 !Number.isFinite(amount) ||
@@ -930,7 +1461,7 @@ module.exports = {
 
                 return interaction.reply({
                     content:
-                        "❌ Số lượng Linh Thạch không hợp lệ.",
+                        "❌ Số Linh Thạch không hợp lệ!",
                     ephemeral: true
                 });
             }
@@ -969,7 +1500,6 @@ module.exports = {
 
             saveData(data);
 
-            // Đồng bộ database chính
             const player =
                 db.getPlayer(id);
 
@@ -986,11 +1516,8 @@ module.exports = {
 
             return interaction.reply({
                 content:
-                    `${customId.includes("add") ? "💰 Đã cộng" : "💸 Đã trừ"} ` +
-                    `**${amount.toLocaleString()} Linh Thạch** ` +
-                    `cho <@${id}>.\n\n` +
-                    `💎 **Linh Thạch hiện tại:** ` +
-                    `${value.toLocaleString()}`,
+                    `${customId === "admin_modal_add_linhthach" ? "💰 Đã cộng" : "💸 Đã trừ"} **${amount.toLocaleString()} Linh Thạch** cho <@${id}>.\n\n` +
+                    `💎 **Linh Thạch:** ${value.toLocaleString()}`,
                 ephemeral: true
             });
         }
@@ -1005,14 +1532,14 @@ module.exports = {
         ) {
 
             const realmText =
-                interaction.fields.getTextInputValue(
-                    "realm"
-                ).trim();
+                interaction.fields
+                    .getTextInputValue(
+                        "realm"
+                    )
+                    .trim();
 
             const realmId =
-                Number(
-                    realmText
-                );
+                Number(realmText);
 
             if (
                 !Number.isInteger(realmId) ||
@@ -1022,7 +1549,7 @@ module.exports = {
 
                 return interaction.reply({
                     content:
-                        "❌ ID cảnh giới phải từ **0 đến 17**.",
+                        "❌ Cảnh giới phải từ **0 đến 17**!",
                     ephemeral: true
                 });
             }
@@ -1076,16 +1603,19 @@ module.exports = {
         ) {
 
             const partnerId =
-                interaction.fields.getTextInputValue(
-                    "partner_id"
-                ).trim();
+                interaction.fields
+                    .getTextInputValue(
+                        "partner_id"
+                    )
+                    .trim();
 
             const type =
-                interaction.fields.getTextInputValue(
-                    "type"
-                )
-                .trim()
-                .toLowerCase();
+                interaction.fields
+                    .getTextInputValue(
+                        "type"
+                    )
+                    .trim()
+                    .toLowerCase();
 
             if (
                 !data.relationships
@@ -1122,7 +1652,9 @@ module.exports = {
                 });
             }
 
-            if (type === "remove") {
+            if (
+                type === "remove"
+            ) {
 
                 if (
                     data.relationships[id]
@@ -1163,14 +1695,18 @@ module.exports = {
         ) {
 
             const name =
-                interaction.fields.getTextInputValue(
-                    "name"
-                ).trim();
+                interaction.fields
+                    .getTextInputValue(
+                        "name"
+                    )
+                    .trim();
 
             const type =
-                interaction.fields.getTextInputValue(
-                    "type"
-                ).trim();
+                interaction.fields
+                    .getTextInputValue(
+                        "type"
+                    )
+                    .trim();
 
             createUser(
                 data,
@@ -1195,6 +1731,103 @@ module.exports = {
         }
 
         // =================================================
+        // ĐAN DƯỢC
+        // =================================================
+
+        if (
+            customId ===
+            "admin_modal_danduoc"
+        ) {
+
+            const danName =
+                interaction.fields
+                    .getTextInputValue(
+                        "dan_name"
+                    )
+                    .trim();
+
+            const amountText =
+                interaction.fields
+                    .getTextInputValue(
+                        "amount"
+                    )
+                    .trim();
+
+            const type =
+                interaction.fields
+                    .getTextInputValue(
+                        "dan_type"
+                    )
+                    .trim()
+                    .toLowerCase();
+
+            const amount =
+                Number(amountText);
+
+            if (
+                !Number.isInteger(amount) ||
+                amount <= 0
+            ) {
+
+                return interaction.reply({
+                    content:
+                        "❌ Số lượng đan dược không hợp lệ!",
+                    ephemeral: true
+                });
+            }
+
+            createUser(
+                data,
+                id
+            );
+
+            if (
+                type === "add"
+            ) {
+
+                if (
+                    !data.users[id].dan[danName]
+                ) {
+
+                    data.users[id].dan[danName] =
+                        0;
+                }
+
+                data.users[id].dan[danName] +=
+                    amount;
+
+            } else if (
+                type === "remove"
+            ) {
+
+                data.users[id].dan[danName] =
+                    Math.max(
+                        0,
+                        Number(
+                            data.users[id].dan[danName] ||
+                            0
+                        ) - amount
+                    );
+
+            } else {
+
+                return interaction.reply({
+                    content:
+                        "❌ Loại phải là `add` hoặc `remove`.",
+                    ephemeral: true
+                });
+            }
+
+            saveData(data);
+
+            return interaction.reply({
+                content:
+                    `${type === "add" ? "💊 Đã thêm" : "❌ Đã trừ"} **${amount}x ${danName}** cho <@${id}>.`,
+                ephemeral: true
+            });
+        }
+
+        // =================================================
         // LUYỆN KHÍ
         // =================================================
 
@@ -1204,19 +1837,21 @@ module.exports = {
         ) {
 
             const item =
-                interaction.fields.getTextInputValue(
-                    "item"
-                ).trim();
+                interaction.fields
+                    .getTextInputValue(
+                        "item"
+                    )
+                    .trim();
 
             const amountText =
-                interaction.fields.getTextInputValue(
-                    "amount"
-                ).trim();
+                interaction.fields
+                    .getTextInputValue(
+                        "amount"
+                    )
+                    .trim();
 
             const amount =
-                Number(
-                    amountText
-                );
+                Number(amountText);
 
             if (
                 !Number.isInteger(amount) ||
@@ -1225,7 +1860,7 @@ module.exports = {
 
                 return interaction.reply({
                     content:
-                        "❌ Số lượng không hợp lệ.",
+                        "❌ Số lượng không hợp lệ!",
                     ephemeral: true
                 });
             }
@@ -1254,9 +1889,131 @@ module.exports = {
                 ephemeral: true
             });
         }
+                // =================================================
+        // TẠO CODE
+        // =================================================
+
+        if (
+            customId ===
+            "admin_modal_create_code"
+        ) {
+
+            const code =
+                interaction.fields
+                    .getTextInputValue(
+                        "code"
+                    )
+                    .trim()
+                    .toUpperCase();
+
+            const reward =
+                interaction.fields
+                    .getTextInputValue(
+                        "reward"
+                    )
+                    .trim()
+                    .toLowerCase();
+
+            const amountText =
+                interaction.fields
+                    .getTextInputValue(
+                        "code_amount"
+                    )
+                    .trim();
+
+            const amount =
+                Number(amountText);
+
+            if (
+                !code ||
+                code.length < 2
+            ) {
+
+                return interaction.reply({
+                    content:
+                        "❌ Mã code không hợp lệ!",
+                    ephemeral: true
+                });
+            }
+
+            if (
+                reward !== "tuvi" &&
+                reward !== "linhthach"
+            ) {
+
+                return interaction.reply({
+                    content:
+                        "❌ Phần thưởng phải là `tuvi` hoặc `linhthach`.",
+                    ephemeral: true
+                });
+            }
+
+            if (
+                !Number.isFinite(amount) ||
+                amount <= 0
+            ) {
+
+                return interaction.reply({
+                    content:
+                        "❌ Số lượng phần thưởng không hợp lệ!",
+                    ephemeral: true
+                });
+            }
+
+            const codes =
+                loadCodes();
+
+            if (
+                codes[code]
+            ) {
+
+                return interaction.reply({
+                    content:
+                        "❌ Code này đã tồn tại!",
+                    ephemeral: true
+                });
+            }
+
+            codes[code] = {
+
+                reward,
+
+                amount,
+
+                usedBy: [],
+
+                createdBy:
+                    interaction.user.id,
+
+                createdAt:
+                    Date.now()
+            };
+
+            if (
+                !saveCodes(codes)
+            ) {
+
+                return interaction.reply({
+                    content:
+                        "❌ Không thể lưu code!",
+                    ephemeral: true
+                });
+            }
+
+            return interaction.reply({
+
+                content:
+                    `🔑 **TẠO CODE THÀNH CÔNG**\n\n` +
+                    `🎁 **Code:** \`${code}\`\n` +
+                    `💎 **Phần thưởng:** ${reward === "tuvi" ? "✨ Tu Vi" : "💰 Linh Thạch"}\n` +
+                    `📦 **Số lượng:** ${amount.toLocaleString()}`,
+
+                ephemeral: true
+            });
+        }
 
         // =================================================
-        // RESET
+        // RESET NHÂN VẬT
         // =================================================
 
         if (
@@ -1265,6 +2022,7 @@ module.exports = {
         ) {
 
             if (
+                data.users &&
                 data.users[id]
             ) {
 
@@ -1272,7 +2030,8 @@ module.exports = {
             }
 
             if (
-                data.relationships
+                data.relationships &&
+                data.relationships[id]
             ) {
 
                 delete data.relationships[id];
@@ -1280,147 +2039,44 @@ module.exports = {
 
             saveData(data);
 
+            // Reset luôn database chính nếu có
+            const player =
+                db.getPlayer(id);
+
+            if (player) {
+
+                db.updatePlayer(
+                    id,
+                    {
+                        tuvi: 0,
+                        realm: 0,
+                        tang: 1,
+                        canhGioi:
+                            "Phàm Nhân",
+                        linhThach: 0
+                    }
+                );
+            }
+
             return interaction.reply({
+
                 content:
                     `♻️ Đã reset dữ liệu của <@${id}>.`,
+
                 ephemeral: true
             });
         }
 
+        // =================================================
+        // KHÔNG TÌM THẤY CHỨC NĂNG
+        // =================================================
+
         return interaction.reply({
+
             content:
-                "❌ Không tìm thấy chức năng.",
+                "❌ Không tìm thấy chức năng Admin này.",
+
             ephemeral: true
         });
-    }
-};
-// =====================================================
-// KẾT THÚC ADMIN.JS
-// =====================================================
-
-module.exports = {
-    data: command,
-
-    async execute(interaction) {
-
-        if (
-            !interaction.member.permissions.has(
-                PermissionFlagsBits.Administrator
-            )
-        ) {
-            return interaction.reply({
-                content:
-                    "🚫 Bạn không có quyền sử dụng Admin Panel!",
-                ephemeral: true
-            });
-        }
-
-        const menu =
-            new StringSelectMenuBuilder()
-                .setCustomId("admin_menu")
-                .setPlaceholder(
-                    "🛡️ Chọn chức năng quản trị..."
-                )
-                .addOptions([
-                    {
-                        label: "Cộng Tu Vi",
-                        description:
-                            "Cộng tu vi cho người chơi",
-                        value: "add_tuvi",
-                        emoji: "✨"
-                    },
-                    {
-                        label: "Trừ Tu Vi",
-                        description:
-                            "Trừ tu vi của người chơi",
-                        value: "remove_tuvi",
-                        emoji: "❌"
-                    },
-                    {
-                        label: "Cộng Linh Thạch",
-                        description:
-                            "Cộng linh thạch",
-                        value: "add_linhthach",
-                        emoji: "💰"
-                    },
-                    {
-                        label: "Trừ Linh Thạch",
-                        description:
-                            "Trừ linh thạch",
-                        value: "remove_linhthach",
-                        emoji: "💸"
-                    },
-                    {
-                        label: "Thiết Lập Cảnh Giới",
-                        description:
-                            "Thiết lập cảnh giới",
-                        value: "set_realm",
-                        emoji: "🌟"
-                    },
-                    {
-                        label: "Đạo Lữ",
-                        description:
-                            "Thêm hoặc xóa đạo lữ",
-                        value: "daolu",
-                        emoji: "💞"
-                    },
-                    {
-                        label: "Công Pháp",
-                        description:
-                            "Thêm công pháp",
-                        value: "congphap",
-                        emoji: "📖"
-                    },
-                    {
-                        label: "Luyện Khí",
-                        description:
-                            "Trao pháp bảo / trang bị",
-                        value: "luyenkhi",
-                        emoji: "⚔️"
-                    },
-                    {
-                        label: "Reset Nhân Vật",
-                        description:
-                            "Xóa dữ liệu người chơi",
-                        value: "reset",
-                        emoji: "♻️"
-                    }
-                ]);
-
-        const row =
-            new ActionRowBuilder()
-                .addComponents(menu);
-
-        const embed =
-            new EmbedBuilder()
-                .setColor(0x8e44ad)
-                .setTitle(
-                    "🛡️ HỒNG HOANG ĐẠI LỤC"
-                )
-                .setDescription(
-                    "## ⚡ ADMIN PANEL\n\n" +
-                    "Chào mừng đến hệ thống quản trị.\n\n" +
-                    "🔽 **Chọn chức năng bên dưới.**\n\n" +
-                    "🔒 Chỉ Administrator mới có thể sử dụng."
-                )
-                .setFooter({
-                    text:
-                        `Admin: ${interaction.user.tag}`
-                });
-
-        return interaction.reply({
-            embeds: [embed],
-            components: [row],
-            ephemeral: true
-        });
-    },
-
-    async handleSelect(interaction) {
-        // Phần xử lý Select Menu nằm ở phần 1/3.
-        // Phần xử lý Modal nằm ở phần 2/3.
-    },
-
-    async handleModal(interaction) {
-        // Phần xử lý Modal nằm ở phần 2/3.
     }
 };
