@@ -126,7 +126,15 @@ client.once("ready", () => {
     console.log(`🧬 Thể Chất: ${THE_CHAT.length}`);
     console.log("====================================");
     console.log("🟢 Bot đang hoạt động.");
-
+    
+    // ❤️ HỒI MÁU TỰ ĐỘNG MỖI GIÂY
+    setInterval(() => {
+        try {
+            regenerateAllPlayers();
+        } catch (error) {
+            console.error("❌ Lỗi hồi máu:", error);
+        }
+    }, 1000);
 });
 
 // ==========================================
