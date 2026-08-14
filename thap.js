@@ -10,7 +10,7 @@ const fs = require("fs");
 const path = require("path");
 
 // =====================================================
-// 📁 DATABASE THÁP
+// 📁 DATABASE
 // =====================================================
 
 const DATA_FILE = path.join(__dirname, "thap.json");
@@ -20,9 +20,7 @@ function loadData() {
         if (!fs.existsSync(DATA_FILE)) {
             fs.writeFileSync(
                 DATA_FILE,
-                JSON.stringify({
-                    players: {}
-                }, null, 2)
+                JSON.stringify({ players: {} }, null, 2)
             );
         }
 
@@ -35,9 +33,7 @@ function loadData() {
         }
 
         return data;
-
     } catch (error) {
-
         console.error("❌ Lỗi đọc thap.json:", error);
 
         return {
@@ -48,21 +44,17 @@ function loadData() {
 
 function saveData(data) {
     try {
-
         fs.writeFileSync(
             DATA_FILE,
             JSON.stringify(data, null, 2)
         );
-
     } catch (error) {
-
         console.error("❌ Lỗi lưu thap.json:", error);
-
     }
 }
 
 // =====================================================
-// 🧰 HÀM TIỆN ÍCH
+// 🧰 TIỆN ÍCH
 // =====================================================
 
 function random(min, max) {
@@ -72,18 +64,35 @@ function random(min, max) {
 }
 
 function formatNumber(number) {
-
     return Number(number || 0).toLocaleString("vi-VN");
-
 }
+
+function getToday() {
+    const now = new Date();
+
+    return (
+        now.getFullYear() +
+        "-" +
+        String(now.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(now.getDate()).padStart(2, "0")
+    );
+}
+
+// =====================================================
+// 👤 PLAYER
+// =====================================================
 
 function getPlayer(data, userId) {
 
     if (!data.players[userId]) {
 
         data.players[userId] = {
+
             tower: null,
+
             floor: 1,
+
             maxFloor: 0,
 
             pendingReward: {
@@ -99,15 +108,67 @@ function getPlayer(data, userId) {
             },
 
             monster: null,
-            defeated: false
+
+            defeated: false,
+
+            // 🌅 4 LƯỢT MỖI NGÀY
+            dailyTower: {
+                date: getToday(),
+                used: 0
+            }
         };
     }
 
-    return data.players[userId];
+    const player = data.players[userId];
+
+    // =================================================
+    // 🌅 TỰ RESET LƯỢT KHI SANG NGÀY MỚI
+    // =================================================
+
+    if (
+        !player.dailyTower ||
+        player.dailyTower.date !== getToday()
+    ) {
+
+        player.dailyTower = {
+            date: getToday(),
+            used: 0
+        };
+    }
+
+    // =================================================
+    // 🛠️ BỔ SUNG DỮ LIỆU CŨ
+    // =================================================
+
+    if (!player.pendingReward) {
+        player.pendingReward = {
+            linhThach: 0,
+            tuVi: 0,
+            items: []
+        };
+    }
+
+    if (!player.totalReward) {
+        player.totalReward = {
+            linhThach: 0,
+            tuVi: 0,
+            items: []
+        };
+    }
+
+    if (!Array.isArray(player.pendingReward.items)) {
+        player.pendingReward.items = [];
+    }
+
+    if (!Array.isArray(player.totalReward.items)) {
+        player.totalReward.items = [];
+    }
+
+    return player;
 }
 
 // =====================================================
-// 🏯 DANH SÁCH 12 THÁP
+// 🏯 12 THÁP HỒNG HOANG
 // =====================================================
 
 const TOWERS = {
@@ -246,7 +307,7 @@ const TOWERS = {
 };
 
 // =====================================================
-// 🐲 TÊN QUÁI
+// 👹 QUÁI
 // =====================================================
 
 const MONSTERS = [
@@ -261,14 +322,14 @@ const MONSTERS = [
     "Đại Đạo Ma Thần"
 ];
 
-// =====================================================
-// 👹 TẠO QUÁI
-// =====================================================
+function createMonster(
+    tower,
+    floor,
+    playerHP,
+    playerPower
+) {
 
-function createMonster(tower, floor, playerHP, playerPower) {
-
-    const boss =
-        floor % 10 === 0;
+    const boss = floor % 10 === 0;
 
     const towerMultiplier =
         tower.difficulty;
@@ -276,14 +337,7 @@ function createMonster(tower, floor, playerHP, playerPower) {
     const floorMultiplier =
         1 + floor * 0.045;
 
-    /*
-     * ❤️ HP người chơi càng cao
-     * → quái càng mạnh.
-     *
-     * Không lấy toàn bộ HP người chơi làm HP quái,
-     * mà dùng căn bậc hai để tránh số tăng quá cực đoan.
-     */
-
+    // ❤️ HP càng cao → quái càng mạnh
     const hpFactor =
         Math.sqrt(
             Math.max(playerHP, 1)
@@ -310,12 +364,9 @@ function createMonster(tower, floor, playerHP, playerPower) {
         towerMultiplier *
         floorMultiplier;
 
-    // Boss mạnh hơn
     if (boss) {
-
         monsterHP *= 2.2;
         monsterAttack *= 1.8;
-
     }
 
     monsterHP = Math.max(
@@ -330,26 +381,28 @@ function createMonster(tower, floor, playerHP, playerPower) {
 
     return {
 
-        name:
-            boss
-                ? `👑 ${MONSTERS[random(0, MONSTERS.length - 1)]} BOSS`
-                : `👹 ${MONSTERS[random(0, MONSTERS.length - 1)]}`,
+        name: boss
+            ? `👑 ${MONSTERS[random(0, MONSTERS.length - 1)]} BOSS`
+            : `👹 ${MONSTERS[random(0, MONSTERS.length - 1)]}`,
 
         hp: monsterHP,
+
         maxHp: monsterHP,
 
         attack: monsterAttack,
 
         boss
-
     };
 }
 
 // =====================================================
-// 🎁 TẠO PHẦN THƯỞNG
+// 🎁 PHẦN THƯỞNG
 // =====================================================
 
-function createReward(tower, floor) {
+function createReward(
+    tower,
+    floor
+) {
 
     const base =
         Math.floor(
@@ -366,39 +419,44 @@ function createReward(tower, floor) {
 
     const items = [];
 
-    // Mỗi tháp có vật phẩm riêng
     if (floor % 5 === 0) {
 
         items.push({
-            id: tower.reward,
-            name: tower.rewardName,
-            amount: floor >= 50 ? 2 : 1
-        });
 
+            id: tower.reward,
+
+            name: tower.rewardName,
+
+            amount:
+                floor >= 50
+                    ? 2
+                    : 1
+        });
     }
 
-    // Boss tầng 10
     if (floor % 10 === 0) {
 
         items.push({
-            id: `${tower.id}_boss`,
-            name: `🎁 ${tower.name} Boss Tinh`,
+
+            id:
+                `${tower.id}_boss`,
+
+            name:
+                `🎁 ${tower.name} Boss Tinh`,
+
             amount: 1
         });
-
     }
 
     return {
-
         linhThach,
         tuVi,
         items
-
     };
 }
 
 // =====================================================
-// 🏯 UI CHỌN THÁP
+// 📜 DANH SÁCH THÁP
 // =====================================================
 
 function createTowerList() {
@@ -409,123 +467,142 @@ function createTowerList() {
     const list =
         Object.values(TOWERS);
 
-    list.forEach((tower, index) => {
+    list.forEach(
+        (tower, index) => {
 
-        let difficulty;
+            let difficulty;
 
-        if (tower.difficulty <= 1) {
-            difficulty = "🟢 Dễ";
-        } else if (tower.difficulty <= 1.8) {
-            difficulty = "🟡 Trung Bình";
-        } else if (tower.difficulty <= 2.7) {
-            difficulty = "🟠 Khó";
-        } else if (tower.difficulty <= 3.6) {
-            difficulty = "🔴 Rất Khó";
-        } else {
-            difficulty = "⚫ Đại Đạo";
+            if (tower.difficulty <= 1) {
+                difficulty = "🟢 Dễ";
+            }
+            else if (tower.difficulty <= 1.8) {
+                difficulty = "🟡 Trung Bình";
+            }
+            else if (tower.difficulty <= 2.7) {
+                difficulty = "🟠 Khó";
+            }
+            else if (tower.difficulty <= 3.6) {
+                difficulty = "🔴 Rất Khó";
+            }
+            else {
+                difficulty = "⚫ Đại Đạo";
+            }
+
+            text +=
+                `**${index + 1}. ${tower.emoji} ${tower.name}**\n` +
+                `> ${difficulty} • 🎁 ${tower.rewardName}\n` +
+                `> ${tower.description}\n\n`;
         }
+    );
 
-        text +=
-            `**${index + 1}. ${tower.emoji} ${tower.name}**\n` +
-            `> ${difficulty} • 🎁 ${tower.rewardName}\n` +
-            `> ${tower.description}\n\n`;
-    });
+    text +=
+        "⚔️ **Chọn một tháp để bắt đầu thử thách.**\n\n" +
+        "🌅 **Mỗi ngày chỉ được leo tối đa 4 lượt.**";
 
     return text;
 }
 
 // =====================================================
-// 🎮 COMMAND
+// 🔘 NÚT 12 THÁP
+// =====================================================
+
+function createTowerButtons() {
+
+    const towers =
+        Object.values(TOWERS);
+
+    const rows = [];
+
+    for (
+        let i = 0;
+        i < towers.length;
+        i += 5
+    ) {
+
+        const row =
+            new ActionRowBuilder();
+
+        towers
+            .slice(i, i + 5)
+            .forEach(
+                (tower) => {
+
+                    row.addComponents(
+
+                        new ButtonBuilder()
+
+                            .setCustomId(
+                                `thap_chon_${tower.id}`
+                            )
+
+                            .setLabel(
+                                tower.name
+                                    .replace(
+                                        " Tháp",
+                                        ""
+                                    )
+                                    .replace(
+                                        "Tháp",
+                                        ""
+                                    )
+                            )
+
+                            .setEmoji(
+                                tower.emoji
+                            )
+
+                            .setStyle(
+                                ButtonStyle.Primary
+                            )
+                    );
+                }
+            );
+
+        rows.push(row);
+    }
+
+    return rows;
+}
+
+// =====================================================
+// 🎮 /THAP
 // =====================================================
 
 module.exports = {
 
-    data: new SlashCommandBuilder()
-        .setName("thap")
-        .setDescription(
-            "🏯 Bách Tháp Hồng Hoang"
-        ),
+    data:
+        new SlashCommandBuilder()
+
+            .setName("thap")
+
+            .setDescription(
+                "🏯 Bách Tháp Hồng Hoang"
+            ),
 
     async execute(interaction) {
 
         const embed =
             new EmbedBuilder()
+
                 .setTitle(
-                    "🏯 BÁCH THÁP HỒNG HOANG"
+                    "🏯 HỒNG HOANG ĐẠI LỤC"
                 )
+
                 .setDescription(
                     createTowerList()
                 )
+
                 .setFooter({
                     text:
-                        "⚔️ Chọn một tháp để bắt đầu thử thách."
+                        "⚔️ Bách Tháp • 🌅 4 lượt mỗi ngày"
                 });
-
-        const row =
-            new ActionRowBuilder();
-
-        Object.values(TOWERS)
-            .slice(0, 5)
-            .forEach(tower => {
-
-                row.addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(
-                            `thap_chon_${tower.id}`
-                        )
-                        .setLabel(
-                            tower.name.replace(
-                                " Tháp",
-                                ""
-                            )
-                        )
-                        .setEmoji(
-                            tower.emoji
-                        )
-                        .setStyle(
-                            ButtonStyle.Primary
-                        )
-                );
-
-            });
-
-        const row2 =
-            new ActionRowBuilder();
-
-        Object.values(TOWERS)
-            .slice(5, 10)
-            .forEach(tower => {
-
-                row2.addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(
-                            `thap_chon_${tower.id}`
-                        )
-                        .setLabel(
-                            tower.name.replace(
-                                " Tháp",
-                                ""
-                            )
-                        )
-                        .setEmoji(
-                            tower.emoji
-                        )
-                        .setStyle(
-                            ButtonStyle.Secondary
-                        )
-                );
-
-            });
 
         return interaction.reply({
 
             embeds: [embed],
 
-            components: [
-                row,
-                row2
-            ]
-
+            components:
+                createTowerButtons()
         });
     },
 
@@ -569,11 +646,12 @@ module.exports = {
             if (!tower) {
 
                 return interaction.reply({
+
                     content:
                         "❌ Không tìm thấy tháp.",
+
                     ephemeral: true
                 });
-
             }
 
             player.tower =
@@ -581,13 +659,19 @@ module.exports = {
 
             player.floor = 1;
 
+            player.maxFloor = 0;
+
             player.pendingReward = {
+
                 linhThach: 0,
+
                 tuVi: 0,
+
                 items: []
             };
 
             player.monster = null;
+
             player.defeated = false;
 
             saveData(data);
@@ -595,8 +679,7 @@ module.exports = {
             return showTower(
                 interaction,
                 tower,
-                player,
-                true
+                player
             );
         }
 
@@ -611,23 +694,49 @@ module.exports = {
             if (!player.tower) {
 
                 return interaction.reply({
+
                     content:
                         "❌ Bạn chưa chọn tháp.",
+
                     ephemeral: true
                 });
-
             }
+
+            // =========================================
+            // 🌅 KIỂM TRA 4 LƯỢT / NGÀY
+            // =========================================
+
+            if (
+                player.dailyTower.used >= 4
+            ) {
+
+                return interaction.reply({
+
+                    content:
+                        "⛔ **HÔM NAY BẠN ĐÃ HẾT LƯỢT LEO THÁP!**\n\n" +
+
+                        "🏯 Mỗi ngày chỉ được khiêu chiến **4 lần**.\n\n" +
+
+                        "⚔️ Lượt hôm nay: **4/4**\n\n" +
+
+                        "🌅 **Ngày mai sẽ tự động reset về 4/4.**\n\n" +
+
+                        "🚪 Bạn vẫn có thể **Rút Lui** để nhận phần thưởng đang giữ.",
+
+                    ephemeral: true
+                });
+            }
+
+            // =========================================
+            // ⚔️ TRỪ 1 LƯỢT
+            // =========================================
+
+            player.dailyTower.used++;
+
+            saveData(data);
 
             const tower =
                 TOWERS[player.tower];
-
-            /*
-             * Dùng HP/Lực chiến từ dữ liệu người chơi
-             * nếu có.
-             *
-             * Nếu database hiện tại chưa có,
-             * mặc định dùng giá trị an toàn.
-             */
 
             const playerHP =
                 Number(
@@ -645,9 +754,13 @@ module.exports = {
 
             const monster =
                 createMonster(
+
                     tower,
+
                     player.floor,
+
                     playerHP,
+
                     playerPower
                 );
 
@@ -655,7 +768,7 @@ module.exports = {
                 monster;
 
             // =========================================
-            // 🎲 TÍNH TỶ LỆ THẮNG
+            // 🎲 TỶ LỆ THẮNG
             // =========================================
 
             const playerStrength =
@@ -675,17 +788,8 @@ module.exports = {
                     )
                 ) * 100;
 
-            /*
-             * Tầng càng cao:
-             * tỷ lệ giảm nhẹ.
-             */
-
             chance -=
                 player.floor * 0.12;
-
-            /*
-             * Boss khó hơn.
-             */
 
             if (monster.boss) {
                 chance -= 12;
@@ -704,7 +808,7 @@ module.exports = {
                 random(1, 100);
 
             // =========================================
-            // 🎲 THẮNG
+            // 🏆 THẮNG
             // =========================================
 
             if (roll <= chance) {
@@ -729,7 +833,6 @@ module.exports = {
                     player.pendingReward.items.push(
                         item
                     );
-
                 }
 
                 player.maxFloor =
@@ -739,6 +842,8 @@ module.exports = {
                     );
 
                 player.defeated = true;
+
+                player.monster = null;
 
                 saveData(data);
 
@@ -768,7 +873,7 @@ module.exports = {
         }
 
         // =============================================
-        // 🎁 NHẬN THƯỞNG / TẦNG TIẾP
+        // ⚔️ TẦNG TIẾP
         // =============================================
 
         if (
@@ -778,16 +883,56 @@ module.exports = {
             if (!player.defeated) {
 
                 return interaction.reply({
+
                     content:
                         "❌ Bạn chưa vượt qua tầng này.",
+
                     ephemeral: true
                 });
+            }
 
+            if (player.floor >= 100) {
+
+                return interaction.update({
+
+                    content:
+                        "🏆 **CHÚC MỪNG!**\n\n" +
+
+                        `Bạn đã hoàn thành **100 tầng ${TOWERS[player.tower].name}**!\n\n` +
+
+                        "🎁 Hãy bấm **Rút Lui & Nhận Thưởng** để nhận phần thưởng.",
+
+                    embeds: [],
+
+                    components: [
+
+                        new ActionRowBuilder()
+                            .addComponents(
+
+                                new ButtonBuilder()
+
+                                    .setCustomId(
+                                        "thap_rut_lui"
+                                    )
+
+                                    .setLabel(
+                                        "Rút Lui & Nhận Thưởng"
+                                    )
+
+                                    .setEmoji("🎁")
+
+                                    .setStyle(
+                                        ButtonStyle.Success
+                                    )
+                            )
+                    ]
+                });
             }
 
             player.floor++;
 
             player.defeated = false;
+
             player.monster = null;
 
             saveData(data);
@@ -798,8 +943,7 @@ module.exports = {
             return showTower(
                 interaction,
                 tower,
-                player,
-                false
+                player
             );
         }
 
@@ -811,17 +955,58 @@ module.exports = {
             id === "thap_rut_lui"
         ) {
 
+            if (!player.tower) {
+
+                return interaction.reply({
+
+                    content:
+                        "❌ Bạn hiện không ở trong tháp.",
+
+                    ephemeral: true
+                });
+            }
+
             const reward =
                 player.pendingReward;
 
             const tower =
                 TOWERS[player.tower];
 
-            /*
-             * Chỉ xóa tiến trình hiện tại.
-             * Phần thưởng đã được cộng vào
-             * tổng thưởng chờ nhận.
-             */
+            const result =
+
+                `## 🚪 RÚT LUI THÀNH CÔNG\n\n` +
+
+                `🏯 **${tower.name}**\n\n` +
+
+                `📊 **Đã vượt:** ${player.maxFloor} tầng\n\n` +
+
+                `⚔️ **Lượt leo hôm nay:** ` +
+                `${Math.max(
+                    0,
+                    4 - player.dailyTower.used
+                )}/4\n\n` +
+
+                `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+                `🎁 **PHẦN THƯỞNG**\n\n` +
+
+                `💎 Linh Thạch:\n` +
+                `**+${formatNumber(
+                    reward.linhThach
+                )}**\n\n` +
+
+                `🌀 Tu Vi:\n` +
+                `**+${formatNumber(
+                    reward.tuVi
+                )}**\n\n` +
+
+                `${formatItems(
+                    reward.items
+                )}\n\n` +
+
+                `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+                `✨ Bạn đã bảo toàn toàn bộ phần thưởng!`;
 
             player.totalReward.linhThach +=
                 reward.linhThach;
@@ -833,54 +1018,31 @@ module.exports = {
                 ...reward.items
             );
 
-            const result =
-                `
-## 🚪 RÚT LUI THÀNH CÔNG
-
-🏯 **${tower.name}**
-
-📊 **Đã vượt:** ${player.maxFloor} tầng
-
-━━━━━━━━━━━━━━━━━━━━
-
-🎁 **PHẦN THƯỞNG**
-
-💎 Linh Thạch:
-**+${formatNumber(
-                    reward.linhThach
-                )}**
-
-🌀 Tu Vi:
-**+${formatNumber(
-                    reward.tuVi
-                )}**
-
-${formatItems(
-                    reward.items
-                )}
-
-━━━━━━━━━━━━━━━━━━━━
-
-✨ Toàn bộ phần thưởng của
-hành trình lần này đã được giữ lại!
-`;
-
             player.tower = null;
+
             player.floor = 1;
+
             player.pendingReward = {
+
                 linhThach: 0,
+
                 tuVi: 0,
+
                 items: []
             };
 
             player.monster = null;
+
             player.defeated = false;
 
             saveData(data);
 
             return interaction.update({
+
                 content: result,
+
                 embeds: [],
+
                 components: []
             });
         }
@@ -896,23 +1058,39 @@ hành trình lần này đã được giữ lại!
             if (!player.tower) {
 
                 return interaction.reply({
+
                     content:
                         "❌ Bạn chưa chọn tháp.",
+
                     ephemeral: true
                 });
-
             }
 
             const tower =
                 TOWERS[player.tower];
 
+            const remaining =
+                Math.max(
+                    0,
+                    4 - player.dailyTower.used
+                );
+
             return interaction.reply({
+
                 content:
+
                     `🏯 **${tower.name}**\n\n` +
+
                     `📊 Tầng hiện tại: **${player.floor}/100**\n` +
-                    `🏆 Cao nhất: **${player.maxFloor}**\n` +
+
+                    `🏆 Cao nhất: **${player.maxFloor}**\n\n` +
+
+                    `🌅 Lượt leo hôm nay: **${remaining}/4**\n\n` +
+
                     `🎁 ${tower.rewardName}\n\n` +
+
                     `${tower.description}`,
+
                 ephemeral: true
             });
         }
@@ -920,14 +1098,13 @@ hành trình lần này đã được giữ lại!
 };
 
 // =====================================================
-// 🏯 HIỂN THỊ THÁP
+// 🏯 HIỂN THỊ TẦNG
 // =====================================================
 
 async function showTower(
     interaction,
     tower,
-    player,
-    first
+    player
 ) {
 
     const floor =
@@ -936,49 +1113,81 @@ async function showTower(
     const boss =
         floor % 10 === 0;
 
+    const remaining =
+        Math.max(
+            0,
+            4 - player.dailyTower.used
+        );
+
     let difficulty;
 
     if (tower.difficulty <= 1) {
         difficulty = "🟢 Dễ";
-    } else if (tower.difficulty <= 1.8) {
+    }
+    else if (tower.difficulty <= 1.8) {
         difficulty = "🟡 Trung Bình";
-    } else if (tower.difficulty <= 2.7) {
+    }
+    else if (tower.difficulty <= 2.7) {
         difficulty = "🟠 Khó";
-    } else if (tower.difficulty <= 3.6) {
+    }
+    else if (tower.difficulty <= 3.6) {
         difficulty = "🔴 Rất Khó";
-    } else {
+    }
+    else {
         difficulty = "⚫ Đại Đạo";
     }
 
     const embed =
         new EmbedBuilder()
+
             .setTitle(
                 `${tower.emoji} ${tower.name}`
             )
+
             .setDescription(
+
                 `## 🏯 TẦNG ${floor} / 100\n\n` +
+
                 `📈 **Độ khó:** ${difficulty}\n` +
+
+                `⚔️ **Lượt leo hôm nay:** **${remaining}/4**\n\n` +
+
+                `🌅 Mỗi ngày được khiêu chiến tối đa **4 lần**.\n\n` +
+
                 `🎁 **Phần thưởng:** ${tower.rewardName}\n\n` +
-                `${boss
-                    ? "👑 **BOSS TẦNG!**\n⚠️ Tầng này khó hơn bình thường rất nhiều!\n\n"
-                    : ""
-                }` +
-                `━━━━━━━━━━━━━━━━━━━━\n` +
-                `🎁 **Thưởng đang chờ:**\n` +
+
+                `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+                (
+                    boss
+
+                        ? "👑 **BOSS TẦNG!**\n" +
+                          "⚠️ Tầng này khó hơn bình thường rất nhiều!\n\n"
+
+                        : ""
+                ) +
+
+                `🎁 **THƯỞNG ĐANG GIỮ**\n\n` +
+
                 `💎 ${formatNumber(
                     player.pendingReward.linhThach
                 )} Linh Thạch\n` +
+
                 `🌀 ${formatNumber(
                     player.pendingReward.tuVi
-                )} Tu Vi\n` +
+                )} Tu Vi\n\n` +
+
                 `${formatItems(
                     player.pendingReward.items
                 )}\n\n` +
+
                 `❤️ **HP càng cao → quái càng mạnh!**`
             )
+
             .setFooter({
+
                 text:
-                    "⚔️ Hãy cân nhắc sức mạnh trước khi khiêu chiến."
+                    "⚔️ Bách Tháp Hồng Hoang"
             });
 
     const row =
@@ -986,55 +1195,60 @@ async function showTower(
             .addComponents(
 
                 new ButtonBuilder()
+
                     .setCustomId(
                         "thap_khieu_chien"
                     )
+
                     .setLabel(
                         "Khiêu Chiến"
                     )
+
                     .setEmoji("⚔️")
+
                     .setStyle(
                         ButtonStyle.Danger
                     ),
 
                 new ButtonBuilder()
+
                     .setCustomId(
                         "thap_rut_lui"
                     )
+
                     .setLabel(
                         "Rút Lui"
                     )
+
                     .setEmoji("🚪")
+
                     .setStyle(
                         ButtonStyle.Success
                     ),
 
                 new ButtonBuilder()
+
                     .setCustomId(
                         "thap_info"
                     )
+
                     .setLabel(
                         "Thông Tin"
                     )
+
                     .setEmoji("📜")
+
                     .setStyle(
                         ButtonStyle.Secondary
                     )
             );
 
-    if (first) {
-
-        return interaction.update({
-            embeds: [embed],
-            content: "",
-            components: [row]
-        });
-
-    }
-
     return interaction.update({
-        embeds: [embed],
+
         content: "",
+
+        embeds: [embed],
+
         components: [row]
     });
 }
@@ -1057,38 +1271,63 @@ async function showVictory(
     const boss =
         floor % 10 === 0;
 
+    const remaining =
+        Math.max(
+            0,
+            4 - player.dailyTower.used
+        );
+
     const embed =
         new EmbedBuilder()
+
             .setTitle(
+
                 boss
                     ? "👑 BOSS BỊ ĐÁNH BẠI!"
                     : "⚔️ VƯỢT QUA TẦNG!"
             )
+
             .setDescription(
+
                 `## ${tower.emoji} ${tower.name}\n\n` +
+
                 `🏯 **Tầng ${floor} / 100**\n\n` +
+
                 `🎲 Tỷ lệ thắng: **${chance.toFixed(1)}%**\n\n` +
+
+                `🌅 **Lượt còn lại hôm nay: ${remaining}/4**\n\n` +
+
                 `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
                 `🎁 **PHẦN THƯỞNG TẦNG ${floor}**\n\n` +
+
                 `💎 +${formatNumber(
                     reward.linhThach
                 )} Linh Thạch\n` +
+
                 `🌀 +${formatNumber(
                     reward.tuVi
-                )} Tu Vi\n` +
+                )} Tu Vi\n\n` +
+
                 `${formatItems(
                     reward.items
                 )}\n\n` +
-                `💰 **Tổng thưởng đang giữ:**\n` +
+
+                `💰 **TỔNG THƯỞNG ĐANG GIỮ**\n\n` +
+
                 `💎 ${formatNumber(
                     player.pendingReward.linhThach
                 )}\n` +
+
                 `🌀 ${formatNumber(
                     player.pendingReward.tuVi
                 )}\n\n` +
+
                 `⚠️ Nếu tiếp tục, tầng sau sẽ khó hơn!`
             )
+
             .setFooter({
+
                 text:
                     "🔥 Hồng Hoang Đại Lục • Bách Tháp"
             });
@@ -1098,39 +1337,50 @@ async function showVictory(
             .addComponents(
 
                 new ButtonBuilder()
+
                     .setCustomId(
                         "thap_tiep"
                     )
+
                     .setLabel(
                         "Tầng Tiếp Theo"
                     )
+
                     .setEmoji("⚔️")
+
                     .setStyle(
                         ButtonStyle.Primary
                     ),
 
                 new ButtonBuilder()
+
                     .setCustomId(
                         "thap_rut_lui"
                     )
+
                     .setLabel(
                         "Rút Lui & Nhận Thưởng"
                     )
+
                     .setEmoji("🎁")
+
                     .setStyle(
                         ButtonStyle.Success
                     )
             );
 
     return interaction.update({
-        embeds: [embed],
+
         content: "",
+
+        embeds: [embed],
+
         components: [row]
     });
 }
 
 // =====================================================
-// 💀 THUA
+// 💀 THẤT BẠI
 // =====================================================
 
 async function showDefeat(
@@ -1140,27 +1390,52 @@ async function showDefeat(
     chance
 ) {
 
+    const remaining =
+        Math.max(
+            0,
+            4 - player.dailyTower.used
+        );
+
     const embed =
         new EmbedBuilder()
+
             .setTitle(
                 "💀 THẤT BẠI!"
             )
+
             .setDescription(
+
                 `## ${tower.emoji} ${tower.name}\n\n` +
+
                 `🏯 **Tầng:** ${player.floor}/100\n\n` +
+
                 `🎲 Tỷ lệ thắng: **${chance.toFixed(1)}%**\n\n` +
+
+                `🌅 **Lượt còn lại hôm nay: ${remaining}/4**\n\n` +
+
                 `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
                 `💀 Bạn đã bị đánh bại.\n\n` +
-                `🎁 Phần thưởng các tầng trước vẫn được giữ:\n` +
+
+                `🎁 **Phần thưởng các tầng trước vẫn được giữ:**\n\n` +
+
                 `💎 ${formatNumber(
                     player.pendingReward.linhThach
                 )} Linh Thạch\n` +
+
                 `🌀 ${formatNumber(
                     player.pendingReward.tuVi
                 )} Tu Vi\n\n` +
-                `⚠️ Bạn có thể rút lui để nhận số thưởng đang giữ.`
+
+                `${formatItems(
+                    player.pendingReward.items
+                )}\n\n` +
+
+                `⚠️ Bạn có thể rút lui để bảo toàn phần thưởng.`
             )
+
             .setFooter({
+
                 text:
                     "💀 Không phải ai cũng có thể chinh phục Bách Tháp."
             });
@@ -1170,27 +1445,34 @@ async function showDefeat(
             .addComponents(
 
                 new ButtonBuilder()
+
                     .setCustomId(
                         "thap_rut_lui"
                     )
+
                     .setLabel(
                         "Rút Lui & Nhận Thưởng"
                     )
+
                     .setEmoji("🚪")
+
                     .setStyle(
                         ButtonStyle.Success
                     )
             );
 
     return interaction.update({
-        embeds: [embed],
+
         content: "",
+
+        embeds: [embed],
+
         components: [row]
     });
 }
 
 // =====================================================
-// 🎁 FORMAT ITEM
+// 🎁 HIỂN THỊ VẬT PHẨM
 // =====================================================
 
 function formatItems(items) {
@@ -1201,13 +1483,14 @@ function formatItems(items) {
     ) {
 
         return "🎁 Không có vật phẩm đặc biệt";
-
     }
 
     return items
+
         .map(
             item =>
                 `${item.name} ×${item.amount}`
         )
+
         .join("\n");
 }
