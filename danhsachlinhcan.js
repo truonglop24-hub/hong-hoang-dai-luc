@@ -13,16 +13,15 @@ module.exports = {
         .setDescription("Xem toàn bộ Linh Căn trong Hồng Hoang"),
 
     async execute(interaction) {
-
         const ranks = [...new Set(LINH_CAN.map(x => x.rank))];
 
         const menu = new StringSelectMenuBuilder()
-            .setCustomId(`xem_linhcan_${interaction.user.id}`)
+            .setCustomId(`linhcan_list_${interaction.user.id}`)
             .setPlaceholder("🌌 Chọn cấp Linh Căn")
             .addOptions(
                 ranks.map(rank => ({
                     label: rank,
-                    description: `Xem các Linh Căn cấp ${rank}`,
+                    description: `Xem Linh Căn cấp ${rank}`,
                     value: rank
                 }))
             );
@@ -33,10 +32,10 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setTitle("🌌 DANH SÁCH LINH CĂN")
             .setDescription(
-                `Hiện có **${LINH_CAN.length} Linh Căn** trong Hồng Hoang.\n\n` +
-                `📖 Hãy chọn cấp bậc bên dưới để xem danh sách.`
+                `Trong Hồng Hoang hiện có **${LINH_CAN.length} Linh Căn**.\n\n` +
+                `👇 Chọn cấp bậc bên dưới để xem chi tiết.`
             )
-            .setColor(0x9b59b6)
+            .setColor(0x8e44ad)
             .setFooter({
                 text: "Hồng Hoang Đại Lục • Linh Căn"
             });
