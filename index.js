@@ -398,7 +398,6 @@ client.on(
                             ephemeral: true
                         });
                     }
-
                 }
 
                 // ==================================
@@ -439,6 +438,48 @@ client.on(
                     return interaction.reply({
                         content:
                             "❌ Hệ thống Ma Đạo chưa hỗ trợ menu.",
+                        ephemeral: true
+                    });
+                }
+
+                // ==================================
+                // 🐉 MENU YÊU ĐẠO
+                // ==================================
+
+                if (
+                    interaction.isStringSelectMenu() &&
+                    customId.startsWith(
+                        "yeudao_menu_"
+                    )
+                ) {
+
+                    const yeudao =
+                        client.commands.get(
+                            "yeudao"
+                        );
+
+                    if (!yeudao) {
+
+                        return interaction.reply({
+                            content:
+                                "❌ Không tải được hệ thống Yêu Đạo. Hãy kiểm tra file yeudao.js.",
+                            ephemeral: true
+                        });
+                    }
+
+                    if (
+                        typeof yeudao.handleMenu ===
+                        "function"
+                    ) {
+
+                        return await yeudao.handleMenu(
+                            interaction
+                        );
+                    }
+
+                    return interaction.reply({
+                        content:
+                            "❌ Hệ thống Yêu Đạo chưa hỗ trợ menu.",
                         ephemeral: true
                     });
                 }
