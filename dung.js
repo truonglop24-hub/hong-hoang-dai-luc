@@ -2,7 +2,7 @@
 // dung.js
 // LỆNH: /dung <tên hoặc ID vật phẩm>
 // Discord.js v14
-// Tương thích cuahang.js + database.js
+// TƯƠNG THÍCH: database.js + cuahang.js
 // ============================================================
 
 const {
@@ -16,7 +16,7 @@ const {
 } = require("./database");
 
 // ============================================================
-// CẤU HÌNH
+// VẬT PHẨM KHÔNG ĐƯỢC /DUNG
 // ============================================================
 
 const KHONG_THE_DUNG = [
@@ -25,25 +25,30 @@ const KHONG_THE_DUNG = [
     "nguyen_lieu",
     "nguyên_liệu",
 
-    "nguyen lieu ren",
-    "nguyên liệu rèn",
-    "nguyen_lieu_ren",
-    "nguyên_liệu_rèn",
-
-    "nguyen lieu che tao",
-    "nguyên liệu chế tạo",
-    "nguyen_lieu_che_tao",
-    "nguyên_liệu_chế_tạo",
-
     "ren do",
     "rèn đồ",
     "ren_do",
     "rèn_đồ",
 
+    "ren",
+    "rèn",
+
     "che tao",
     "chế tạo",
     "che_tao",
-    "chế_tạo"
+    "chế_tạo",
+
+    "nguyen lieu ren",
+    "nguyên liệu rèn",
+
+    "nguyen lieu che tao",
+    "nguyên liệu chế tạo",
+
+    "nguyen_lieu_ren",
+    "nguyên_liệu_rèn",
+
+    "nguyen_lieu_che_tao",
+    "nguyên_liệu_chế_tạo"
 ];
 
 // ============================================================
@@ -51,7 +56,7 @@ const KHONG_THE_DUNG = [
 // ============================================================
 
 function chuanHoa(text) {
-    return String(text ?? "")
+    return String(text || "")
         .trim()
         .toLowerCase()
         .normalize("NFD")
@@ -65,7 +70,7 @@ function chuanHoa(text) {
 // LẤY TÊN
 // ============================================================
 
-function layTenVatPham(item) {
+function layTen(item) {
     if (!item || typeof item !== "object") {
         return "Vật phẩm không tên";
     }
@@ -84,7 +89,7 @@ function layTenVatPham(item) {
 // LẤY ID
 // ============================================================
 
-function layIdVatPham(item) {
+function layId(item) {
     if (!item || typeof item !== "object") {
         return null;
     }
@@ -103,34 +108,50 @@ function layIdVatPham(item) {
 }
 
 // ============================================================
-// LẤY CATEGORY
+// LẤY SỐ LƯỢNG
 // ============================================================
 
-function layCategory(item) {
-    if (!item || typeof item !== "object") {
-        return "dacBiet";
+function laySoLuong(item) {
+    if (!item) return 1;
+
+    const value =
+        item.amount ??
+        item.soluong ??
+        item.quantity ??
+        item.soLuong ??
+        item.qty;
+
+    if (
+        value === undefined ||
+        value === null
+    ) {
+        return 1;
     }
 
-    return (
-        item.__dungCategory ??
-        item.category ??
-        item.nhom ??
-        item.type ??
-        item.loai ??
-        "dacBiet"
-    );
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+        return 1;
+    }
+
+    return number;
 }
 
 // ============================================================
-// TẠO ITEM TỪ TÚI
+// GẮN CATEGORY CHO ITEM
 // ============================================================
 
-function taoItemTrongTui(item, category) {
-    if (!item || typeof item !== "object") {
-        return null;
+function ganCategory(item, category) {
+
+    if (
+        !item ||
+        typeof item !== "object"
+    ) {
+        return item;
     }
 
     try {
+
         Object.defineProperty(
             item,
             "__dungCategory",
@@ -141,52 +162,35 @@ function taoItemTrongTui(item, category) {
                 enumerable: false
             }
         );
+
     } catch {
-        item.__dungCategory = category;
+
+        item.__dungCategory =
+            category;
     }
 
     return item;
 }
 
 // ============================================================
-// KIỂM TRA ITEM KHÔNG ĐƯỢC DÙNG
-// ============================================================
-
-function laVatPhamKhongTheDung(item) {
-    if (!item) {
-        return true;
-    }
-
-    const text = chuanHoa(
-        [
-            layTenVatPham(item),
-            layIdVatPham(item),
-            item.type,
-            item.loai,
-            item.category,
-            item.nhom,
-            item.__dungCategory,
-            item.legacyId
-        ]
-            .filter(
-                x =>
-                    x !== undefined &&
-                    x !== null
-            )
-            .join(" ")
-    );
-
-    return KHONG_THE_DUNG.some(
-        x => text.includes(chuanHoa(x))
-    );
-}
-
-// ============================================================
-// LẤY TÚI ĐỒ
+// LẤY TOÀN BỘ TÚI ĐỒ
+//
+// QUAN TRỌNG:
+// cuahang.js lưu:
+//
+// player.tuiDo[category] = [
+//     item,
+//     item,
+//     item
+// ]
+//
+// Vì vậy phải quét toàn bộ player.tuiDo.
 // ============================================================
 
 function layTuiDo(userId) {
-    const player = getPlayer(userId);
+
+    const player =
+        getPlayer(userId);
 
     if (!player) {
         return null;
@@ -199,29 +203,41 @@ function layTuiDo(userId) {
         player.tuiDo = {};
     }
 
-    const tuiDo = player.tuiDo;
+    const tuiDo =
+        player.tuiDo;
+
     const items = [];
 
-    // QUAN TRỌNG:
-    // Quét TẤT CẢ category đang tồn tại trong túi.
     for (
         const [category, danhSach]
         of Object.entries(tuiDo)
     ) {
-        if (!Array.isArray(danhSach)) {
+
+        if (
+            !Array.isArray(
+                danhSach
+            )
+        ) {
             continue;
         }
 
-        for (const item of danhSach) {
-            const itemMoi =
-                taoItemTrongTui(
-                    item,
-                    category
-                );
+        for (
+            const item of danhSach
+        ) {
 
-            if (itemMoi) {
-                items.push(itemMoi);
+            if (
+                !item ||
+                typeof item !== "object"
+            ) {
+                continue;
             }
+
+            ganCategory(
+                item,
+                category
+            );
+
+            items.push(item);
         }
     }
 
@@ -233,195 +249,54 @@ function layTuiDo(userId) {
 }
 
 // ============================================================
-// TÌM THEO ID
+// KIỂM TRA KHÔNG ĐƯỢC DÙNG
 // ============================================================
 
-function timVatPhamTheoId(
-    items,
-    input
-) {
-    const search =
-        String(input ?? "")
-            .trim()
-            .toLowerCase();
+function laVatPhamKhongTheDung(item) {
 
-    if (!search) {
-        return null;
+    if (!item) {
+        return true;
     }
 
-    return items.find(item => {
-        const id =
-            layIdVatPham(item);
-
-        const legacyId =
-            item?.legacyId;
-
-        if (
-            id !== null &&
-            id !== undefined &&
-            String(id)
-                .trim()
-                .toLowerCase() === search
-        ) {
-            return true;
-        }
-
-        if (
-            legacyId !== null &&
-            legacyId !== undefined &&
-            String(legacyId)
-                .trim()
-                .toLowerCase() === search
-        ) {
-            return true;
-        }
-
-        return false;
-    }) || null;
-}
-
-// ============================================================
-// TÌM TÊN CHÍNH XÁC
-// ============================================================
-
-function timVatPhamTheoTen(
-    items,
-    input
-) {
-    const search =
-        chuanHoa(input);
-
-    if (!search) {
-        return null;
-    }
-
-    return items.find(item => {
-        const ten =
-            chuanHoa(
-                layTenVatPham(item)
-            );
-
-        return ten === search;
-    }) || null;
-}
-
-// ============================================================
-// TÌM TÊN GẦN ĐÚNG
-// ============================================================
-
-function timVatPhamGanDung(
-    items,
-    input
-) {
-    const search =
-        chuanHoa(input);
-
-    if (!search) {
-        return null;
-    }
-
-    return items.find(item => {
-        const ten =
-            chuanHoa(
-                layTenVatPham(item)
-            );
-
-        if (!ten) {
-            return false;
-        }
-
-        return (
-            ten.includes(search) ||
-            search.includes(ten)
-        );
-    }) || null;
-}
-
-// ============================================================
-// TÌM VẬT PHẨM
-// ============================================================
-
-function timVatPham(
-    items,
-    input
-) {
-    // 1. ID
-    let item =
-        timVatPhamTheoId(
-            items,
-            input
+    const text =
+        chuanHoa(
+            [
+                layTen(item),
+                item.type,
+                item.loai,
+                item.category,
+                item.nhom,
+                item.itemType,
+                item.itemCategory
+            ]
+                .filter(Boolean)
+                .join(" ")
         );
 
-    if (item) {
-        return item;
-    }
-
-    // 2. Tên chính xác
-    item =
-        timVatPhamTheoTen(
-            items,
-            input
-        );
-
-    if (item) {
-        return item;
-    }
-
-    // 3. Tên gần đúng
-    return timVatPhamGanDung(
-        items,
-        input
+    return KHONG_THE_DUNG.some(
+        x =>
+            text.includes(
+                chuanHoa(x)
+            )
     );
 }
 
 // ============================================================
-// LẤY SỐ
+// XÁC ĐỊNH CATEGORY
 // ============================================================
 
-function laySo(item, keys) {
+function layCategory(item) {
+
     if (!item) {
-        return 0;
+        return "dacBiet";
     }
 
-    for (const key of keys) {
-        if (
-            item[key] !== undefined &&
-            item[key] !== null
-        ) {
-            const value =
-                Number(item[key]);
-
-            if (
-                Number.isFinite(value)
-            ) {
-                return value;
-            }
-        }
-    }
-
-    return 0;
-}
-
-// ============================================================
-// LẤY EFFECT
-// ============================================================
-
-function layEffect(item) {
-    if (
-        item?.effect &&
-        typeof item.effect === "object"
-    ) {
-        return item.effect;
-    }
-
-    if (
-        item?.effects &&
-        typeof item.effects === "object"
-    ) {
-        return item.effects;
-    }
-
-    return {};
+    return (
+        item.__dungCategory ??
+        item.category ??
+        item.nhom ??
+        "dacBiet"
+    );
 }
 
 // ============================================================
@@ -429,84 +304,100 @@ function layEffect(item) {
 // ============================================================
 
 function xacDinhLoai(item) {
+
     const category =
         chuanHoa(
             layCategory(item)
         );
 
-    const effect =
-        layEffect(item);
-
-    const effectLoai =
-        chuanHoa(
-            effect.loai ||
-            effect.type ||
-            ""
-        );
-
     const text =
         chuanHoa(
             [
-                layTenVatPham(item),
-                category,
+                layTen(item),
                 item.type,
                 item.loai,
                 item.category,
                 item.nhom,
-                effectLoai,
-                effect.category
+                category
             ]
                 .filter(Boolean)
                 .join(" ")
         );
 
-    // ========================================================
-    // ĐAN DƯỢC
-    // ========================================================
+    // -----------------------------
+    // CATEGORY ĐAN
+    // -----------------------------
 
     if (
+        category === "dan" ||
         category.includes("dan duoc") ||
         category.includes("danduoc") ||
-        category.includes("danDuoc") ||
-        category === "dan" ||
-        category === "pill" ||
-        text.includes("dan duoc") ||
-        text.includes("danduoc")
+        category === "pill"
     ) {
         return "dan_duoc";
     }
 
-    // ========================================================
-    // CÔNG PHÁP
-    // ========================================================
+    // -----------------------------
+    // CATEGORY PHÁP BẢO
+    // -----------------------------
 
     if (
+        category === "phapbao" ||
+        category === "phap_bao" ||
+        category.includes("phap bao") ||
+        category.includes("artifact")
+    ) {
+        return "phap_bao";
+    }
+
+    // -----------------------------
+    // CATEGORY CÔNG PHÁP
+    // -----------------------------
+
+    if (
+        category === "congphap" ||
+        category === "cong_phap" ||
         category.includes("cong phap") ||
-        category.includes("congphap") ||
-        category.includes("cong_phap") ||
-        category.includes("ma cong phap") ||
-        category.includes("yeu cong phap") ||
-        text.includes("cong phap") ||
-        text.includes("congphap") ||
-        text.includes("bi kip") ||
-        text.includes("ky nang") ||
-        text.includes("skill")
+        category.includes("bi kip") ||
+        category.includes("ky nang")
     ) {
         return "cong_phap";
     }
 
-    // ========================================================
-    // PHÁP BẢO
-    // ========================================================
+    // -----------------------------
+    // CATEGORY LINH THÚ
+    // -----------------------------
 
     if (
-        category.includes("phap bao") ||
-        category.includes("phapbao") ||
-        category.includes("phap_bao") ||
-        category.includes("ma phap bao") ||
-        category.includes("yeu phap bao") ||
+        category === "linhthu" ||
+        category === "linh_thu" ||
+        category.includes("linh thu") ||
+        category.includes("pet")
+    ) {
+        return "linh_thu";
+    }
+
+    // -----------------------------
+    // TÊN ĐAN
+    // -----------------------------
+
+    if (
+        text.includes("dan duoc") ||
+        text.includes("dan") ||
+        text.includes("duoc") ||
+        text.includes("pill") ||
+        text.includes("elixir") ||
+        text.includes("thuoc")
+    ) {
+        return "dan_duoc";
+    }
+
+    // -----------------------------
+    // TÊN PHÁP BẢO
+    // -----------------------------
+
+    if (
         text.includes("phap bao") ||
-        text.includes("phapbao") ||
         text.includes("artifact") ||
         text.includes("vu khi") ||
         text.includes("weapon")
@@ -514,59 +405,268 @@ function xacDinhLoai(item) {
         return "phap_bao";
     }
 
-    // ========================================================
-    // LINH THÚ
-    // ========================================================
+    // -----------------------------
+    // TÊN CÔNG PHÁP
+    // -----------------------------
 
     if (
-        category.includes("linh thu") ||
-        category.includes("linhthu") ||
-        category.includes("linh_thu") ||
-        category === "pet" ||
+        text.includes("cong phap") ||
+        text.includes("bi kip") ||
+        text.includes("ky nang") ||
+        text.includes("skill") ||
+        text.includes("cultivation")
+    ) {
+        return "cong_phap";
+    }
+
+    // -----------------------------
+    // TÊN LINH THÚ
+    // -----------------------------
+
+    if (
         text.includes("linh thu") ||
-        text.includes("linhthu") ||
-        text.includes("pet")
+        text.includes("pet") ||
+        text.includes("thu cung")
     ) {
         return "linh_thu";
     }
-
-    // ========================================================
-    // VẬT PHẨM
-    // ========================================================
 
     return "vat_pham";
 }
 
 // ============================================================
-// KIỂM TRA CÓ HIỆU ỨNG
+// TÌM THEO ID
 // ============================================================
 
-function coHieuUng(item) {
-    if (!item) {
+function timTheoId(
+    items,
+    input
+) {
+
+    const search =
+        String(input)
+            .trim()
+            .toLowerCase();
+
+    return items.find(
+        item => {
+
+            const id =
+                layId(item);
+
+            if (
+                id === null ||
+                id === undefined
+            ) {
+                return false;
+            }
+
+            return (
+                String(id)
+                    .trim()
+                    .toLowerCase() ===
+                search
+            );
+        }
+    );
+}
+
+// ============================================================
+// TÌM THEO TÊN CHÍNH XÁC
+// ============================================================
+
+function timTheoTen(
+    items,
+    input
+) {
+
+    const search =
+        chuanHoa(input);
+
+    return items.find(
+        item =>
+            chuanHoa(
+                layTen(item)
+            ) === search
+    );
+}
+
+// ============================================================
+// TÌM TÊN GẦN ĐÚNG
+// ============================================================
+
+function timGanDung(
+    items,
+    input
+) {
+
+    const search =
+        chuanHoa(input);
+
+    if (!search) {
+        return null;
+    }
+
+    return items.find(
+        item => {
+
+            const ten =
+                chuanHoa(
+                    layTen(item)
+                );
+
+            if (!ten) {
+                return false;
+            }
+
+            return (
+                ten.includes(search) ||
+                search.includes(ten)
+            );
+        }
+    );
+}
+
+// ============================================================
+// TÌM VẬT PHẨM
+//
+// ƯU TIÊN:
+// 1. ID
+// 2. Tên chính xác
+// 3. Tên gần đúng
+// ============================================================
+
+function timVatPham(
+    items,
+    input
+) {
+
+    let item =
+        timTheoId(
+            items,
+            input
+        );
+
+    if (item) {
+        return item;
+    }
+
+    item =
+        timTheoTen(
+            items,
+            input
+        );
+
+    if (item) {
+        return item;
+    }
+
+    return timGanDung(
+        items,
+        input
+    );
+}
+
+// ============================================================
+// TRỪ 1 VẬT PHẨM
+// ============================================================
+
+function truVatPham(
+    tuiDo,
+    item
+) {
+
+    if (
+        !tuiDo ||
+        !item
+    ) {
         return false;
     }
 
-    const effect =
-        layEffect(item);
+    const category =
+        layCategory(item);
 
-    return (
-        item.usable === true ||
-        item.useable === true ||
-        item.coTheDung === true ||
-        item.coTheSuDung === true ||
+    if (
+        !Array.isArray(
+            tuiDo[category]
+        )
+    ) {
+        return false;
+    }
 
-        item.hpBonus !== undefined ||
-        item.congBonus !== undefined ||
-        item.thuBonus !== undefined ||
-        item.tuviBonus !== undefined ||
-        item.linhLucBonus !== undefined ||
+    const danhSach =
+        tuiDo[category];
 
-        item.bonus !== undefined ||
-        item.effect !== undefined ||
-        item.effects !== undefined ||
+    const index =
+        danhSach.indexOf(item);
 
-        Object.keys(effect).length > 0
-    );
+    if (index === -1) {
+        return false;
+    }
+
+    const soLuong =
+        laySoLuong(item);
+
+    // -----------------------------
+    // CÒN 1
+    // -----------------------------
+
+    if (soLuong <= 1) {
+
+        danhSach.splice(
+            index,
+            1
+        );
+
+        return true;
+    }
+
+    // -----------------------------
+    // CÒN NHIỀU
+    // -----------------------------
+
+    if (
+        item.amount !== undefined
+    ) {
+
+        item.amount =
+            soLuong - 1;
+
+    } else if (
+        item.soluong !== undefined
+    ) {
+
+        item.soluong =
+            soLuong - 1;
+
+    } else if (
+        item.quantity !== undefined
+    ) {
+
+        item.quantity =
+            soLuong - 1;
+
+    } else if (
+        item.soLuong !== undefined
+    ) {
+
+        item.soLuong =
+            soLuong - 1;
+
+    } else if (
+        item.qty !== undefined
+    ) {
+
+        item.qty =
+            soLuong - 1;
+
+    } else {
+
+        item.amount =
+            soLuong - 1;
+    }
+
+    return true;
 }
 
 // ============================================================
@@ -577,87 +677,109 @@ async function dungDanDuoc(
     item,
     player
 ) {
+
     const ten =
-        layTenVatPham(item);
+        layTen(item);
 
-    const effect =
-        layEffect(item);
-
-    let hpTang =
-        laySo(
-            item,
-            [
-                "hp",
-                "heal",
-                "hoiMau",
-                "hoiHp",
-                "healHp",
-                "hpBonus"
-            ]
-        );
-
-    let linhLucTang =
-        laySo(
-            item,
-            [
-                "linhLuc",
-                "linhLucTang",
-                "linhLucBonus",
-                "mana"
-            ]
-        );
-
-    let tuViTang =
-        laySo(
-            item,
-            [
-                "tuvi",
-                "tuVi",
-                "kinhNghiem",
-                "exp",
-                "tuviBonus"
-            ]
-        );
-
-    // Effect
-    hpTang +=
+    let hp =
         Number(
-            effect.hp ??
-            effect.heal ??
-            effect.hoiMau ??
-            effect.hpBonus ??
+            item.hp ??
+            item.heal ??
+            item.hoiMau ??
+            item.hpBonus ??
             0
         ) || 0;
 
-    linhLucTang +=
+    let linhLuc =
         Number(
-            effect.linhLuc ??
-            effect.linhLucTang ??
-            effect.linhLucBonus ??
-            effect.mana ??
+            item.linhLuc ??
+            item.linhLucBonus ??
+            item.mana ??
             0
         ) || 0;
 
-    tuViTang +=
+    let tuVi =
         Number(
-            effect.tuvi ??
-            effect.tuVi ??
-            effect.tuviBonus ??
-            effect.exp ??
+            item.tuvi ??
+            item.tuVi ??
+            item.tuviBonus ??
+            item.kinhNghiem ??
+            item.exp ??
             0
         ) || 0;
 
-    // ========================================================
-    // HP
-    // ========================================================
+    // -----------------------------
+    // EFFECT
+    // -----------------------------
 
-    if (hpTang > 0) {
+    if (
+        item.effect &&
+        typeof item.effect === "object"
+    ) {
+
+        hp += Number(
+            item.effect.hp ??
+            item.effect.heal ??
+            item.effect.hoiMau ??
+            item.effect.hpBonus ??
+            0
+        ) || 0;
+
+        linhLuc += Number(
+            item.effect.linhLuc ??
+            item.effect.linhLucBonus ??
+            item.effect.mana ??
+            0
+        ) || 0;
+
+        tuVi += Number(
+            item.effect.tuvi ??
+            item.effect.tuVi ??
+            item.effect.tuviBonus ??
+            item.effect.exp ??
+            0
+        ) || 0;
+    }
+
+    // -----------------------------
+    // EFFECTS
+    // -----------------------------
+
+    if (
+        item.effects &&
+        typeof item.effects === "object"
+    ) {
+
+        hp += Number(
+            item.effects.hp ??
+            item.effects.heal ??
+            item.effects.hoiMau ??
+            0
+        ) || 0;
+
+        linhLuc += Number(
+            item.effects.linhLuc ??
+            item.effects.mana ??
+            0
+        ) || 0;
+
+        tuVi += Number(
+            item.effects.tuvi ??
+            item.effects.tuVi ??
+            item.effects.exp ??
+            0
+        ) || 0;
+    }
+
+    // -----------------------------
+    // CẬP NHẬT HP
+    // -----------------------------
+
+    if (hp > 0) {
+
         const maxHp =
-            Math.max(
-                1,
-                Number(
-                    player.maxHp || 1
-                )
+            Number(
+                player.maxHp || 100
             );
 
         player.hp =
@@ -665,55 +787,58 @@ async function dungDanDuoc(
                 maxHp,
                 Number(
                     player.hp || 0
-                ) + hpTang
+                ) + hp
             );
     }
 
-    // ========================================================
-    // LINH LỰC
-    // ========================================================
+    // -----------------------------
+    // CẬP NHẬT LINH LỰC
+    // -----------------------------
 
-    if (linhLucTang > 0) {
+    if (linhLuc > 0) {
+
         player.linhLuc =
             Number(
                 player.linhLuc || 0
-            ) + linhLucTang;
+            ) + linhLuc;
     }
 
-    // ========================================================
-    // TU VI
-    // ========================================================
+    // -----------------------------
+    // CẬP NHẬT TU VI
+    // -----------------------------
 
-    if (tuViTang > 0) {
-        player.tuvi =
+    if (tuVi > 0) {
+
+        player.kinhNghiem =
             Number(
-                player.tuvi || 0
-            ) + tuViTang;
+                player.kinhNghiem || 0
+            ) + tuVi;
     }
 
     const thongBao = [];
 
-    if (hpTang > 0) {
+    if (hp > 0) {
         thongBao.push(
-            `❤️ +${hpTang.toLocaleString()} HP`
+            `❤️ +${hp} HP`
         );
     }
 
-    if (linhLucTang > 0) {
+    if (linhLuc > 0) {
         thongBao.push(
-            `💠 +${linhLucTang.toLocaleString()} Linh lực`
+            `💠 +${linhLuc} Linh lực`
         );
     }
 
-    if (tuViTang > 0) {
+    if (tuVi > 0) {
         thongBao.push(
-            `✨ +${tuViTang.toLocaleString()} Tu vi`
+            `✨ +${tuVi} Kinh nghiệm`
         );
     }
 
     if (
         thongBao.length === 0
     ) {
+
         thongBao.push(
             "✨ Hiệu lực đan dược đã được kích hoạt."
         );
@@ -736,59 +861,73 @@ async function dungPhapBao(
     item,
     player
 ) {
-    const ten =
-        layTenVatPham(item);
 
-    const id =
-        layIdVatPham(item);
+    const ten =
+        layTen(item);
 
     if (
         !player.phapBao ||
         typeof player.phapBao !== "object"
     ) {
+
         player.phapBao = {};
     }
 
-    // Không cộng lại bonus mua hàng.
-    // cuahang.js đã cộng bonus khi mua.
     player.phapBao = {
+        ...player.phapBao,
         ...item,
 
-        id,
-        ten
+        ten,
+
+        id:
+            layId(item)
     };
 
     const cong =
-        laySo(
-            item,
-            [
-                "cong",
-                "attack",
-                "atk"
-            ]
-        );
+        Number(
+            item.cong ??
+            item.congBonus ??
+            item.attack ??
+            item.atk ??
+            0
+        ) || 0;
 
     const thu =
-        laySo(
-            item,
-            [
-                "thu",
-                "def",
-                "defense"
-            ]
-        );
+        Number(
+            item.thu ??
+            item.thuBonus ??
+            item.def ??
+            item.defense ??
+            0
+        ) || 0;
+
+    if (cong > 0) {
+
+        player.cong =
+            Number(
+                player.cong || 0
+            ) + cong;
+    }
+
+    if (thu > 0) {
+
+        player.thu =
+            Number(
+                player.thu || 0
+            ) + thu;
+    }
 
     const buff = [];
 
     if (cong > 0) {
         buff.push(
-            `⚔️ +${cong.toLocaleString()} Công`
+            `⚔️ +${cong} Công`
         );
     }
 
     if (thu > 0) {
         buff.push(
-            `🛡️ +${thu.toLocaleString()} Thủ`
+            `🛡️ +${thu} Thủ`
         );
     }
 
@@ -799,7 +938,7 @@ async function dungPhapBao(
             `⚔️ Bạn đã sử dụng **${ten}**!\n\n` +
             `✨ Pháp bảo đã được trang bị.` +
             (
-                buff.length > 0
+                buff.length
                     ? `\n${buff.join("\n")}`
                     : ""
             )
@@ -814,74 +953,88 @@ async function dungCongPhap(
     item,
     player
 ) {
-    const ten =
-        layTenVatPham(item);
 
-    const id =
-        layIdVatPham(item);
+    const ten =
+        layTen(item);
 
     if (
         !Array.isArray(
             player.congPhap
         )
     ) {
+
         player.congPhap = [];
     }
 
-    const daHoc =
-        player.congPhap.some(x => {
-            if (
-                !x ||
-                typeof x !== "object"
-            ) {
-                return false;
-            }
+    const id =
+        layId(item);
 
-            const xId =
-                x.id ??
-                x.itemId ??
-                x.itemID;
+    if (id !== null) {
 
-            const xTen =
-                x.ten ??
-                x.name;
+        const daHoc =
+            player.congPhap.some(
+                x => {
 
-            if (
-                id !== null &&
-                id !== undefined &&
-                xId !== null &&
-                xId !== undefined
-            ) {
-                return String(xId) === String(id);
-            }
+                    if (
+                        !x ||
+                        typeof x !== "object"
+                    ) {
+                        return false;
+                    }
 
-            return (
-                chuanHoa(xTen) ===
-                chuanHoa(ten)
+                    return String(
+                        x.id ??
+                        x.itemId ??
+                        ""
+                    ) ===
+                    String(id);
+                }
             );
-        });
 
-    if (daHoc) {
-        return {
-            thanhCong: false,
+        if (daHoc) {
 
-            noiDung:
-                `⚠️ Bạn đã tu luyện **${ten}** rồi.`
-        };
+            return {
+                thanhCong: false,
+
+                noiDung:
+                    `⚠️ Bạn đã tu luyện **${ten}** rồi.`
+            };
+        }
     }
 
     player.congPhap.push({
         id,
         ten,
-        name: ten
+        item
     });
+
+    const tuLuyen =
+        Number(
+            item.tuLuyen ??
+            item.tuLuyenBonus ??
+            item.cultivation ??
+            0
+        ) || 0;
+
+    if (tuLuyen > 0) {
+
+        player.tuLuyenBonus =
+            Number(
+                player.tuLuyenBonus || 0
+            ) + tuLuyen;
+    }
 
     return {
         thanhCong: true,
 
         noiDung:
             `📖 Bạn đã sử dụng **${ten}**!\n\n` +
-            `✨ Công pháp đã được ghi nhận.`
+            `✨ Công pháp đã được ghi nhận và kích hoạt.` +
+            (
+                tuLuyen > 0
+                    ? `\n🌟 +${tuLuyen} hiệu quả tu luyện`
+                    : ""
+            )
     };
 }
 
@@ -893,18 +1046,18 @@ async function dungLinhThu(
     item,
     player
 ) {
-    const ten =
-        layTenVatPham(item);
 
-    const id =
-        layIdVatPham(item);
+    const ten =
+        layTen(item);
 
     player.linhThuDangSuDung = {
-        ...item,
 
-        id,
+        id:
+            layId(item),
+
         ten,
-        name: ten
+
+        ...item
     };
 
     return {
@@ -921,13 +1074,24 @@ async function dungLinhThu(
 // ============================================================
 
 async function dungVatPham(
-    item,
-    player
+    item
 ) {
-    const ten =
-        layTenVatPham(item);
 
-    if (!coHieuUng(item)) {
+    const ten =
+        layTen(item);
+
+    const coHieuUng =
+        item.usable === true ||
+        item.useable === true ||
+        item.coTheDung === true ||
+        item.coTheSuDung === true ||
+        !!item.hieuUng ||
+        !!item.effect ||
+        !!item.effects ||
+        !!item.effectId;
+
+    if (!coHieuUng) {
+
         return {
             thanhCong: false,
 
@@ -936,373 +1100,13 @@ async function dungVatPham(
         };
     }
 
-    const effect =
-        layEffect(item);
-
-    const thongBao = [];
-
-    const hp =
-        laySo(
-            item,
-            [
-                "hpBonus",
-                "hp",
-                "heal",
-                "hoiMau"
-            ]
-        );
-
-    const linhLuc =
-        laySo(
-            item,
-            [
-                "linhLucBonus",
-                "linhLuc",
-                "linhLucTang"
-            ]
-        );
-
-    const tuvi =
-        laySo(
-            item,
-            [
-                "tuviBonus",
-                "tuvi",
-                "tuVi"
-            ]
-        );
-
-    if (hp > 0) {
-        const maxHp =
-            Math.max(
-                1,
-                Number(
-                    player.maxHp || 1
-                )
-            );
-
-        player.hp =
-            Math.min(
-                maxHp,
-                Number(
-                    player.hp || 0
-                ) + hp
-            );
-
-        thongBao.push(
-            `❤️ +${hp.toLocaleString()} HP`
-        );
-    }
-
-    if (linhLuc > 0) {
-        player.linhLuc =
-            Number(
-                player.linhLuc || 0
-            ) + linhLuc;
-
-        thongBao.push(
-            `💠 +${linhLuc.toLocaleString()} Linh lực`
-        );
-    }
-
-    if (tuvi > 0) {
-        player.tuvi =
-            Number(
-                player.tuvi || 0
-            ) + tuvi;
-
-        thongBao.push(
-            `✨ +${tuvi.toLocaleString()} Tu vi`
-        );
-    }
-
-    if (
-        effect.message ||
-        effect.mess ||
-        effect.description
-    ) {
-        thongBao.push(
-            String(
-                effect.message ??
-                effect.mess ??
-                effect.description
-            )
-        );
-    }
-
-    if (
-        thongBao.length === 0
-    ) {
-        thongBao.push(
-            "💫 Hiệu ứng vật phẩm đã được kích hoạt."
-        );
-    }
-
     return {
         thanhCong: true,
 
         noiDung:
-            `✨ Bạn đã sử dụng **${ten}**!\n\n` +
-            thongBao.join("\n")
+            `✨ Bạn đã sử dụng **${ten}**!\n` +
+            `💫 Hiệu ứng vật phẩm đã được kích hoạt.`
     };
-}
-
-// ============================================================
-// TRỪ ITEM
-// ============================================================
-
-function truVatPham(
-    tuiDo,
-    item
-) {
-    if (!item) {
-        return false;
-    }
-
-    const category =
-        layCategory(item);
-
-    if (
-        !Array.isArray(
-            tuiDo[category]
-        )
-    ) {
-        return false;
-    }
-
-    const danhSach =
-        tuiDo[category];
-
-    let index =
-        danhSach.indexOf(item);
-
-    // Fallback tìm theo ID
-    if (index === -1) {
-        const id =
-            layIdVatPham(item);
-
-        if (
-            id !== null &&
-            id !== undefined
-        ) {
-            index =
-                danhSach.findIndex(x => {
-                    const xId =
-                        layIdVatPham(x);
-
-                    return (
-                        xId !== null &&
-                        xId !== undefined &&
-                        String(xId) ===
-                        String(id)
-                    );
-                });
-        }
-    }
-
-    // Fallback tìm theo tên
-    if (index === -1) {
-        const ten =
-            chuanHoa(
-                layTenVatPham(item)
-            );
-
-        index =
-            danhSach.findIndex(x =>
-                chuanHoa(
-                    layTenVatPham(x)
-                ) === ten
-            );
-    }
-
-    if (index === -1) {
-        return false;
-    }
-
-    const target =
-        danhSach[index];
-
-    const soLuong =
-        laySo(
-            target,
-            [
-                "amount",
-                "soluong",
-                "quantity",
-                "soLuong",
-                "qty"
-            ]
-        );
-
-    // Không có quantity -> coi như 1
-    const coQuantity =
-        [
-            "amount",
-            "soluong",
-            "quantity",
-            "soLuong",
-            "qty"
-        ].some(
-            key =>
-                target[key] !== undefined
-        );
-
-    if (
-        !coQuantity ||
-        soLuong <= 1
-    ) {
-        danhSach.splice(
-            index,
-            1
-        );
-
-        return true;
-    }
-
-    if (
-        target.amount !== undefined
-    ) {
-        target.amount =
-            soLuong - 1;
-    } else if (
-        target.soluong !== undefined
-    ) {
-        target.soluong =
-            soLuong - 1;
-    } else if (
-        target.quantity !== undefined
-    ) {
-        target.quantity =
-            soLuong - 1;
-    } else if (
-        target.soLuong !== undefined
-    ) {
-        target.soLuong =
-            soLuong - 1;
-    } else if (
-        target.qty !== undefined
-    ) {
-        target.qty =
-            soLuong - 1;
-    }
-
-    return true;
-}
-
-// ============================================================
-// AUTOCOMPLETE
-// ============================================================
-
-async function autocomplete(
-    interaction
-) {
-    try {
-        const userId =
-            interaction.user.id;
-
-        const tui =
-            layTuiDo(userId);
-
-        const items =
-            tui?.items || [];
-
-        const input =
-            interaction.options
-                .getString("vatpham")
-                ?.trim()
-                .toLowerCase() || "";
-
-        const ketQua =
-            items
-                .filter(
-                    item =>
-                        !laVatPhamKhongTheDung(
-                            item
-                        )
-                )
-                .filter(item => {
-                    const ten =
-                        String(
-                            layTenVatPham(item)
-                        ).toLowerCase();
-
-                    const id =
-                        layIdVatPham(item);
-
-                    const legacyId =
-                        item.legacyId;
-
-                    const idText =
-                        id === null ||
-                        id === undefined
-                            ? ""
-                            : String(id)
-                                .toLowerCase();
-
-                    const legacyText =
-                        legacyId === null ||
-                        legacyId === undefined
-                            ? ""
-                            : String(
-                                legacyId
-                            ).toLowerCase();
-
-                    return (
-                        !input ||
-                        ten.includes(input) ||
-                        idText.includes(input) ||
-                        legacyText.includes(input)
-                    );
-                })
-                .slice(0, 25);
-
-        await interaction.respond(
-            ketQua.map(item => {
-                const ten =
-                    String(
-                        layTenVatPham(item)
-                    );
-
-                const id =
-                    layIdVatPham(item);
-
-                const category =
-                    layCategory(item);
-
-                let hienThi =
-                    ten;
-
-                if (
-                    id !== null &&
-                    id !== undefined
-                ) {
-                    hienThi =
-                        `${ten} | ID: ${id}`;
-                }
-
-                return {
-                    name:
-                        hienThi.slice(0, 100),
-
-                    value:
-                        String(
-                            id ??
-                            ten
-                        ).slice(0, 100)
-                };
-            })
-        );
-
-    } catch (error) {
-        console.error(
-            "❌ Lỗi autocomplete /dung:",
-            error
-        );
-
-        try {
-            await interaction.respond([]);
-        } catch {}
-    }
 }
 
 // ============================================================
@@ -1310,39 +1114,175 @@ async function autocomplete(
 // ============================================================
 
 module.exports = {
+
     data:
         new SlashCommandBuilder()
+
             .setName("dung")
+
             .setDescription(
-                "Sử dụng vật phẩm bằng tên hoặc ID"
+                "Sử dụng vật phẩm trong túi đồ"
             )
-            .addStringOption(option =>
-                option
-                    .setName("vatpham")
-                    .setDescription(
-                        "Nhập tên hoặc ID vật phẩm"
-                    )
-                    .setRequired(true)
-                    .setAutocomplete(true)
+
+            .addStringOption(
+                option =>
+                    option
+                        .setName("vatpham")
+                        .setDescription(
+                            "Nhập tên hoặc ID vật phẩm trong túi đồ"
+                        )
+                        .setRequired(true)
+                        .setAutocomplete(true)
             ),
 
-    autocomplete,
+    // ========================================================
+    // AUTOCOMPLETE
+    // ========================================================
+
+    async autocomplete(
+        interaction
+    ) {
+
+        try {
+
+            const tui =
+                layTuiDo(
+                    interaction.user.id
+                );
+
+            const items =
+                tui?.items || [];
+
+            const input =
+                interaction.options
+                    .getString(
+                        "vatpham"
+                    )
+                    ?.toLowerCase()
+                    .trim() || "";
+
+            const ketQua =
+                items
+                    .filter(
+                        item =>
+                            !laVatPhamKhongTheDung(
+                                item
+                            )
+                    )
+                    .filter(
+                        item => {
+
+                            const ten =
+                                String(
+                                    layTen(item)
+                                )
+                                    .toLowerCase();
+
+                            const id =
+                                layId(item);
+
+                            const idText =
+                                id === null ||
+                                id === undefined
+                                    ? ""
+                                    : String(
+                                        id
+                                    ).toLowerCase();
+
+                            return (
+                                !input ||
+                                ten.includes(
+                                    input
+                                ) ||
+                                idText.includes(
+                                    input
+                                )
+                            );
+                        }
+                    )
+                    .slice(
+                        0,
+                        25
+                    );
+
+            await interaction.respond(
+                ketQua.map(
+                    item => {
+
+                        const ten =
+                            String(
+                                layTen(item)
+                            );
+
+                        const id =
+                            layId(item);
+
+                        return {
+
+                            name:
+                                (
+                                    id !== null &&
+                                    id !== undefined
+                                )
+                                    ? `${ten} | ID: ${id}`.slice(
+                                        0,
+                                        100
+                                    )
+                                    : ten.slice(
+                                        0,
+                                        100
+                                    ),
+
+                            value:
+                                String(
+                                    id ??
+                                    ten
+                                ).slice(
+                                    0,
+                                    100
+                                )
+                        };
+                    }
+                )
+            );
+
+        } catch (error) {
+
+            console.error(
+                "❌ Lỗi autocomplete /dung:",
+                error
+            );
+
+            try {
+                await interaction.respond([]);
+            } catch {}
+        }
+    },
 
     // ========================================================
     // EXECUTE
     // ========================================================
 
-    async execute(interaction) {
+    async execute(
+        interaction
+    ) {
+
         try {
+
             const input =
                 interaction.options
-                    .getString("vatpham")
+                    .getString(
+                        "vatpham"
+                    )
                     ?.trim();
 
             if (!input) {
+
                 return interaction.reply({
+
                     content:
                         "❌ Vui lòng nhập tên hoặc ID vật phẩm.",
+
                     ephemeral: true
                 });
             }
@@ -1351,40 +1291,28 @@ module.exports = {
                 interaction.user.id;
 
             // ==================================================
-            // PLAYER
-            // ==================================================
-
-            const player =
-                getPlayer(userId);
-
-            if (!player) {
-                return interaction.reply({
-                    content:
-                        "❌ Không tìm thấy nhân vật của bạn.",
-                    ephemeral: true
-                });
-            }
-
-            // ==================================================
-            // TÚI
+            // LẤY TÚI ĐỒ
             // ==================================================
 
             const tui =
                 layTuiDo(userId);
 
             if (!tui) {
+
                 return interaction.reply({
+
                     content:
-                        "❌ Không thể đọc túi đồ của bạn.",
+                        "❌ Không tìm thấy nhân vật của bạn.",
+
                     ephemeral: true
                 });
             }
 
             const items =
-                tui.items || [];
+                tui.items;
 
             // ==================================================
-            // TÌM ITEM
+            // TÌM VẬT PHẨM
             // ==================================================
 
             const item =
@@ -1394,22 +1322,22 @@ module.exports = {
                 );
 
             if (!item) {
+
                 return interaction.reply({
+
                     content:
-                        `❌ Không tìm thấy vật phẩm **${input}** trong túi đồ.\n\n` +
-                        `💡 Hãy nhập **ID chính xác** của vật phẩm hoặc chọn vật phẩm từ danh sách gợi ý.`,
+                        `❌ Không tìm thấy vật phẩm **${input}** trong túi đồ của bạn.\n\n` +
+                        `💡 Hãy nhập đúng tên vật phẩm hoặc ID.`,
+
                     ephemeral: true
                 });
             }
 
             const ten =
-                layTenVatPham(item);
+                layTen(item);
 
             const id =
-                layIdVatPham(item);
-
-            const category =
-                layCategory(item);
+                layId(item);
 
             // ==================================================
             // KHÔNG ĐƯỢC DÙNG
@@ -1420,9 +1348,12 @@ module.exports = {
                     item
                 )
             ) {
+
                 return interaction.reply({
+
                     content:
-                        `🚫 **${ten}** là vật phẩm dùng cho rèn đồ/chế tạo hoặc hệ thống khác nên không thể dùng bằng \`/dung\`.`,
+                        `🚫 **${ten}** là vật phẩm dùng cho rèn đồ/chế tạo hoặc hệ thống khác nên không thể sử dụng bằng \`/dung\`.`,
+
                     ephemeral: true
                 });
             }
@@ -1436,66 +1367,83 @@ module.exports = {
 
             let ketQua;
 
+            // ==================================================
+            // XỬ LÝ
+            // ==================================================
+
             switch (loai) {
+
                 case "dan_duoc":
+
                     ketQua =
                         await dungDanDuoc(
                             item,
-                            player
+                            tui.player
                         );
+
                     break;
 
                 case "phap_bao":
+
                     ketQua =
                         await dungPhapBao(
                             item,
-                            player
+                            tui.player
                         );
+
                     break;
 
                 case "cong_phap":
+
                     ketQua =
                         await dungCongPhap(
                             item,
-                            player
+                            tui.player
                         );
+
                     break;
 
                 case "linh_thu":
+
                     ketQua =
                         await dungLinhThu(
                             item,
-                            player
+                            tui.player
                         );
+
                     break;
 
                 default:
+
                     ketQua =
                         await dungVatPham(
-                            item,
-                            player
+                            item
                         );
+
                     break;
             }
 
             // ==================================================
-            // XỬ LÝ THẤT BẠI
+            // THẤT BẠI
             // ==================================================
 
             if (
                 !ketQua ||
                 !ketQua.thanhCong
             ) {
+
                 return interaction.reply({
+
                     content:
                         ketQua?.noiDung ||
                         "❌ Không thể sử dụng vật phẩm này.",
+
                     ephemeral: true
                 });
             }
 
             // ==================================================
-            // TRỪ ITEM
+            // TRỪ 1 ITEM TRỰC TIẾP TRONG CATEGORY
             // ==================================================
 
             const daTru =
@@ -1505,9 +1453,12 @@ module.exports = {
                 );
 
             if (!daTru) {
+
                 return interaction.reply({
+
                     content:
-                        `❌ Đã kích hoạt **${ten}** nhưng không thể trừ vật phẩm khỏi túi đồ.`,
+                        "❌ Không thể trừ vật phẩm khỏi túi đồ.",
+
                     ephemeral: true
                 });
             }
@@ -1523,37 +1474,34 @@ module.exports = {
                         tui.tuiDo,
 
                     hp:
-                        player.hp,
+                        tui.player.hp,
 
                     maxHp:
-                        player.maxHp,
+                        tui.player.maxHp,
 
                     linhLuc:
-                        player.linhLuc,
-
-                    tuvi:
-                        player.tuvi,
+                        tui.player.linhLuc,
 
                     kinhNghiem:
-                        player.kinhNghiem,
+                        tui.player.kinhNghiem,
 
                     cong:
-                        player.cong,
+                        tui.player.cong,
 
                     thu:
-                        player.thu,
+                        tui.player.thu,
 
                     phapBao:
-                        player.phapBao,
+                        tui.player.phapBao,
 
                     congPhap:
-                        player.congPhap,
-
-                    linhThuDangSuDung:
-                        player.linhThuDangSuDung,
+                        tui.player.congPhap,
 
                     tuLuyenBonus:
-                        player.tuLuyenBonus
+                        tui.player.tuLuyenBonus,
+
+                    linhThuDangSuDung:
+                        tui.player.linhThuDangSuDung
                 }
             );
 
@@ -1567,27 +1515,28 @@ module.exports = {
             if (
                 loai === "dan_duoc"
             ) {
+
                 tenLoai =
                     "💊 Đan dược";
-            }
 
-            else if (
+            } else if (
                 loai === "phap_bao"
             ) {
+
                 tenLoai =
                     "⚔️ Pháp bảo";
-            }
 
-            else if (
+            } else if (
                 loai === "cong_phap"
             ) {
+
                 tenLoai =
                     "📖 Công pháp";
-            }
 
-            else if (
+            } else if (
                 loai === "linh_thu"
             ) {
+
                 tenLoai =
                     "🐉 Linh thú";
             }
@@ -1598,13 +1547,17 @@ module.exports = {
 
             const embed =
                 new EmbedBuilder()
+
                     .setTitle(
                         "✨ SỬ DỤNG VẬT PHẨM"
                     )
+
                     .setDescription(
                         ketQua.noiDung
                     )
+
                     .addFields(
+
                         {
                             name:
                                 "📦 Vật phẩm",
@@ -1621,16 +1574,6 @@ module.exports = {
 
                             value:
                                 tenLoai,
-
-                            inline: true
-                        },
-
-                        {
-                            name:
-                                "🗂️ Túi",
-
-                            value:
-                                `\`${category}\``,
 
                             inline: true
                         },
@@ -1658,36 +1601,41 @@ module.exports = {
                             inline: true
                         }
                     )
+
                     .setTimestamp();
 
             return interaction.reply({
-                embeds: [embed]
+                embeds: [
+                    embed
+                ]
             });
 
         } catch (error) {
+
             console.error(
                 "❌ Lỗi lệnh /dung:",
                 error
             );
 
-            const message =
-                error?.message ||
-                String(error);
-
             if (
                 interaction.replied ||
                 interaction.deferred
             ) {
+
                 return interaction.followUp({
+
                     content:
-                        `❌ Đã xảy ra lỗi khi sử dụng vật phẩm.\n\`${message.slice(0, 1500)}\``,
+                        `❌ Đã xảy ra lỗi khi sử dụng vật phẩm.\n\`${error.message || error}\``,
+
                     ephemeral: true
                 });
             }
 
             return interaction.reply({
+
                 content:
-                    `❌ Đã xảy ra lỗi khi sử dụng vật phẩm.\n\`${message.slice(0, 1500)}\``,
+                    `❌ Đã xảy ra lỗi khi sử dụng vật phẩm.\n\`${error.message || error}\``,
+
                 ephemeral: true
             });
         }
