@@ -44,7 +44,6 @@ let LINH_CAN = [];
 let THE_CHAT = [];
 
 try {
-
     const linhCanData = require("./linhcan");
 
     LINH_CAN =
@@ -64,7 +63,6 @@ try {
 }
 
 try {
-
     const theChatData =
         require("./thechat");
 
@@ -214,7 +212,6 @@ client.once(
                         "❌ Lỗi hồi máu:",
                         error
                     );
-
                 }
 
             },
@@ -245,6 +242,44 @@ client.on(
 
                 const customId =
                     interaction.customId;
+
+                // ==================================
+                // 🏯 PHÓ BẢN HỒNG HOANG
+                // ==================================
+
+                if (
+                    interaction.isStringSelectMenu() &&
+                    customId === "chon_pho_ban"
+                ) {
+
+                    const phoban =
+                        client.commands.get("phoban");
+
+                    if (!phoban) {
+
+                        return interaction.reply({
+                            content:
+                                "❌ Không tải được hệ thống Phó Bản. Kiểm tra file phoban.js.",
+                            ephemeral: true
+                        });
+                    }
+
+                    if (
+                        typeof phoban.handleSelect !==
+                        "function"
+                    ) {
+
+                        return interaction.reply({
+                            content:
+                                "❌ phoban.js chưa có handleSelect().",
+                            ephemeral: true
+                        });
+                    }
+
+                    return await phoban.handleSelect(
+                        interaction
+                    );
+                }
 
                 // ==================================
                 // 🏯 BÁCH THÁP HỒNG HOANG
