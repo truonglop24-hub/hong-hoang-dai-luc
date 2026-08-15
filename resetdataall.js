@@ -7,8 +7,9 @@ const {
     resetAllPlayers
 } = require("./database");
 
+// Discord ID được phép sử dụng /resetall
 const ADMIN_IDS = [
-    "ĐIỀN_DISCORD_ID_CỦA_BẠN"
+    "1263416165372268607"
 ];
 
 module.exports = {
@@ -25,7 +26,7 @@ module.exports = {
 
     async execute(interaction) {
 
-        // Chỉ admin được dùng
+        // Kiểm tra ID có nằm trong danh sách được cấp quyền hay không
         if (
             !ADMIN_IDS.includes(
                 interaction.user.id
@@ -38,6 +39,7 @@ module.exports = {
             });
         }
 
+        // Reset toàn bộ người chơi
         const count =
             resetAllPlayers();
 
@@ -55,3 +57,5 @@ module.exports = {
         });
     }
 };
+
+ID "1263416165372268607" đã được đặt vào "ADMIN_IDS", đúng với phần kiểm tra quyền trong file gốc.
