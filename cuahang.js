@@ -1,6 +1,10 @@
 const {
     SlashCommandBuilder,
-    EmbedBuilder
+    EmbedBuilder,
+    ButtonBuilder,
+    ActionRowBuilder,
+    ButtonStyle,
+    ComponentType
 } = require("discord.js");
 
 const {
@@ -9,23 +13,21 @@ const {
 } = require("./database");
 
 // =====================================================
-// 🏪 CỬA HÀNG HỒNG HOANG - 540 VẬT PHẨM
+// 🏪 CỬA HÀNG HỒNG HOANG
 // =====================================================
+// 6 DANH MỤC:
+// 💊 Đan dược
+// 🎁 Vật phẩm
+// 🐉 Linh thú
+// 📜 Công pháp
+// ⚔️ Pháp bảo
+// 🧿 Bùa chú
 //
-// 4 SHOP:
-// 1. Thường
-// 2. Tiên
-// 3. Thánh
-// 4. Đại Đạo
-//
-// Mỗi shop:
-// - 25 Công pháp
-// - 25 Đan dược
-// - 20 Linh thú
-// - 20 Pháp bảo
-// - 20 Thiên tài địa bảo
-//
-// Tổng thực tế: 4 x 135 = 540 vật phẩm
+// + ☠️ Công pháp Ma Đạo
+// + ⚔️ Pháp bảo Ma Đạo
+// + 💊 Đan dược Ma Đạo
+// + 🧬 Đan Đổi Linh Căn = 10.000.000 LT
+// + 💠 Đan Đổi Thể Chất = 10.000.000 LT
 // =====================================================
 
 
@@ -56,6 +58,32 @@ const REALMS = [
 
 
 // =====================================================
+// ☠️ 18 CẢNH GIỚI MA ĐẠO
+// =====================================================
+
+const MA_DAO_REALMS = [
+    "Ma Đồ",
+    "Ma Tu",
+    "Ma Sư",
+    "Đại Ma Sư",
+    "Ma Tướng",
+    "Ma Vương",
+    "Ma Hoàng",
+    "Ma Tôn",
+    "Ma Thánh",
+    "Ma Đế",
+    "Thiên Ma",
+    "Cửu U Ma",
+    "Tu La Ma",
+    "Hỗn Độn Ma",
+    "Ma Tổ",
+    "Ma Đạo Thánh Nhân",
+    "Ma Đạo Thiên Đạo",
+    "Ma Đạo Chí Tôn"
+];
+
+
+// =====================================================
 // ⭐ ĐỘ HIẾM
 // =====================================================
 
@@ -73,7 +101,7 @@ const RARITIES = [
 
 
 // =====================================================
-// 🏪 4 SHOP
+// 🏪 4 SHOP CŨ
 // =====================================================
 
 const SHOPS = {
@@ -108,7 +136,7 @@ const SHOPS = {
 
 
 // =====================================================
-// 📜 TÊN CÔNG PHÁP
+// 📜 CÔNG PHÁP HỒNG HOANG
 // =====================================================
 
 const CONG_PHAP_NAMES = [
@@ -141,7 +169,35 @@ const CONG_PHAP_NAMES = [
 
 
 // =====================================================
-// 💊 TÊN ĐAN DƯỢC
+// ☠️ CÔNG PHÁP MA ĐẠO
+// =====================================================
+
+const MA_DAO_CONG_PHAP = [
+    "Huyết Ma Kinh",
+    "Cửu U Ma Kinh",
+    "La Sát Ma Công",
+    "Vạn Hồn Ma Điển",
+    "Phệ Hồn Đại Pháp",
+    "Ma Long Thôn Thiên Công",
+    "Thiên Ma Cửu Biến",
+    "Tu La Huyết Công",
+    "Cửu U Phệ Thiên Công",
+    "Huyết Hải Ma Công",
+    "Vạn Ma Quy Tông",
+    "Thôn Thiên Ma Công",
+    "Diệt Thế Ma Công",
+    "Hắc Ám Ma Điển",
+    "Cửu Thiên Ma Quyết",
+    "Hỗn Độn Ma Điển",
+    "Ma Đế Kinh",
+    "Ma Tổ Chân Kinh",
+    "Ma Đạo Thánh Kinh",
+    "Ma Đạo Thủy Tổ Kinh"
+];
+
+
+// =====================================================
+// 💊 ĐAN DƯỢC HỒNG HOANG
 // =====================================================
 
 const DAN_DUOC_NAMES = [
@@ -174,7 +230,100 @@ const DAN_DUOC_NAMES = [
 
 
 // =====================================================
-// 🐉 TÊN LINH THÚ
+// ☠️ ĐAN DƯỢC MA ĐẠO
+// =====================================================
+
+const MA_DAO_DAN_DUOC = [
+    {
+        id: "ma_huyet_dan",
+        name: "🩸 Ma Huyết Đan",
+        rarity: "🔵 Huyền",
+        cost: 50000,
+        requiredRealm: 0,
+        effect: {
+            hp: 5000,
+            cong: 300
+        }
+    },
+
+    {
+        id: "cuu_u_ma_dan",
+        name: "🌑 Cửu U Ma Đan",
+        rarity: "🟣 Địa",
+        cost: 300000,
+        requiredRealm: 2,
+        effect: {
+            hp: 20000,
+            cong: 1000,
+            thu: 500
+        }
+    },
+
+    {
+        id: "phe_hon_ma_dan",
+        name: "👻 Phệ Hồn Ma Đan",
+        rarity: "🟠 Thiên",
+        cost: 1000000,
+        requiredRealm: 4,
+        effect: {
+            cong: 5000,
+            thu: 2000,
+            tuvi: 50000
+        }
+    },
+
+    {
+        id: "thien_ma_dan",
+        name: "😈 Thiên Ma Đan",
+        rarity: "🔴 Tiên",
+        cost: 5000000,
+        requiredRealm: 8,
+        effect: {
+            cong: 20000,
+            thu: 10000,
+            tuvi: 200000
+        }
+    },
+
+    {
+        id: "hon_don_ma_dan",
+        name: "🌌 Hỗn Độn Ma Đan",
+        rarity: "🌌 Hỗn Độn",
+        cost: 50000000,
+        requiredRealm: 14,
+        effect: {
+            cong: 100000,
+            thu: 80000,
+            tuvi: 1000000
+        }
+    },
+
+    {
+        id: "dan_doi_linh_can",
+        name: "🧬 Đan Đổi Linh Căn",
+        rarity: "⭐ Đại Đạo",
+        cost: 10000000,
+        requiredRealm: 0,
+        effect: {
+            special: "doi_linh_can"
+        }
+    },
+
+    {
+        id: "dan_doi_the_chat",
+        name: "💠 Đan Đổi Thể Chất",
+        rarity: "⭐ Đại Đạo",
+        cost: 10000000,
+        requiredRealm: 0,
+        effect: {
+            special: "doi_the_chat"
+        }
+    }
+];
+
+
+// =====================================================
+// 🐉 LINH THÚ
 // =====================================================
 
 const LINH_THU_NAMES = [
@@ -202,7 +351,7 @@ const LINH_THU_NAMES = [
 
 
 // =====================================================
-// ⚔️ TÊN PHÁP BẢO
+// ⚔️ PHÁP BẢO HỒNG HOANG
 // =====================================================
 
 const PHAP_BAO_NAMES = [
@@ -231,6 +380,34 @@ const PHAP_BAO_NAMES = [
     "Đại Đạo Luân",
     "Hỗn Độn Châu",
     "Đại Đạo Chí Bảo"
+];
+
+
+// =====================================================
+// ☠️ PHÁP BẢO MA ĐẠO
+// =====================================================
+
+const MA_DAO_PHAP_BAO = [
+    "Ma Huyết Kiếm",
+    "Cửu U Ma Đao",
+    "La Sát Ma Kích",
+    "Vạn Hồn Phiên",
+    "Phệ Hồn Châu",
+    "Ma Long Kiếm",
+    "Tu La Huyết Nhận",
+    "Thiên Ma Tháp",
+    "Huyết Hải Ma Kỳ",
+    "Cửu U Ma Quan",
+    "Vạn Ma Phiên",
+    "Diệt Thế Ma Đao",
+    "Hắc Ám Ma Chung",
+    "Cửu Thiên Ma Kiếm",
+    "Ma Đế Chi Nhận",
+    "Ma Tổ Huyết Kiếm",
+    "Ma Đạo Thánh Binh",
+    "Hỗn Độn Ma Kiếm",
+    "Ma Đạo Thủy Tổ Đỉnh",
+    "Vô Thượng Ma Binh"
 ];
 
 
@@ -291,7 +468,35 @@ const DAC_BIET_NAMES = [
 
 
 // =====================================================
-// 🔢 TẠO SHOP
+// 🧿 BÙA CHÚ
+// =====================================================
+
+const BUA_CHU_NAMES = [
+    "Bùa Tăng Công",
+    "Bùa Tăng Thủ",
+    "Bùa Hộ Mệnh",
+    "Bùa Tụ Linh",
+    "Bùa Hộ Thần",
+    "Bùa Cuồng Chiến",
+    "Bùa Phệ Hồn",
+    "Bùa Ma Khí",
+    "Bùa Thiên Ma",
+    "Bùa Cửu U",
+    "Bùa Tu La",
+    "Bùa Huyết Hải",
+    "Bùa Vạn Hồn",
+    "Bùa Diệt Hồn",
+    "Bùa Diệt Thế",
+    "Bùa Hỗn Độn",
+    "Bùa Ma Đế",
+    "Bùa Ma Tổ",
+    "Bùa Thủy Tổ",
+    "Bùa Ma Đạo Chí Tôn"
+];
+
+
+// =====================================================
+// 🏪 SHOP
 // =====================================================
 
 const SHOP = {
@@ -301,7 +506,8 @@ const SHOP = {
         linhThu: {},
         phapBao: {},
         baoVat: {},
-        dacBiet: {}
+        dacBiet: {},
+        buaChu: {}
     },
 
     tien: {
@@ -310,7 +516,8 @@ const SHOP = {
         linhThu: {},
         phapBao: {},
         baoVat: {},
-        dacBiet: {}
+        dacBiet: {},
+        buaChu: {}
     },
 
     thanh: {
@@ -319,7 +526,8 @@ const SHOP = {
         linhThu: {},
         phapBao: {},
         baoVat: {},
-        dacBiet: {}
+        dacBiet: {},
+        buaChu: {}
     },
 
     daidao: {
@@ -328,13 +536,28 @@ const SHOP = {
         linhThu: {},
         phapBao: {},
         baoVat: {},
-        dacBiet: {}
+        dacBiet: {},
+        buaChu: {}
     }
 };
 
 
 // =====================================================
-// 🎯 HÀM THÊM VẬT PHẨM
+// 🏷️ TÊN DANH MỤC
+// =====================================================
+
+const CATEGORY_NAME = {
+    danDuoc: "💊 Đan dược",
+    vatPham: "🎁 Vật phẩm",
+    linhThu: "🐉 Linh thú",
+    congPhap: "📜 Công pháp",
+    phapBao: "⚔️ Pháp bảo",
+    buaChu: "🧿 Bùa chú"
+};
+
+
+// =====================================================
+// 🎯 THÊM ITEM
 // =====================================================
 
 function addItem(
@@ -345,8 +568,14 @@ function addItem(
     requiredRealm,
     rarity,
     cost,
-    effect
+    effect = {},
+    extra = {}
 ) {
+    if (!SHOP[shop]) return;
+
+    if (!SHOP[shop][category]) {
+        SHOP[shop][category] = {};
+    }
 
     SHOP[shop][category][id] = {
         id,
@@ -357,60 +586,59 @@ function addItem(
         effect,
 
         bonus:
-            effect.cong || 0,
+            Number(effect.cong || 0),
 
         hpBonus:
-            effect.hp || 0,
+            Number(effect.hp || 0),
 
         congBonus:
-            effect.cong || 0,
+            Number(effect.cong || 0),
 
         thuBonus:
-            effect.thu || 0,
+            Number(effect.thu || 0),
 
         tuviBonus:
-            effect.tuvi || 0,
+            Number(effect.tuvi || 0),
 
         linhLucBonus:
-            effect.linhLuc || 0
+            Number(effect.linhLuc || 0),
+
+        ...extra
     };
 }
 
 
 // =====================================================
-// 💰 HỆ SỐ SHOP
+// 🆔 TẠO ID
 // =====================================================
 
-const SHOP_MULTIPLIER = {
-    thuong: 1,
-    tien: 1000,
-    thanh: 1000000,
-    daidao: 100000000
-};
+function makeItemId(name) {
+    return String(name || "")
+        .replace(/^[^\wÀ-ỹ]+\s*/, "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/đ/g, "d")
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+}
 
 
 // =====================================================
-// ⭐ TẠO VẬT PHẨM
+// ⭐ TẠO SHOP
 // =====================================================
 
 function generateShop() {
 
     let counter = 1;
 
-    const shopNames = [
-        "thuong",
-        "tien",
-        "thanh",
-        "daidao"
-    ];
+    for (const shop of Object.keys(SHOPS)) {
 
-    for (
-        const shop
-        of shopNames
-    ) {
+        const config = SHOPS[shop];
 
-        const config =
-            SHOPS[shop];
+        // =================================================
+        // 📜 CÔNG PHÁP HỒNG HOANG
+        // =================================================
 
         CONG_PHAP_NAMES.forEach(
             (baseName, i) => {
@@ -426,9 +654,7 @@ function generateShop() {
                     RARITIES[
                         Math.min(
                             8,
-                            Math.floor(
-                                realm / 2
-                            )
+                            Math.floor(realm / 2)
                         )
                     ];
 
@@ -451,18 +677,76 @@ function generateShop() {
                     rarity,
                     cost,
                     {
-                        cong:
-                            (realm + 1) * 100,
-
-                        thu:
-                            (realm + 1) * 30,
-
-                        tuvi:
-                            (realm + 1) * 1000
+                        cong: (realm + 1) * 100,
+                        thu: (realm + 1) * 30,
+                        tuvi: (realm + 1) * 1000
                     }
                 );
             }
         );
+
+
+        // =================================================
+        // ☠️ CÔNG PHÁP MA ĐẠO
+        // =================================================
+
+        MA_DAO_CONG_PHAP.forEach(
+            (baseName, i) => {
+
+                const realm =
+                    Math.min(
+                        config.maxRealm,
+                        config.minRealm +
+                        Math.floor(i / 3)
+                    );
+
+                const rarity =
+                    RARITIES[
+                        Math.min(
+                            8,
+                            Math.floor(realm / 2)
+                        )
+                    ];
+
+                const cost =
+                    Math.max(
+                        10000,
+                        Math.floor(
+                            config.price *
+                            (i + 1) *
+                            5
+                        )
+                    );
+
+                addItem(
+                    shop,
+                    "congPhap",
+                    `mdcp-${shop}-${counter++}`,
+                    `☠️ ${baseName}`,
+                    realm,
+                    rarity,
+                    cost,
+                    {
+                        cong:
+                            (realm + 1) * 180,
+
+                        thu:
+                            (realm + 1) * 70,
+
+                        tuvi:
+                            (realm + 1) * 1800
+                    },
+                    {
+                        maDao: true
+                    }
+                );
+            }
+        );
+
+
+        // =================================================
+        // 💊 ĐAN DƯỢC HỒNG HOANG
+        // =================================================
 
         DAN_DUOC_NAMES.forEach(
             (baseName, i) => {
@@ -478,9 +762,7 @@ function generateShop() {
                     RARITIES[
                         Math.min(
                             8,
-                            Math.floor(
-                                realm / 2
-                            )
+                            Math.floor(realm / 2)
                         )
                     ];
 
@@ -510,6 +792,43 @@ function generateShop() {
             }
         );
 
+
+        // =================================================
+        // ☠️ ĐAN DƯỢC MA ĐẠO
+        // =================================================
+
+        MA_DAO_DAN_DUOC.forEach(
+            (item, i) => {
+
+                addItem(
+                    shop,
+                    "danDuoc",
+                    `${item.id}-${shop}-${counter++}`,
+                    item.name,
+                    Math.min(
+                        config.maxRealm,
+                        item.requiredRealm
+                    ),
+                    item.rarity,
+                    Math.max(
+                        item.cost,
+                        config.price
+                    ),
+                    item.effect,
+                    {
+                        maDao: true,
+                        special:
+                            item.effect.special || null
+                    }
+                );
+            }
+        );
+
+
+        // =================================================
+        // 🐉 LINH THÚ
+        // =================================================
+
         LINH_THU_NAMES.forEach(
             (baseName, i) => {
 
@@ -524,9 +843,7 @@ function generateShop() {
                     RARITIES[
                         Math.min(
                             8,
-                            Math.floor(
-                                realm / 2
-                            )
+                            Math.floor(realm / 2)
                         )
                     ];
 
@@ -559,6 +876,11 @@ function generateShop() {
             }
         );
 
+
+        // =================================================
+        // ⚔️ PHÁP BẢO HỒNG HOANG
+        // =================================================
+
         PHAP_BAO_NAMES.forEach(
             (baseName, i) => {
 
@@ -573,9 +895,7 @@ function generateShop() {
                     RARITIES[
                         Math.min(
                             8,
-                            Math.floor(
-                                realm / 2
-                            )
+                            Math.floor(realm / 2)
                         )
                     ];
 
@@ -609,6 +929,72 @@ function generateShop() {
             }
         );
 
+
+        // =================================================
+        // ☠️ PHÁP BẢO MA ĐẠO
+        // =================================================
+
+        MA_DAO_PHAP_BAO.forEach(
+            (baseName, i) => {
+
+                const realm =
+                    Math.min(
+                        config.maxRealm,
+                        config.minRealm +
+                        Math.floor(i / 3)
+                    );
+
+                const rarity =
+                    RARITIES[
+                        Math.min(
+                            8,
+                            Math.floor(realm / 2)
+                        )
+                    ];
+
+                const bonus =
+                    (realm + 1) * 70;
+
+                const cost =
+                    Math.max(
+                        20000,
+                        Math.floor(
+                            config.price *
+                            (i + 1) *
+                            8
+                        )
+                    );
+
+                addItem(
+                    shop,
+                    "phapBao",
+                    `mdpb-${shop}-${counter++}`,
+                    `☠️ ${baseName}`,
+                    realm,
+                    rarity,
+                    cost,
+                    {
+                        cong:
+                            bonus * 2,
+
+                        thu:
+                            bonus,
+
+                        hp:
+                            bonus * 15
+                    },
+                    {
+                        maDao: true
+                    }
+                );
+            }
+        );
+
+
+        // =================================================
+        // 🌿 BẢO VẬT
+        // =================================================
+
         BAO_VAT_NAMES.forEach(
             (baseName, i) => {
 
@@ -623,9 +1009,7 @@ function generateShop() {
                     RARITIES[
                         Math.min(
                             8,
-                            Math.floor(
-                                realm / 2
-                            )
+                            Math.floor(realm / 2)
                         )
                     ];
 
@@ -658,6 +1042,11 @@ function generateShop() {
             }
         );
 
+
+        // =================================================
+        // 🎁 VẬT PHẨM ĐẶC BIỆT
+        // =================================================
+
         DAC_BIET_NAMES.forEach(
             (baseName, i) => {
 
@@ -672,9 +1061,7 @@ function generateShop() {
                     RARITIES[
                         Math.min(
                             8,
-                            Math.floor(
-                                realm / 2
-                            )
+                            Math.floor(realm / 2)
                         )
                     ];
 
@@ -706,34 +1093,73 @@ function generateShop() {
                 );
             }
         );
+
+
+        // =================================================
+        // 🧿 BÙA CHÚ
+        // =================================================
+
+        BUA_CHU_NAMES.forEach(
+            (baseName, i) => {
+
+                const realm =
+                    Math.min(
+                        config.maxRealm,
+                        config.minRealm +
+                        Math.floor(i / 3)
+                    );
+
+                const rarity =
+                    RARITIES[
+                        Math.min(
+                            8,
+                            Math.floor(realm / 2)
+                        )
+                    ];
+
+                const bonus =
+                    (realm + 1) * 30;
+
+                const cost =
+                    Math.max(
+                        1000,
+                        Math.floor(
+                            config.price *
+                            (i + 1) *
+                            3
+                        )
+                    );
+
+                addItem(
+                    shop,
+                    "buaChu",
+                    `bc-${shop}-${counter++}`,
+                    `🧿 ${baseName}`,
+                    realm,
+                    rarity,
+                    cost,
+                    {
+                        cong: bonus,
+                        thu: bonus,
+                        hp: bonus * 3,
+                        tuvi: (realm + 1) * 300
+                    }
+                );
+            }
+        );
     }
 }
 
-generateShop();
+
 // =====================================================
-// 🔑 CHÌA KHÓA TIÊN GIỚI
-// Yêu cầu: Độ Kiếp | Giá: 1.000.000.000 Linh Thạch
+// 🚀 TẠO SHOP
 // =====================================================
 
-addItem(
-    "tien",
-    "dacBiet",
-    "chia_khoa_tien_gioi",
-    "🔑 Chìa Khóa Tiên Giới",
-    9,
-    "🔴 Tiên",
-    1000000000,
-    {
-        cong: 0,
-        thu: 0,
-        hp: 0,
-        tuvi: 0,
-        linhLuc: 0,
-        moTa: "Dùng để mở Cổng Tiên Giới và phi thăng"
-    }
-);
+generateShop();
+
+
 // =====================================================
-// 🔍 TÌM VẬT PHẨM
+// 🔍 TÌM ITEM THEO ID
 // =====================================================
 
 function findItem(itemId) {
@@ -748,13 +1174,11 @@ function findItem(itemId) {
             .toLowerCase();
 
     for (
-        const shop
-        of Object.keys(SHOP)
+        const shop of Object.keys(SHOP)
     ) {
 
         for (
-            const category
-            of Object.keys(
+            const category of Object.keys(
                 SHOP[shop]
             )
         ) {
@@ -763,8 +1187,7 @@ function findItem(itemId) {
                 SHOP[shop][category];
 
             for (
-                const id
-                of Object.keys(items)
+                const id of Object.keys(items)
             ) {
 
                 if (
@@ -787,7 +1210,64 @@ function findItem(itemId) {
 
 
 // =====================================================
-// 📦 TOÀN BỘ VẬT PHẨM
+// 🔎 TÌM ID ĐẸP
+// =====================================================
+
+function findItemByReadableId(
+    readableId
+) {
+
+    if (!readableId) {
+        return null;
+    }
+
+    const normalized =
+        String(readableId)
+            .trim()
+            .toLowerCase();
+
+    for (
+        const shop of Object.keys(SHOP)
+    ) {
+
+        for (
+            const category of Object.keys(
+                SHOP[shop]
+            )
+        ) {
+
+            for (
+                const item of Object.values(
+                    SHOP[shop][category]
+                )
+            ) {
+
+                const generated =
+                    makeItemId(
+                        item.name
+                    );
+
+                if (
+                    generated ===
+                    normalized
+                ) {
+
+                    return {
+                        ...item,
+                        shop,
+                        category
+                    };
+                }
+            }
+        }
+    }
+
+    return null;
+}
+
+
+// =====================================================
+// 📦 TẤT CẢ ITEM
 // =====================================================
 
 function getAllShopItems() {
@@ -795,18 +1275,17 @@ function getAllShopItems() {
     const result = [];
 
     for (
-        const shop
-        of Object.keys(SHOP)
+        const shop of Object.keys(SHOP)
     ) {
 
         for (
-            const category
-            of Object.keys(SHOP[shop])
+            const category of Object.keys(
+                SHOP[shop]
+            )
         ) {
 
             for (
-                const item
-                of Object.values(
+                const item of Object.values(
                     SHOP[shop][category]
                 )
             ) {
@@ -825,16 +1304,54 @@ function getAllShopItems() {
 
 
 // =====================================================
-// 📖 PHÂN TRANG
+// 🏷️ ĐỔI CATEGORY GỐC THÀNH 6 SHOP
 // =====================================================
 
-function getShopPage(
+function getDisplayCategory(item) {
+
+    if (
+        item.category === "baoVat" ||
+        item.category === "dacBiet"
+    ) {
+
+        return "vatPham";
+    }
+
+    return item.category;
+}
+
+
+// =====================================================
+// 📖 LỌC THEO 6 SHOP
+// =====================================================
+
+function getCategoryItems(
+    category
+) {
+
+    return getAllShopItems()
+        .filter(
+            item =>
+                getDisplayCategory(item) ===
+                category
+        );
+}
+
+
+// =====================================================
+// 📄 PHÂN TRANG
+// =====================================================
+
+function getCategoryPage(
+    category = "danDuoc",
     page = 1,
-    pageSize = 12
+    pageSize = 6
 ) {
 
     const items =
-        getAllShopItems();
+        getCategoryItems(
+            category
+        );
 
     const totalPages =
         Math.max(
@@ -849,7 +1366,7 @@ function getShopPage(
         Math.max(
             1,
             Math.min(
-                page,
+                Number(page) || 1,
                 totalPages
             )
         );
@@ -866,78 +1383,359 @@ function getShopPage(
             ),
 
         page,
+
         totalPages,
+
         totalItems:
-            items.length
+            items.length,
+
+        category
     };
 }
-// =====================================================
-// 🆔 TẠO ID DỄ NHỚ
-// =====================================================
-
-function makeItemId(name) {
-
-    return String(name)
-        .replace(
-            /^[^\wÀ-ỹ]+\s*/,
-            ""
-        )
-        .normalize("NFD")
-        .replace(
-            /[\u0300-\u036f]/g,
-            ""
-        )
-        .toLowerCase()
-        .replace(
-            /[^a-z0-9]+/g,
-            "_"
-        )
-        .replace(
-            /^_+|_+$/g,
-            ""
-        );
-}
 
 
 // =====================================================
-// 🔎 TÌM ITEM BẰNG ID DỄ NHỚ
+// ✨ HIỂN THỊ TÁC DỤNG
 // =====================================================
 
-function findItemByReadableId(
-    readableId
+function getEffectText(
+    item
 ) {
 
-    if (!readableId) {
-        return null;
+    const effect =
+        item.effect || {};
+
+    const lines = [];
+
+    if (effect.tuvi) {
+
+        lines.push(
+            `🌀 Tu Vi: **+${Number(effect.tuvi).toLocaleString()}**`
+        );
     }
 
-    const normalized =
-        String(readableId)
-            .trim()
-            .toLowerCase();
+    if (effect.cong) {
 
-    const items =
-        getAllShopItems();
+        lines.push(
+            `⚔️ Công: **+${Number(effect.cong).toLocaleString()}**`
+        );
+    }
 
-    return (
-        items.find(item => {
+    if (effect.thu) {
 
-            const generatedId =
-                makeItemId(
-                    item.name
-                );
+        lines.push(
+            `🛡️ Thủ: **+${Number(effect.thu).toLocaleString()}**`
+        );
+    }
 
-            return (
-                generatedId ===
-                normalized
-            );
-        }) || null
-    );
+    if (effect.hp) {
+
+        lines.push(
+            `❤️ HP: **+${Number(effect.hp).toLocaleString()}**`
+        );
+    }
+
+    if (effect.linhLuc) {
+
+        lines.push(
+            `✨ Linh Lực: **+${Number(effect.linhLuc).toLocaleString()}**`
+        );
+    }
+
+    if (
+        effect.special ===
+        "doi_linh_can"
+    ) {
+
+        lines.push(
+            "🧬 **Đổi Linh Căn ngẫu nhiên**"
+        );
+    }
+
+    if (
+        effect.special ===
+        "doi_the_chat"
+    ) {
+
+        lines.push(
+            "💠 **Đổi Thể Chất ngẫu nhiên**"
+        );
+    }
+
+    if (
+        item.maDao
+    ) {
+
+        lines.push(
+            "☠️ **Thuộc hệ thống Ma Đạo**"
+        );
+    }
+
+    if (!lines.length) {
+
+        lines.push(
+            "📦 Vật phẩm đặc biệt"
+        );
+    }
+
+    return lines.join("\n");
 }
 
 
 // =====================================================
-// 💎 LẤY LINH THẠCH
+// 🏪 TẠO EMBED SHOP
+// =====================================================
+
+function createCategoryShopEmbed(
+    category = "danDuoc",
+    page = 1
+) {
+
+    const data =
+        getCategoryPage(
+            category,
+            page,
+            6
+        );
+
+    let description =
+        `💎 Thanh toán bằng **Linh Thạch**.\n\n`;
+
+    if (
+        !data.items.length
+    ) {
+
+        description +=
+            "📦 Danh mục này hiện chưa có vật phẩm.";
+
+    } else {
+
+        data.items.forEach(
+            (item, index) => {
+
+                const readableId =
+                    makeItemId(
+                        item.name
+                    );
+
+                description +=
+                    `### ${index + 1}. ${item.name}\n`;
+
+                description +=
+                    `🆔 \`${readableId}\`\n`;
+
+                description +=
+                    `${item.rarity}\n`;
+
+                description +=
+                    `🌌 Yêu cầu: **${
+                        REALMS[item.requiredRealm] ||
+                        "Phàm Nhân"
+                    }**\n`;
+
+                description +=
+                    `💎 Giá: **${Number(item.cost).toLocaleString()} Linh Thạch**\n`;
+
+                description +=
+                    `✨ **Tác dụng:**\n`;
+
+                description +=
+                    `${getEffectText(item)}\n\n`;
+
+                description +=
+                    "━━━━━━━━━━━━━━\n\n";
+            }
+        );
+    }
+
+    const embed =
+        new EmbedBuilder()
+            .setColor(
+                category === "congPhap"
+                    ? 0x8e44ad
+                    : category === "phapBao"
+                        ? 0x34495e
+                        : category === "danDuoc"
+                            ? 0xe74c3c
+                            : category === "linhThu"
+                                ? 0x27ae60
+                                : category === "buaChu"
+                                    ? 0x9b59b6
+                                    : 0xf39c12
+            )
+            .setTitle(
+                `🏪 CỬA HÀNG HỒNG HOANG — ${
+                    CATEGORY_NAME[category]
+                }`
+            )
+            .setDescription(
+                description
+            )
+            .setFooter({
+                text:
+                    `📖 Trang ${data.page}/${data.totalPages} • ${data.totalItems} vật phẩm`
+            });
+
+    return {
+        embed,
+        data
+    };
+}
+
+
+// =====================================================
+// 🔘 TẠO NÚT 6 SHOP
+// =====================================================
+
+function createCategoryButtons(
+    category,
+    page,
+    totalPages,
+    sessionId
+) {
+
+    const prefix =
+        `shop_${sessionId}_`;
+
+    const categories = [
+        {
+            id: "danDuoc",
+            label: "💊 Đan dược"
+        },
+        {
+            id: "vatPham",
+            label: "🎁 Vật phẩm"
+        },
+        {
+            id: "linhThu",
+            label: "🐉 Linh thú"
+        },
+        {
+            id: "congPhap",
+            label: "📜 Công pháp"
+        },
+        {
+            id: "phapBao",
+            label: "⚔️ Pháp bảo"
+        },
+        {
+            id: "buaChu",
+            label: "🧿 Bùa chú"
+        }
+    ];
+
+    const row1 =
+        new ActionRowBuilder()
+            .addComponents(
+                categories
+                    .slice(0, 3)
+                    .map(
+                        item =>
+                            new ButtonBuilder()
+                                .setCustomId(
+                                    `${prefix}category_${item.id}`
+                                )
+                                .setLabel(
+                                    item.label
+                                )
+                                .setStyle(
+                                    item.id ===
+                                    category
+                                        ? ButtonStyle.Primary
+                                        : ButtonStyle.Secondary
+                                )
+                    )
+            );
+
+    const row2 =
+        new ActionRowBuilder()
+            .addComponents(
+                categories
+                    .slice(3, 6)
+                    .map(
+                        item =>
+                            new ButtonBuilder()
+                                .setCustomId(
+                                    `${prefix}category_${item.id}`
+                                )
+                                .setLabel(
+                                    item.label
+                                )
+                                .setStyle(
+                                    item.id ===
+                                    category
+                                        ? ButtonStyle.Primary
+                                        : ButtonStyle.Secondary
+                                )
+                    )
+            );
+
+    const previous =
+        new ButtonBuilder()
+            .setCustomId(
+                `${prefix}page_${Math.max(
+                    1,
+                    page - 1
+                )}`
+            )
+            .setLabel(
+                "◀️ Trang trước"
+            )
+            .setStyle(
+                ButtonStyle.Secondary
+            )
+            .setDisabled(
+                page <= 1
+            );
+
+    const home =
+        new ButtonBuilder()
+            .setCustomId(
+                `${prefix}home`
+            )
+            .setLabel(
+                "🏪 Trang đầu"
+            )
+            .setStyle(
+                ButtonStyle.Success
+            );
+
+    const next =
+        new ButtonBuilder()
+            .setCustomId(
+                `${prefix}page_${Math.min(
+                    totalPages,
+                    page + 1
+                )}`
+            )
+            .setLabel(
+                "Trang sau ▶️"
+            )
+            .setStyle(
+                ButtonStyle.Secondary
+            )
+            .setDisabled(
+                page >= totalPages
+            );
+
+    const row3 =
+        new ActionRowBuilder()
+            .addComponents(
+                previous,
+                home,
+                next
+            );
+
+    return [
+        row1,
+        row2,
+        row3
+    ];
+}
+
+
+// =====================================================
+// 💎 LINH THẠCH
 // =====================================================
 
 function getLinhThach(
@@ -954,7 +1752,7 @@ function getLinhThach(
 
 
 // =====================================================
-// 🌌 LẤY CẢNH GIỚI
+// 🌌 CẢNH GIỚI
 // =====================================================
 
 function getRealmIndex(
@@ -965,6 +1763,7 @@ function getRealmIndex(
         typeof player.realmIndex ===
         "number"
     ) {
+
         return player.realmIndex;
     }
 
@@ -972,6 +1771,7 @@ function getRealmIndex(
         typeof player.canhGioiIndex ===
         "number"
     ) {
+
         return player.canhGioiIndex;
     }
 
@@ -1004,93 +1804,174 @@ function addToInventory(
     item
 ) {
 
-    // Hỗ trợ nhiều kiểu database
-    if (
-        !Array.isArray(
-            player.tuiDo
-        )
-    ) {
-
-        if (
-            Array.isArray(
-                player.inventory
-            )
-        ) {
-
-            player.tuiDo =
-                player.inventory;
-
-        } else {
-
-            player.tuiDo = [];
-        }
-    }
-
     const itemId =
-        item.id ||
         makeItemId(
             item.name
         );
 
-    const existing =
-        player.tuiDo.find(
-            x =>
-                x.id === itemId ||
-                x.itemId === itemId
-        );
+    // ---------------------------------------------
+    // Hệ thống túi dạng ARRAY
+    // ---------------------------------------------
 
-    if (existing) {
-
-        existing.quantity =
-            Number(
-                existing.quantity || 0
-            ) + 1;
-
-    } else {
-
-        player.tuiDo.push({
-
-            id:
-                itemId,
-
-            itemId:
-                itemId,
-
-            name:
-                item.name,
-
-            quantity:
-                1,
-
-            rarity:
-                item.rarity,
-
-            requiredRealm:
-                item.requiredRealm,
-
-            cost:
-                item.cost,
-
-            effect:
-                item.effect || {}
-        });
-    }
-
-    // Đồng bộ inventory nếu database đang dùng tên này
     if (
         Array.isArray(
-            player.inventory
+            player.tuiDo
         )
     ) {
 
-        player.inventory =
-            player.tuiDo;
+        const existing =
+            player.tuiDo.find(
+                x =>
+                    x &&
+                    x.id === itemId
+            );
+
+        if (existing) {
+
+            existing.quantity =
+                Number(
+                    existing.quantity || 0
+                ) + 1;
+
+        } else {
+
+            player.tuiDo.push({
+                id: itemId,
+                name: item.name,
+                quantity: 1,
+                rarity: item.rarity,
+                requiredRealm:
+                    item.requiredRealm,
+                cost: item.cost,
+                effect: item.effect
+            });
+        }
+
+        return;
+    }
+
+
+    // ---------------------------------------------
+    // Hệ thống túi dạng OBJECT
+    // ---------------------------------------------
+
+    if (
+        !player.tuiDo ||
+        typeof player.tuiDo !== "object"
+    ) {
+
+        player.tuiDo = {};
+    }
+
+    let type =
+        getDisplayCategory(
+            item
+        );
+
+    if (
+        !Array.isArray(
+            player.tuiDo[type]
+        )
+    ) {
+
+        player.tuiDo[type] = [];
+    }
+
+    player.tuiDo[type].push(
+        item.name
+    );
+}
+
+
+// =====================================================
+// ➕ CỘNG EFFECT
+// =====================================================
+
+function applyItemEffect(
+    player,
+    item
+) {
+
+    const effect =
+        item.effect || {};
+
+    if (
+        effect.tuvi
+    ) {
+
+        player.tuVi =
+            Number(
+                player.tuVi || 0
+            ) +
+            Number(
+                effect.tuvi
+            );
+    }
+
+    if (
+        effect.cong
+    ) {
+
+        player.cong =
+            Number(
+                player.cong || 0
+            ) +
+            Number(
+                effect.cong
+            );
+    }
+
+    if (
+        effect.thu
+    ) {
+
+        player.thu =
+            Number(
+                player.thu || 0
+            ) +
+            Number(
+                effect.thu
+            );
+    }
+
+    if (
+        effect.hp
+    ) {
+
+        player.hp =
+            Number(
+                player.hp || 0
+            ) +
+            Number(
+                effect.hp
+            );
+
+        player.maxHp =
+            Number(
+                player.maxHp || 0
+            ) +
+            Number(
+                effect.hp
+            );
+    }
+
+    if (
+        effect.linhLuc
+    ) {
+
+        player.linhLuc =
+            Number(
+                player.linhLuc || 0
+            ) +
+            Number(
+                effect.linhLuc
+            );
     }
 }
 
 
 // =====================================================
-// 🛒 MUA VẬT PHẨM
+// 🛒 MUA ITEM
 // =====================================================
 
 async function buyItem(
@@ -1109,18 +1990,11 @@ async function buyItem(
     if (!player) {
 
         return interaction.reply({
-
             content:
-                "❌ **Bạn chưa có nhân vật!**\n\n" +
-                "🌱 Hãy sử dụng `/batdau` để bắt đầu con đường tu tiên.",
-
+                "❌ Bạn chưa có nhân vật. Hãy dùng `/batdau`.",
             ephemeral: true
         });
     }
-
-    // =============================================
-    // 🔎 TÌM ITEM
-    // =============================================
 
     let item =
         findItemByReadableId(
@@ -1138,110 +2012,91 @@ async function buyItem(
     if (!item) {
 
         return interaction.reply({
-
             content: [
-                "❌ **KHÔNG TÌM THẤY VẬT PHẨM**",
+                "❌ **Không tìm thấy vật phẩm!**",
                 "",
                 `🆔 ID: \`${itemId}\``,
                 "",
-                "💡 Hãy kiểm tra lại ID.",
-                "",
-                "📌 Ví dụ:",
-                "`/cuahang mua id:thanh_van_kiem_quyet`"
+                "💡 Dùng `/cuahang xem` để xem ID."
             ].join("\n"),
-
             ephemeral: true
         });
     }
 
 
-    // =============================================
-    // 🌌 KIỂM TRA CẢNH GIỚI
-    // =============================================
+    // =================================================
+    // 🔒 KIỂM TRA CẢNH GIỚI
+    // =================================================
 
     const playerRealm =
         getRealmIndex(
             player
         );
 
-    const requiredRealm =
-        Number(
-            item.requiredRealm || 0
-        );
-
     if (
         playerRealm <
-        requiredRealm
+        item.requiredRealm
     ) {
 
         return interaction.reply({
-
             content: [
-                "🔒 **CẢNH GIỚI CHƯA ĐỦ**",
+                "🔒 **Cảnh giới chưa đủ!**",
                 "",
-                `📦 Vật phẩm: **${item.name}**`,
-                "",
-                `🌌 Yêu cầu: **${REALMS[requiredRealm] || "Không xác định"}**`,
-                `👤 Hiện tại: **${REALMS[playerRealm] || "Phàm Nhân"}**`,
-                "",
-                "⚡ Hãy tiếp tục tu luyện để mở khóa vật phẩm này!"
+                `📦 ${item.name}`,
+                `🌌 Yêu cầu: **${
+                    REALMS[item.requiredRealm]
+                }**`,
+                `👤 Hiện tại: **${
+                    REALMS[playerRealm]
+                }**`
             ].join("\n"),
-
             ephemeral: true
         });
     }
 
 
-    // =============================================
+    // =================================================
     // 💎 KIỂM TRA LINH THẠCH
-    // =============================================
+    // =================================================
 
     const money =
         getLinhThach(
             player
         );
 
-    const price =
-        Number(
-            item.cost || 0
-        );
-
     if (
         money <
-        price
+        item.cost
     ) {
 
         return interaction.reply({
-
             content: [
-                "💎 **KHÔNG ĐỦ LINH THẠCH**",
+                "💎 **Không đủ Linh Thạch!**",
                 "",
-                `📦 Vật phẩm: **${item.name}**`,
-                `💰 Giá: **${price.toLocaleString()}** Linh Thạch`,
+                `📦 ${item.name}`,
+                `💰 Giá: **${Number(item.cost).toLocaleString()}**`,
                 `💎 Bạn có: **${money.toLocaleString()}**`,
-                `❌ Còn thiếu: **${(
-                    price - money
-                ).toLocaleString()}**`,
-                "",
-                "💡 Hãy kiếm thêm Linh Thạch rồi quay lại!"
+                `❌ Thiếu: **${(
+                    item.cost - money
+                ).toLocaleString()}**`
             ].join("\n"),
-
             ephemeral: true
         });
     }
 
 
-    // =============================================
-    // 💎 TRỪ LINH THẠCH
-    // =============================================
+    // =================================================
+    // 💰 TRỪ LINH THẠCH
+    // =================================================
 
     player.linhThach =
-        money - price;
+        money -
+        item.cost;
 
 
-    // =============================================
+    // =================================================
     // 🎒 THÊM VÀO TÚI
-    // =============================================
+    // =================================================
 
     addToInventory(
         player,
@@ -1249,87 +2104,38 @@ async function buyItem(
     );
 
 
-    // =============================================
-    // ✨ ÁP DỤNG HIỆU ỨNG
-    // =============================================
+    // =================================================
+    // ✨ KHÔNG TỰ KÍCH HOẠT 2 ĐAN ĐẶC BIỆT
+    // =================================================
 
-    const effect =
-        item.effect || {};
+    const isSpecial =
+        item.effect &&
+        (
+            item.effect.special ===
+                "doi_linh_can" ||
+            item.effect.special ===
+                "doi_the_chat"
+        );
 
+
+    // =================================================
+    // ➕ ITEM THƯỜNG CỘNG EFFECT
+    // =================================================
 
     if (
-        effect.tuvi
+        !isSpecial
     ) {
 
-        player.tuVi =
-            Number(
-                player.tuVi || 0
-            ) +
-            Number(
-                effect.tuvi
-            );
+        applyItemEffect(
+            player,
+            item
+        );
     }
 
 
-    if (
-        effect.cong
-    ) {
-
-        player.cong =
-            Number(
-                player.cong || 0
-            ) +
-            Number(
-                effect.cong
-            );
-    }
-
-
-    if (
-        effect.thu
-    ) {
-
-        player.thu =
-            Number(
-                player.thu || 0
-            ) +
-            Number(
-                effect.thu
-            );
-    }
-
-
-    if (
-        effect.hp
-    ) {
-
-        player.hp =
-            Number(
-                player.hp || 0
-            ) +
-            Number(
-                effect.hp
-            );
-    }
-
-
-    if (
-        effect.linhLuc
-    ) {
-
-        player.linhLuc =
-            Number(
-                player.linhLuc || 0
-            ) +
-            Number(
-                effect.linhLuc
-            );
-    }
-
-
-    // =============================================
+    // =================================================
     // 💾 LƯU DATABASE
-    // =============================================
+    // =================================================
 
     updatePlayer(
         userId,
@@ -1337,194 +2143,71 @@ async function buyItem(
     );
 
 
-    // =============================================
-    // 🎉 THÔNG BÁO MUA THÀNH CÔNG
-    // =============================================
+    // =================================================
+    // 🎉 THÔNG BÁO
+    // =================================================
+
+    let extra =
+        "";
+
+    if (
+        item.effect &&
+        item.effect.special ===
+            "doi_linh_can"
+    ) {
+
+        extra =
+            "\n🧬 **Đan này dùng để đổi Linh Căn.**\n" +
+            "Hãy dùng lệnh đan dược hiện tại của bạn để sử dụng.";
+
+    }
+
+    if (
+        item.effect &&
+        item.effect.special ===
+            "doi_the_chat"
+    ) {
+
+        extra =
+            "\n💠 **Đan này dùng để đổi Thể Chất.**\n" +
+            "Hãy dùng lệnh đan dược hiện tại của bạn để sử dụng.";
+    }
 
     const embed =
         new EmbedBuilder()
+            .setColor(
+                item.maDao
+                    ? 0x8b0000
+                    : 0x8e44ad
+            )
             .setTitle(
                 "🎉 MUA HÀNG THÀNH CÔNG"
             )
             .setDescription([
-                "╭───────────────╮",
-                `🛍️ **${item.name}**`,
-                "╰───────────────╯",
+                `🛍️ Đã mua: **${item.name}**`,
                 "",
                 `🆔 ID: \`${makeItemId(item.name)}\``,
-                `✨ Độ hiếm: **${item.rarity}**`,
+                `💎 Đã trả: **${Number(item.cost).toLocaleString()} Linh Thạch**`,
+                `💰 Còn lại: **${Number(player.linhThach).toLocaleString()} Linh Thạch**`,
                 "",
-                `💎 Đã trả: **${price.toLocaleString()}**`,
-                `💰 Còn lại: **${player.linhThach.toLocaleString()}**`,
+                `✨ **Tác dụng:**`,
+                getEffectText(item),
                 "",
-                "🎒 **Vật phẩm đã được thêm vào túi đồ!**",
-                "",
-                "🌌 Chúc đạo hữu tiếp tục hành trình tu tiên!"
+                "🎒 Vật phẩm đã được thêm vào túi đồ!",
+                extra
             ].join("\n"));
 
     return interaction.reply({
-
         embeds: [
             embed
         ],
-
         ephemeral: true
     });
 }
 
 
 // =====================================================
-// 🎨 UI CỬA HÀNG
-// =====================================================
-
-function createShopEmbed(
-    page = 1
-) {
-
-    const data =
-        getShopPage(
-            page,
-            12
-        );
-
-    let description =
-        "";
-
-    data.items.forEach(
-        (
-            item,
-            index
-        ) => {
-
-            const itemId =
-                makeItemId(
-                    item.name
-                );
-
-            description +=
-                `**${index + 1}. ${item.name}**\n`;
-
-            description +=
-                `🆔 \`${itemId}\`\n`;
-
-            description +=
-                `${item.rarity}\n`;
-
-            description +=
-                `🌌 ${REALMS[item.requiredRealm] || "Không xác định"}\n`;
-
-            description +=
-                `💎 **${Number(item.cost).toLocaleString()}** Linh Thạch\n\n`;
-        }
-    );
-
-
-    const embed =
-        new EmbedBuilder()
-            .setTitle(
-                "🛒 HỒNG HOANG • CỬA HÀNG"
-            )
-            .setDescription(
-                description ||
-                "📦 Cửa hàng hiện không có vật phẩm."
-            )
-            .setFooter({
-                text:
-                    `📖 Trang ${data.page}/${data.totalPages}` +
-                    ` • 🛍️ ${data.totalItems} vật phẩm`
-            });
-
-
-    return {
-        embed,
-        data
-    };
-}
-
-
-// =====================================================
-// 🔘 TẠO NÚT PHÂN TRANG
-// =====================================================
-
-function createShopButtons(
-    page,
-    totalPages,
-    sessionId = ""
-) {
-
-    const {
-        ButtonBuilder,
-        ActionRowBuilder,
-        ButtonStyle
-    } = require("discord.js");
-
-
-    const prefix =
-        sessionId
-            ? `shop_${sessionId}_`
-            : "shop_";
-
-
-    const previous =
-        new ButtonBuilder()
-            .setCustomId(
-                `${prefix}page_${Math.max(
-                    1,
-                    page - 1
-                )}`
-            )
-            .setLabel(
-                "◀️ Trang trước"
-            )
-            .setStyle(
-                ButtonStyle.Secondary
-            )
-            .setDisabled(
-                page <= 1
-            );
-
-
-    const home =
-        new ButtonBuilder()
-            .setCustomId(
-                `${prefix}home`
-            )
-            .setLabel(
-                "🏠 Trang 1"
-            )
-            .setStyle(
-                ButtonStyle.Primary
-            );
-
-
-    const next =
-        new ButtonBuilder()
-            .setCustomId(
-                `${prefix}page_${Math.min(
-                    totalPages,
-                    page + 1
-                )}`
-            )
-            .setLabel(
-                "Trang sau ▶️"
-            )
-            .setStyle(
-                ButtonStyle.Secondary
-            )
-            .setDisabled(
-                page >= totalPages
-            );
-
-
-    return new ActionRowBuilder()
-        .addComponents(
-            previous,
-            home,
-            next
-        );
-}
-// =====================================================
-// ⚡ LỆNH /CUAHANG
+// 📜 SLASH COMMAND
 // =====================================================
 
 const data =
@@ -1533,14 +2216,16 @@ const data =
         .setDescription(
             "🛒 Mở cửa hàng Hồng Hoang"
         )
+
         .addSubcommand(
             sub =>
                 sub
                     .setName("xem")
                     .setDescription(
-                        "🏪 Xem toàn bộ cửa hàng"
+                        "🏪 Xem cửa hàng"
                     )
         )
+
         .addSubcommand(
             sub =>
                 sub
@@ -1553,10 +2238,9 @@ const data =
                             option
                                 .setName("id")
                                 .setDescription(
-                                    "🆔 ID vật phẩm, ví dụ: thanh_van_kiem_quyet"
+                                    "🆔 ID vật phẩm"
                                 )
                                 .setRequired(true)
-                                .setAutocomplete(false)
                     )
         );
 
@@ -1571,21 +2255,32 @@ async function execute(
 
     try {
 
+        const player =
+            getPlayer(
+                interaction.user.id
+            );
+
+        if (!player) {
+
+            return interaction.reply({
+                content:
+                    "⚠️ Hãy dùng `/batdau` trước.",
+                ephemeral: true
+            });
+        }
+
         const subcommand =
             interaction.options.getSubcommand();
 
 
         // =================================================
-        // 🏪 /CUAHANG XEM
+        // 🏪 XEM SHOP
         // =================================================
 
         if (
-            subcommand === "xem"
+            subcommand ===
+            "xem"
         ) {
-
-            // ---------------------------------------------
-            // 🆔 ID PHIÊN RIÊNG
-            // ---------------------------------------------
 
             const sessionId =
                 `${interaction.user.id}_${Date.now()}`
@@ -1597,69 +2292,47 @@ async function execute(
                         -70
                     );
 
+            let currentCategory =
+                "danDuoc";
 
-            // ---------------------------------------------
-            // 📖 TRANG 1
-            // ---------------------------------------------
+            let currentPage =
+                1;
 
             const {
                 embed,
                 data: shopData
             } =
-                createShopEmbed(
-                    1
+                createCategoryShopEmbed(
+                    currentCategory,
+                    currentPage
                 );
 
-
-            // ---------------------------------------------
-            // 🔘 NÚT
-            // ---------------------------------------------
-
             const buttons =
-                createShopButtons(
+                createCategoryButtons(
+                    currentCategory,
                     shopData.page,
                     shopData.totalPages,
                     sessionId
                 );
 
-
-            // ---------------------------------------------
-            // 📤 GỬI SHOP
-            // ---------------------------------------------
-
             await interaction.reply({
-
                 embeds: [
                     embed
                 ],
-
-                components: [
+                components:
                     buttons
-                ]
             });
-
-
-            // ---------------------------------------------
-            // 📩 LẤY MESSAGE
-            // ---------------------------------------------
 
             const message =
                 await interaction.fetchReply();
 
 
             // =================================================
-            // 🎮 BUTTON COLLECTOR
+            // 🎮 COLLECTOR
             // =================================================
-
-            const {
-                ComponentType
-            } =
-                require("discord.js");
-
 
             const collector =
                 message.createMessageComponentCollector({
-
                     componentType:
                         ComponentType.Button,
 
@@ -1667,20 +2340,14 @@ async function execute(
                         15 * 60 * 1000,
 
                     filter:
-                        buttonInteraction => {
-
-                            // Chỉ người mở shop được bấm
-                            return (
-                                buttonInteraction.user.id ===
-                                interaction.user.id
-                            );
-                        }
+                        buttonInteraction =>
+                            buttonInteraction.user.id ===
+                                interaction.user.id &&
+                            buttonInteraction.customId.startsWith(
+                                `shop_${sessionId}_`
+                            )
                 });
 
-
-            // =================================================
-            // 🔘 BUTTON COLLECT
-            // =================================================
 
             collector.on(
                 "collect",
@@ -1688,96 +2355,68 @@ async function execute(
 
                     try {
 
+                        const prefix =
+                            `shop_${sessionId}_`;
+
                         const customId =
                             buttonInteraction.customId;
 
 
-                        // -----------------------------------------
-                        // 🛡️ KIỂM TRA PHIÊN
-                        // -----------------------------------------
-
-                        const prefix =
-                            `shop_${sessionId}_`;
-
-
-                        if (
-                            !customId.startsWith(
-                                prefix
-                            )
-                        ) {
-
-                            return;
-                        }
-
-
-                        // =================================================
-                        // 🏠 TRANG 1
-                        // =================================================
+                        // =========================================
+                        // 🏠 TRANG ĐẦU
+                        // =========================================
 
                         if (
                             customId ===
                             `${prefix}home`
                         ) {
 
-                            const {
-                                embed,
-                                data: newData
-                            } =
-                                createShopEmbed(
-                                    1
-                                );
+                            currentCategory =
+                                "danDuoc";
 
-
-                            const newButtons =
-                                createShopButtons(
-                                    newData.page,
-                                    newData.totalPages,
-                                    sessionId
-                                );
-
-
-                            await buttonInteraction.update({
-
-                                embeds: [
-                                    embed
-                                ],
-
-                                components: [
-                                    newButtons
-                                ]
-                            });
-
-
-                            return;
+                            currentPage =
+                                1;
                         }
 
 
-                        // =================================================
-                        // 📖 CHUYỂN TRANG
-                        // =================================================
+                        // =========================================
+                        // 🔄 CHUYỂN CATEGORY
+                        // =========================================
 
-                        if (
+                        else if (
+                            customId.startsWith(
+                                `${prefix}category_`
+                            )
+                        ) {
+
+                            currentCategory =
+                                customId.replace(
+                                    `${prefix}category_`,
+                                    ""
+                                );
+
+                            currentPage =
+                                1;
+                        }
+
+
+                        // =========================================
+                        // ◀️ ▶️ CHUYỂN TRANG
+                        // =========================================
+
+                        else if (
                             customId.startsWith(
                                 `${prefix}page_`
                             )
                         ) {
 
-                            const pageText =
-                                customId.replace(
-                                    `${prefix}page_`,
-                                    ""
-                                );
-
-
                             const page =
                                 Number(
-                                    pageText
+                                    customId.replace(
+                                        `${prefix}page_`,
+                                        ""
+                                    )
                                 );
-
-
-                            // -----------------------------------------
-                            // 🛡️ KIỂM TRA PAGE
-                            // -----------------------------------------
 
                             if (
                                 !Number.isInteger(
@@ -1786,92 +2425,84 @@ async function execute(
                             ) {
 
                                 return buttonInteraction.reply({
-
                                     content:
                                         "❌ Trang không hợp lệ.",
-
-                                    ephemeral:
-                                        true
+                                    ephemeral: true
                                 });
                             }
 
-
-                            const {
-                                embed,
-                                data: newData
-                            } =
-                                createShopEmbed(
-                                    page
-                                );
+                            currentPage =
+                                page;
+                        }
 
 
-                            const newButtons =
-                                createShopButtons(
-                                    newData.page,
-                                    newData.totalPages,
-                                    sessionId
-                                );
-
-
-                            await buttonInteraction.update({
-
-                                embeds: [
-                                    embed
-                                ],
-
-                                components: [
-                                    newButtons
-                                ]
-                            });
-
+                        else {
 
                             return;
                         }
 
+
+                        // =========================================
+                        // 🔄 RENDER
+                        // =========================================
+
+                        const {
+                            embed: nextEmbed,
+                            data: nextData
+                        } =
+                            createCategoryShopEmbed(
+                                currentCategory,
+                                currentPage
+                            );
+
+                        currentPage =
+                            nextData.page;
+
+                        const nextButtons =
+                            createCategoryButtons(
+                                currentCategory,
+                                nextData.page,
+                                nextData.totalPages,
+                                sessionId
+                            );
+
+                        await buttonInteraction.update({
+                            embeds: [
+                                nextEmbed
+                            ],
+                            components:
+                                nextButtons
+                        });
+
                     } catch (error) {
 
                         console.error(
-                            "❌ Lỗi khi xử lý nút cửa hàng:",
+                            "❌ Lỗi UI cửa hàng:",
                             error
                         );
-
 
                         try {
 
                             if (
-                                buttonInteraction.replied ||
-                                buttonInteraction.deferred
+                                !buttonInteraction.replied &&
+                                !buttonInteraction.deferred
                             ) {
 
-                                return;
+                                await buttonInteraction.reply({
+                                    content:
+                                        "❌ Cửa hàng gặp lỗi.",
+                                    ephemeral: true
+                                });
                             }
 
-
-                            await buttonInteraction.reply({
-
-                                content:
-                                    "❌ Đã xảy ra lỗi khi xử lý cửa hàng.",
-
-                                ephemeral:
-                                    true
-                            });
-
-                        } catch (
-                            replyError
-                        ) {
-
-                            console.error(
-                                "❌ Không thể gửi lỗi:",
-                                replyError
-                            );
-                        }
+                        } catch (_) {}
                     }
                 }
             );
 
 
             // =================================================
-            // ⏰ COLLECTOR KẾT THÚC
+            // ⏰ HẾT THỜI GIAN
             // =================================================
 
             collector.on(
@@ -1881,62 +2512,55 @@ async function execute(
                     try {
 
                         const {
-                            data: endData
+                            data: finalData
                         } =
-                            createShopEmbed(
-                                1
+                            createCategoryShopEmbed(
+                                currentCategory,
+                                currentPage
                             );
 
-
                         const disabledButtons =
-                            createShopButtons(
-                                endData.page,
-                                endData.totalPages,
+                            createCategoryButtons(
+                                currentCategory,
+                                finalData.page,
+                                finalData.totalPages,
                                 sessionId
                             );
 
+                        for (
+                            const row of disabledButtons
+                        ) {
 
-                        disabledButtons.components.forEach(
-                            button => {
+                            for (
+                                const button of row.components
+                            ) {
 
                                 button.setDisabled(
                                     true
                                 );
-
                             }
-                        );
-
+                        }
 
                         await message.edit({
-
-                            components: [
+                            components:
                                 disabledButtons
-                            ]
                         });
 
-                    } catch (
-                        error
-                    ) {
-
-                        // Message có thể đã bị xóa
-                        console.log(
-                            "ℹ️ Shop collector đã kết thúc."
-                        );
-                    }
+                    } catch (_) {}
                 }
             );
-
 
             return;
         }
 
 
         // =================================================
-        // 🛍️ /CUAHANG MUA
+        // 🛒 MUA
         // =================================================
 
         if (
-            subcommand === "mua"
+            subcommand ===
+            "mua"
         ) {
 
             const itemId =
@@ -1944,69 +2568,32 @@ async function execute(
                     "id"
                 );
 
-
-            if (
-                !itemId ||
-                !itemId.trim()
-            ) {
-
-                return interaction.reply({
-
-                    content:
-                        "❌ Bạn chưa nhập ID vật phẩm.",
-
-                    ephemeral:
-                        true
-                });
-            }
-
-
             return buyItem(
                 interaction,
-                itemId.trim()
+                itemId
             );
         }
 
-
-    } catch (
-        error
-    ) {
+    } catch (error) {
 
         console.error(
             "❌ Lỗi /cuahang:",
             error
         );
 
-
-        try {
-
-            if (
-                interaction.replied ||
-                interaction.deferred
-            ) {
-
-                return;
-            }
-
-
-            await interaction.reply({
-
-                content:
-                    "❌ Đã xảy ra lỗi khi mở cửa hàng.",
-
-                ephemeral:
-                    true
-            });
-
-        } catch (
-            replyError
+        if (
+            interaction.replied ||
+            interaction.deferred
         ) {
 
-            console.error(
-                "❌ Không thể gửi phản hồi lỗi:",
-                replyError
-            );
+            return;
         }
+
+        return interaction.reply({
+            content:
+                "❌ Đã xảy ra lỗi khi mở cửa hàng.",
+            ephemeral: true
+        });
     }
 }
 
@@ -2014,9 +2601,8 @@ async function execute(
 // =====================================================
 // 🔘 HANDLE BUTTON
 // =====================================================
-//
-// Giữ lại hàm này để index.js cũ của bot vẫn có thể
-// gọi được nếu đang có hệ thống interaction chung.
+// Giữ để tương thích với index.js nếu index.js
+// chuyển Button Interaction vào cuahang.js.
 // =====================================================
 
 async function handleButton(
@@ -2030,14 +2616,12 @@ async function handleButton(
         return false;
     }
 
+    const id =
+        interaction.customId || "";
 
-    const customId =
-        interaction.customId;
-
-
-    // Không phải button của shop
+    // Các button session được collector xử lý
     if (
-        !customId.startsWith(
+        id.startsWith(
             "shop_"
         )
     ) {
@@ -2045,192 +2629,10 @@ async function handleButton(
         return false;
     }
 
-
-    try {
-
-        // ---------------------------------------------
-        // 🔙 Hệ thống button cũ không có session
-        // ---------------------------------------------
-
-        if (
-            customId ===
-            "shop_home"
-        ) {
-
-            const {
-                embed,
-                data: shopData
-            } =
-                createShopEmbed(
-                    1
-                );
-
-
-            const buttons =
-                createShopButtons(
-                    shopData.page,
-                    shopData.totalPages
-                );
-
-
-            await interaction.update({
-
-                embeds: [
-                    embed
-                ],
-
-                components: [
-                    buttons
-                ]
-            });
-
-
-            return true;
-        }
-
-
-        // ---------------------------------------------
-        // 📖 Button trang cũ
-        // ---------------------------------------------
-
-        if (
-            customId.startsWith(
-                "shop_page_"
-            )
-        ) {
-
-            const page =
-                Number(
-                    customId.replace(
-                        "shop_page_",
-                        ""
-                    )
-                );
-
-
-            if (
-                !Number.isInteger(
-                    page
-                )
-            ) {
-
-                await interaction.reply({
-
-                    content:
-                        "❌ Trang không hợp lệ.",
-
-                    ephemeral:
-                        true
-                });
-
-                return true;
-            }
-
-
-            const {
-                embed,
-                data: shopData
-            } =
-                createShopEmbed(
-                    page
-                );
-
-
-            const buttons =
-                createShopButtons(
-                    shopData.page,
-                    shopData.totalPages
-                );
-
-
-            await interaction.update({
-
-                embeds: [
-                    embed
-                ],
-
-                components: [
-                    buttons
-                ]
-            });
-
-
-            return true;
-        }
-
-
-        // ---------------------------------------------
-        // 🔒 Button session mới
-        // ---------------------------------------------
-        //
-        // Các button dạng:
-        //
-        // shop_USERID_TIMESTAMP_home
-        // shop_USERID_TIMESTAMP_page_2
-        //
-        // được Collector trong execute() xử lý.
-        //
-        // Nếu index.js bắt trước Collector thì bỏ qua
-        // để tránh xử lý trùng.
-        // ---------------------------------------------
-
-        const sessionPattern =
-            /^shop_[0-9]+_[0-9]+_(home|page_[0-9]+)$/;
-
-
-        if (
-            sessionPattern.test(
-                customId
-            )
-        ) {
-
-            return false;
-        }
-
-
-        return false;
-
-    } catch (
-        error
-    ) {
-
-        console.error(
-            "❌ Lỗi handleButton cửa hàng:",
-            error
-        );
-
-
-        try {
-
-            if (
-                !interaction.replied &&
-                !interaction.deferred
-            ) {
-
-                await interaction.reply({
-
-                    content:
-                        "❌ Không thể xử lý nút cửa hàng.",
-
-                    ephemeral:
-                        true
-                });
-            }
-
-        } catch (
-            replyError
-        ) {
-
-            console.error(
-                "❌ Reply error:",
-                replyError
-            );
-        }
-
-
-        return true;
-    }
+    return false;
 }
+
+
 // =====================================================
 // 🔘 HANDLE INTERACTION
 // =====================================================
@@ -2242,7 +2644,8 @@ async function handleInteraction(
     if (
         !interaction.isButton()
     ) {
-        return false;
+
+        return null;
     }
 
     return handleButton(
@@ -2252,36 +2655,31 @@ async function handleInteraction(
 
 
 // =====================================================
-// 📊 THỐNG KÊ CỬA HÀNG
+// 📊 THỐNG KÊ
 // =====================================================
 
 function getShopStats() {
 
     const stats = {
         total: 0,
-
         congPhap: 0,
-
         danDuoc: 0,
-
         linhThu: 0,
-
         phapBao: 0,
-
         baoVat: 0,
-
-        dacBiet: 0
+        dacBiet: 0,
+        buaChu: 0,
+        vatPham: 0
     };
 
-
     for (
-        const shop
-        of Object.keys(SHOP)
+        const shop of Object.keys(
+            SHOP
+        )
     ) {
 
         for (
-            const category
-            of Object.keys(
+            const category of Object.keys(
                 SHOP[shop]
             )
         ) {
@@ -2291,87 +2689,68 @@ function getShopStats() {
                     SHOP[shop][category]
                 ).length;
 
-
             stats.total +=
                 count;
 
-
             if (
-                stats[
-                    category
-                ] !== undefined
+                stats[category] !==
+                undefined
             ) {
 
-                stats[
-                    category
-                ] += count;
+                stats[category] +=
+                    count;
+            }
+
+            if (
+                category ===
+                    "baoVat" ||
+                category ===
+                    "dacBiet"
+            ) {
+
+                stats.vatPham +=
+                    count;
             }
         }
     }
-
 
     return stats;
 }
 
 
 // =====================================================
-// 🔎 TÌM KIẾM VẬT PHẨM
+// 🔎 TÌM KIẾM
 // =====================================================
 
 function searchItems(
     keyword
 ) {
 
-    if (
-        !keyword
-    ) {
-
+    if (!keyword) {
         return [];
     }
-
 
     const key =
         String(keyword)
             .toLowerCase()
             .trim();
 
-
     return getAllShopItems()
         .filter(
             item => {
 
                 const name =
-                    String(
-                        item.name || ""
-                    )
+                    item.name
                         .toLowerCase();
 
-
-                const itemId =
-                    String(
-                        item.id || ""
-                    )
-                        .toLowerCase();
-
-
-                const readableId =
+                const id =
                     makeItemId(
                         item.name
                     );
 
-
                 return (
-                    name.includes(
-                        key
-                    ) ||
-
-                    itemId.includes(
-                        key
-                    ) ||
-
-                    readableId.includes(
-                        key
-                    )
+                    name.includes(key) ||
+                    id.includes(key)
                 );
             }
         );
@@ -2386,80 +2765,35 @@ function validateShop() {
 
     const errors = [];
 
-
     for (
-        const shop
-        of Object.keys(SHOP)
+        const shop of Object.keys(
+            SHOP
+        )
     ) {
 
-        if (
-            !SHOP[shop]
-        ) {
-
-            errors.push(
-                `Shop không tồn tại: ${shop}`
-            );
-
-            continue;
-        }
-
-
         for (
-            const category
-            of Object.keys(
+            const category of Object.keys(
                 SHOP[shop]
             )
         ) {
-
-            const items =
-                SHOP[shop][category];
-
-
-            if (
-                !items ||
-                typeof items !==
-                "object"
-            ) {
-
-                errors.push(
-                    `${shop}/${category}: dữ liệu không hợp lệ`
-                );
-
-                continue;
-            }
-
 
             for (
                 const [
                     id,
                     item
-                ]
-                of Object.entries(
-                    items
+                ] of Object.entries(
+                    SHOP[shop][category]
                 )
             ) {
-
-                if (
-                    !item
-                ) {
-
-                    errors.push(
-                        `${shop}/${category}/${id}: item rỗng`
-                    );
-
-                    continue;
-                }
-
 
                 if (
                     !item.name
                 ) {
 
                     errors.push(
-                        `${shop}/${category}/${id}: thiếu tên`
+                        `${id}: thiếu tên`
                     );
                 }
-
 
                 if (
                     typeof item.cost !==
@@ -2467,10 +2801,9 @@ function validateShop() {
                 ) {
 
                     errors.push(
-                        `${shop}/${category}/${id}: giá không hợp lệ`
+                        `${id}: giá không hợp lệ`
                     );
                 }
-
 
                 if (
                     typeof item.requiredRealm !==
@@ -2478,395 +2811,155 @@ function validateShop() {
                 ) {
 
                     errors.push(
-                        `${shop}/${category}/${id}: cảnh giới không hợp lệ`
+                        `${id}: cảnh giới không hợp lệ`
                     );
                 }
 
-
                 if (
-                    item.requiredRealm <
-                    0 ||
-                    item.requiredRealm >=
-                    REALMS.length
+                    !item.effect
                 ) {
 
                     errors.push(
-                        `${shop}/${category}/${id}: cảnh giới nằm ngoài phạm vi`
+                        `${id}: thiếu effect`
                     );
                 }
             }
         }
     }
-
 
     return errors;
 }
 
 
 // =====================================================
-// 📦 LẤY VẬT PHẨM THEO SHOP
+// 📦 GET PAGE CŨ - TƯƠNG THÍCH
 // =====================================================
 
-function getShopItems(
-    shopName
-) {
-
-    if (
-        !SHOP[shopName]
-    ) {
-
-        return [];
-    }
-
-
-    const result = [];
-
-
-    for (
-        const category
-        of Object.keys(
-            SHOP[shopName]
-        )
-    ) {
-
-        for (
-            const item
-            of Object.values(
-                SHOP[shopName][category]
-            )
-        ) {
-
-            result.push({
-                ...item,
-
-                shop:
-                    shopName,
-
-                category
-            });
-        }
-    }
-
-
-    return result;
-}
-
-
-// =====================================================
-// 📚 LẤY TÊN SHOP
-// =====================================================
-
-function getShopName(
-    shopName
-) {
-
-    return (
-        SHOPS[shopName]?.name ||
-        shopName
-    );
-}
-
-
-// =====================================================
-// 📖 LẤY THÔNG TIN TRANG
-// =====================================================
-
-function getPageInfo(
+function getShopPage(
     page = 1,
     pageSize = 12
 ) {
 
-    const data =
-        getShopPage(
-            page,
-            pageSize
+    const items =
+        getAllShopItems();
+
+    const totalPages =
+        Math.max(
+            1,
+            Math.ceil(
+                items.length /
+                pageSize
+            )
         );
 
+    page =
+        Math.max(
+            1,
+            Math.min(
+                Number(page) || 1,
+                totalPages
+            )
+        );
+
+    const start =
+        (page - 1) *
+        pageSize;
 
     return {
+        items:
+            items.slice(
+                start,
+                start + pageSize
+            ),
 
-        currentPage:
-            data.page,
+        page,
 
-        totalPages:
-            data.totalPages,
+        totalPages,
 
         totalItems:
-            data.totalItems,
-
-        pageSize,
-
-        hasPrevious:
-            data.page > 1,
-
-        hasNext:
-            data.page <
-            data.totalPages
+            items.length
     };
 }
 
 
 // =====================================================
-// 🛒 KIỂM TRA ITEM CÓ TỒN TẠI
+// 🏪 CREATE SHOP EMBED CŨ
 // =====================================================
 
-function itemExists(
-    itemId
+function createShopEmbed(
+    page = 1
 ) {
 
-    return Boolean(
-        findItem(
-            itemId
-        ) ||
-        findItemByReadableId(
-            itemId
-        )
+    return createCategoryShopEmbed(
+        "danDuoc",
+        page
     );
 }
 
 
 // =====================================================
-// 💰 ĐỊNH DẠNG GIÁ
+// 🔘 CREATE BUTTON CŨ
 // =====================================================
 
-function formatPrice(
-    price
+function createShopButtons(
+    page,
+    totalPages
 ) {
 
-    return `${Number(
-        price || 0
-    ).toLocaleString()} 💎`;
-}
-
-
-// =====================================================
-// 🌌 ĐỊNH DẠNG CẢNH GIỚI
-// =====================================================
-
-function formatRealm(
-    realmIndex
-) {
-
-    return (
-        REALMS[
-            Number(
-                realmIndex
+    const previous =
+        new ButtonBuilder()
+            .setCustomId(
+                `shop_page_${Math.max(
+                    1,
+                    page - 1
+                )}`
             )
-        ] ||
-        "Phàm Nhân"
-    );
-}
-
-
-// =====================================================
-// 🆔 LẤY ID HIỂN THỊ
-// =====================================================
-
-function getDisplayItemId(
-    item
-) {
-
-    if (
-        item.id &&
-        !String(
-            item.id
-        ).startsWith(
-            "cp-"
-        ) &&
-        !String(
-            item.id
-        ).startsWith(
-            "dd-"
-        ) &&
-        !String(
-            item.id
-        ).startsWith(
-            "lt-"
-        ) &&
-        !String(
-            item.id
-        ).startsWith(
-            "pb-"
-        ) &&
-        !String(
-            item.id
-        ).startsWith(
-            "bv-"
-        ) &&
-        !String(
-            item.id
-        ).startsWith(
-            "db-"
-        )
-    ) {
-
-        return item.id;
-    }
-
-
-    return makeItemId(
-        item.name
-    );
-}
-
-
-// =====================================================
-// 🧹 DỌN DỮ LIỆU ITEM
-// =====================================================
-
-function normalizeItem(
-    item
-) {
-
-    if (
-        !item
-    ) {
-
-        return null;
-    }
-
-
-    return {
-
-        ...item,
-
-        id:
-            item.id ||
-            makeItemId(
-                item.name
-            ),
-
-        name:
-            item.name ||
-            "Vật phẩm không tên",
-
-        requiredRealm:
-            Number(
-                item.requiredRealm || 0
-            ),
-
-        cost:
-            Number(
-                item.cost || 0
-            ),
-
-        rarity:
-            item.rarity ||
-            "⚪ Phàm",
-
-        effect:
-            item.effect ||
-            {}
-    };
-}
-
-
-// =====================================================
-// 📦 CHUẨN HÓA TOÀN BỘ SHOP
-// =====================================================
-
-function normalizeShopData() {
-
-    for (
-        const shop
-        of Object.keys(SHOP)
-    ) {
-
-        for (
-            const category
-            of Object.keys(
-                SHOP[shop]
+            .setLabel(
+                "◀️ Trang trước"
             )
-        ) {
+            .setStyle(
+                ButtonStyle.Secondary
+            )
+            .setDisabled(
+                page <= 1
+            );
 
-            const items =
-                SHOP[shop][category];
+    const home =
+        new ButtonBuilder()
+            .setCustomId(
+                "shop_home"
+            )
+            .setLabel(
+                "🏪 Trang 1"
+            )
+            .setStyle(
+                ButtonStyle.Primary
+            );
 
+    const next =
+        new ButtonBuilder()
+            .setCustomId(
+                `shop_page_${Math.min(
+                    totalPages,
+                    page + 1
+                )}`
+            )
+            .setLabel(
+                "Trang sau ▶️"
+            )
+            .setStyle(
+                ButtonStyle.Secondary
+            )
+            .setDisabled(
+                page >= totalPages
+            );
 
-            for (
-                const id
-                of Object.keys(
-                    items
-                )
-            ) {
-
-                const normalized =
-                    normalizeItem(
-                        items[id]
-                    );
-
-
-                if (
-                    normalized
-                ) {
-
-                    items[id] =
-                        normalized;
-                }
-            }
-        }
-    }
-}
-
-
-// Chạy chuẩn hóa một lần
-normalizeShopData();
-
-
-// =====================================================
-// 🧪 VALIDATE KHI KHỞI ĐỘNG
-// =====================================================
-
-const shopErrors =
-    validateShop();
-
-
-if (
-    shopErrors.length > 0
-) {
-
-    console.warn(
-        "⚠️ SHOP CÓ LỖI:"
-    );
-
-
-    shopErrors
-        .slice(
-            0,
-            20
-        )
-        .forEach(
-            error => {
-
-                console.warn(
-                    " -",
-                    error
-                );
-            }
+    return new ActionRowBuilder()
+        .addComponents(
+            previous,
+            home,
+            next
         );
-
-
-    if (
-        shopErrors.length >
-        20
-    ) {
-
-        console.warn(
-            `... và ${
-                shopErrors.length - 20
-            } lỗi khác.`
-        );
-    }
-
-} else {
-
-    const stats =
-        getShopStats();
-
-
-    console.log(
-        `✅ Cửa hàng đã tải: ${stats.total} vật phẩm`
-    );
 }
 
 
@@ -2876,106 +2969,61 @@ if (
 
 module.exports = {
 
-    // ---------------------------------------------
-    // Slash Command
-    // ---------------------------------------------
-
+    // Slash command
     data,
 
+    // Execute
     execute,
 
-
-    // ---------------------------------------------
-    // Interaction / Button
-    // ---------------------------------------------
-
+    // Button
     handleButton,
 
+    // Interaction
     handleInteraction,
 
-
-    // ---------------------------------------------
-    // Database / Shop
-    // ---------------------------------------------
-
+    // Shop
     SHOP,
-
     SHOPS,
 
-    REALMS,
-
-    RARITIES,
-
-
-    // ---------------------------------------------
-    // Item
-    // ---------------------------------------------
-
+    // Items
     findItem,
-
     findItemByReadableId,
-
     getAllShopItems,
 
-    getShopItems,
-
-    itemExists,
-
-
-    // ---------------------------------------------
     // Pagination
-    // ---------------------------------------------
-
     getShopPage,
+    getCategoryPage,
 
-    getPageInfo,
-
-
-    // ---------------------------------------------
     // Search
-    // ---------------------------------------------
-
     searchItems,
 
-
-    // ---------------------------------------------
-    // Statistics
-    // ---------------------------------------------
-
+    // Stats
     getShopStats,
 
+    // Validation
     validateShop,
 
-
-    // ---------------------------------------------
     // UI
-    // ---------------------------------------------
-
     createShopEmbed,
-
     createShopButtons,
+    createCategoryShopEmbed,
+    createCategoryButtons,
 
-
-    // ---------------------------------------------
     // Purchase
-    // ---------------------------------------------
-
     buyItem,
 
-
-    // ---------------------------------------------
-    // Helpers
-    // ---------------------------------------------
-
+    // ID
     makeItemId,
 
-    getDisplayItemId,
+    // Category
+    getCategoryItems,
 
-    formatPrice,
+    // Effects
+    getEffectText,
 
-    formatRealm,
+    // Realm
+    getRealmIndex,
 
-    getShopName,
-
-    normalizeItem
+    // Inventory
+    addToInventory
 };
