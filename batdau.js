@@ -5,34 +5,706 @@ const {
     StringSelectMenuBuilder
 } = require("discord.js");
 
-const db =
-    require("./database");
+const db = require("./database");
 
 // =====================================================
-// ⚔️ /BATDAU
-// =====================================================
-// Khi người chơi chưa có nhân vật:
-//
-// /batdau
-//      ↓
-// Chọn con đường
-//      ↓
-// ⚔️ Chính Đạo
-// ☠️ Ma Đạo
-//
-// Người đã có nhân vật sẽ không bị tạo lại.
+// 🌌 THÔNG TIN 3 CON ĐƯỜNG
 // =====================================================
 
+const DAO_PATHS = {
+
+    chinhdao: {
+        name: "⚔️ CHÍNH ĐẠO",
+        value: "chinhdao",
+        description:
+            "Tu luyện chính thống, cân bằng công và thủ.",
+        color: 0x3498db,
+
+        hpMultiplier: 1.00,
+        linhLucMultiplier: 1.00,
+        congMultiplier: 1.00,
+        thuMultiplier: 1.10,
+
+        icon: "⚔️"
+    },
+
+    maDao: {
+        name: "☠️ MA ĐẠO",
+        value: "madao",
+        description:
+            "Ma lực mạnh mẽ, thiên về công kích và sức mạnh.",
+        color: 0x8e44ad,
+
+        hpMultiplier: 1.10,
+        linhLucMultiplier: 1.15,
+        congMultiplier: 1.30,
+        thuMultiplier: 0.95,
+
+        icon: "☠️"
+    },
+
+    yeuDao: {
+        name: "🐉 YÊU ĐẠO",
+        value: "yeudao",
+        description:
+            "Huyết mạch Yêu tộc, thân thể cực mạnh và sức chiến đấu vượt trội.",
+        color: 0xe67e22,
+
+        // 🐉 YÊU ĐẠO MẠNH HƠN
+        hpMultiplier: 1.50,
+        linhLucMultiplier: 1.35,
+        congMultiplier: 1.60,
+        thuMultiplier: 1.45,
+
+        icon: "🐉"
+    }
+};
+
+// =====================================================
+// 🐉 BUFF YÊU ĐẠO
+// =====================================================
+
+const YEU_DAO_BUFF = {
+    hp: 50,
+    linhLuc: 35,
+    cong: 60,
+    thu: 45,
+    tuLuyen: 30,
+    dotPha: 20
+};
+
+// =====================================================
+// ☠️ BUFF MA ĐẠO
+// =====================================================
+
+const MA_DAO_BUFF = {
+    hp: 10,
+    linhLuc: 15,
+    cong: 30,
+    thu: 0,
+    tuLuyen: 15,
+    dotPha: 10
+};
+
+// =====================================================
+// ⚔️ BUFF CHÍNH ĐẠO
+// =====================================================
+
+const CHINH_DAO_BUFF = {
+    hp: 5,
+    linhLuc: 5,
+    cong: 10,
+    thu: 15,
+    tuLuyen: 10,
+    dotPha: 5
+};
+
+// =====================================================
+// 🔧 LẤY BUFF THEO ĐẠO
+// =====================================================
+
+function getDaoBuff(dao) {
+
+    if (dao === "yeudao") {
+        return {
+            ...YEU_DAO_BUFF
+        };
+    }
+
+    if (dao === "madao") {
+        return {
+            ...MA_DAO_BUFF
+        };
+    }
+
+    return {
+        ...CHINH_DAO_BUFF
+    };
+}
+
+// =====================================================
+// 🏷️ TÊN ĐẠO
+// =====================================================
+
+function getDaoName(dao) {
+
+    if (dao === "yeudao") {
+        return "🐉 Yêu Đạo";
+    }
+
+    if (dao === "madao") {
+        return "☠️ Ma Đạo";
+    }
+
+    return "⚔️ Chính Đạo";
+}
+
+// =====================================================
+// 🎨 MÀU ĐẠO
+// =====================================================
+
+function getDaoColor(dao) {
+
+    if (dao === "yeudao") {
+        return 0xe67e22;
+    }
+
+    if (dao === "madao") {
+        return 0x8e44ad;
+    }
+
+    return 0x3498db;
+}
+
+// =====================================================
+// 📜 MÔ TẢ ĐẠO
+// =====================================================
+
+function getDaoDescription(dao) {
+
+    if (dao === "yeudao") {
+
+        return [
+            "🐉 **YÊU ĐẠO**",
+            "",
+            "🌟 Huyết mạch Yêu tộc thức tỉnh.",
+            "💪 Thân thể mạnh mẽ hơn người tu tiên.",
+            "⚔️ Công kích tăng mạnh.",
+            "🛡️ Phòng thủ tăng mạnh.",
+            "❤️ Sinh lực tăng mạnh.",
+            "🔥 Linh lực tăng cao.",
+            "",
+            "⭐ **Đặc biệt:** Yêu Đạo có sức mạnh tộc cao hơn."
+        ].join("\n");
+    }
+
+    if (dao === "madao") {
+
+        return [
+            "☠️ **MA ĐẠO**",
+            "",
+            "🔥 Ma lực hung bạo.",
+            "⚔️ Công kích cao.",
+            "❤️ Sinh lực khá cao.",
+            "🔥 Linh lực mạnh.",
+            "⚡ Tốc độ tu luyện tốt.",
+            "",
+            "☠️ Con đường lấy sát phạt chứng đạo."
+        ].join("\n");
+    }
+
+    return [
+        "⚔️ **CHÍNH ĐẠO**",
+        "",
+        "🌟 Tu luyện chính thống.",
+        "🛡️ Phòng thủ ổn định.",
+        "⚔️ Công kích cân bằng.",
+        "🔥 Linh lực ổn định.",
+        "",
+        "⚔️ Con đường chính đạo lấy tu thân chứng đạo."
+    ].join("\n");
+}
+
+// =====================================================
+// 🧬 TẠO MENU CHỌN ĐẠO
+// =====================================================
+
+function createDaoMenu(userId) {
+
+    const menu =
+        new StringSelectMenuBuilder()
+            .setCustomId(
+                `batdau_dao_${userId}`
+            )
+            .setPlaceholder(
+                "🌌 Chọn con đường chứng đạo..."
+            )
+            .addOptions(
+
+                {
+                    label:
+                        "⚔️ Chính Đạo",
+                    description:
+                        "Con đường tu luyện chính thống, cân bằng.",
+                    value:
+                        "chinhdao",
+                    emoji:
+                        "⚔️"
+                },
+
+                {
+                    label:
+                        "☠️ Ma Đạo",
+                    description:
+                        "Ma lực mạnh mẽ, công kích cao.",
+                    value:
+                        "madao",
+                    emoji:
+                        "☠️"
+                },
+
+                {
+                    label:
+                        "🐉 Yêu Đạo",
+                    description:
+                        "Yêu tộc huyết mạch mạnh, sức mạnh vượt trội.",
+                    value:
+                        "yeudao",
+                    emoji:
+                        "🐉"
+                }
+            );
+
+    return new ActionRowBuilder()
+        .addComponents(menu);
+}
+
+// =====================================================
+// 🌌 EMBED CHỌN ĐẠO
+// =====================================================
+
+function createDaoEmbed(username) {
+
+    return new EmbedBuilder()
+
+        .setColor(0xf1c40f)
+
+        .setTitle(
+            "🌌 HỒNG HOANG ĐẠI LỤC"
+        )
+
+        .setDescription(
+
+            `✨ **${username}**, ngươi đã bước vào Hồng Hoang.\n\n` +
+
+            `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+            `🌌 **THIÊN ĐẠO BAN CHO NGƯƠI 3 CON ĐƯỜNG**\n\n` +
+
+            `⚔️ **CHÍNH ĐẠO**\n` +
+            `> Tu luyện chính thống, công thủ cân bằng.\n\n` +
+
+            `☠️ **MA ĐẠO**\n` +
+            `> Ma lực mạnh mẽ, lấy sát phạt chứng đạo.\n\n` +
+
+            `🐉 **YÊU ĐẠO**\n` +
+            `> Huyết mạch Yêu tộc, thân thể và sức mạnh vượt trội.\n\n` +
+
+            `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+            `⚠️ **Hãy lựa chọn con đường của ngươi.**\n` +
+            `Lựa chọn này sẽ quyết định sức mạnh và con đường tu luyện của nhân vật.`
+        )
+
+        .setFooter({
+            text:
+                "🌌 Hồng Hoang Đại Lục • Thiên mệnh đã định"
+        });
+}
+
+// =====================================================
+// 🧬 TẠO NHÂN VẬT SAU KHI CHỌN ĐẠO
+// =====================================================
+
+async function createCharacter(
+    interaction,
+    dao
+) {
+
+    const userId =
+        interaction.user.id;
+
+    const username =
+        interaction.user.username;
+
+    // =================================================
+    // KIỂM TRA LẠI NHÂN VẬT
+    // =================================================
+
+    let player =
+        db.getPlayer(
+            userId
+        );
+
+    if (player) {
+
+        return interaction.update({
+
+            content:
+                "⚠️ Bạn đã có nhân vật rồi.",
+
+            embeds: [],
+
+            components: []
+        });
+    }
+
+    // =================================================
+    // TẠO NHÂN VẬT
+    // =================================================
+
+    player =
+        db.createPlayer(
+            userId,
+            username
+        );
+
+    // =================================================
+    // QUAY LINH CĂN
+    // =================================================
+
+    const linhCan =
+        db.generateLinhCan();
+
+    // =================================================
+    // BUFF LINH CĂN
+    // =================================================
+
+    const linhCanBuff =
+        linhCan.buff || {};
+
+    // =================================================
+    // BUFF ĐẠO
+    // =================================================
+
+    const daoBuff =
+        getDaoBuff(
+            dao
+        );
+
+    // =================================================
+    // CHỈ SỐ CƠ BẢN
+    // =================================================
+
+    const baseHp =
+        Number(
+            player.maxHp
+        ) || 100;
+
+    const baseLinhLuc =
+        Number(
+            player.linhLuc
+        ) || 0;
+
+    const baseCong =
+        Number(
+            player.cong
+        ) || 10;
+
+    const baseThu =
+        Number(
+            player.thu
+        ) || 5;
+
+    // =================================================
+    // ❤️ HP
+    // =================================================
+
+    let hp =
+        Math.round(
+            baseHp *
+
+            (
+                1 +
+
+                (
+                    Number(
+                        linhCanBuff.hp
+                    ) || 0
+                ) / 100
+            )
+        );
+
+    hp =
+        Math.round(
+            hp *
+            (
+                1 +
+                daoBuff.hp / 100
+            )
+        );
+
+    // =================================================
+    // 🔥 LINH LỰC
+    // =================================================
+
+    let linhLuc =
+        Math.round(
+            baseLinhLuc +
+
+            (
+                Number(
+                    linhCanBuff.linhLuc
+                ) || 0
+            )
+        );
+
+    linhLuc =
+        Math.round(
+            linhLuc *
+            (
+                1 +
+                daoBuff.linhLuc / 100
+            )
+        );
+
+    // =================================================
+    // ⚔️ CÔNG
+    // =================================================
+
+    let cong =
+        Math.round(
+            baseCong *
+
+            (
+                1 +
+
+                (
+                    Number(
+                        linhCanBuff.cong
+                    ) || 0
+                ) / 100
+            )
+        );
+
+    cong =
+        Math.round(
+            cong *
+            (
+                1 +
+                daoBuff.cong / 100
+            )
+        );
+
+    // =================================================
+    // 🛡️ THỦ
+    // =================================================
+
+    let thu =
+        Math.round(
+            baseThu *
+
+            (
+                1 +
+
+                (
+                    Number(
+                        linhCanBuff.thu
+                    ) || 0
+                ) / 100
+            )
+        );
+
+    thu =
+        Math.round(
+            thu *
+            (
+                1 +
+                daoBuff.thu / 100
+            )
+        );
+
+    // =================================================
+    // 💾 LƯU NHÂN VẬT
+    // =================================================
+
+    player =
+        db.updatePlayer(
+
+            userId,
+
+            {
+
+                // ===============================
+                // 🌌 CON ĐƯỜNG
+                // ===============================
+
+                dao:
+                    dao,
+
+                conDuong:
+                    dao,
+
+                phuongDao:
+                    dao,
+
+                // ===============================
+                // 🧬 LINH CĂN
+                // ===============================
+
+                linhCan:
+                    linhCan,
+
+                // ===============================
+                // ❤️ CHỈ SỐ
+                // ===============================
+
+                hp:
+                    hp,
+
+                maxHp:
+                    hp,
+
+                linhLuc:
+                    linhLuc,
+
+                cong:
+                    cong,
+
+                thu:
+                    thu,
+
+                // ===============================
+                // 🌱 CẢNH GIỚI
+                // ===============================
+
+                canhGioi:
+                    player.canhGioi ||
+                    "Luyện Khí",
+
+                tang:
+                    player.tang ||
+                    1,
+
+                // ===============================
+                // ✨ TU VI
+                // ===============================
+
+                tuvi:
+                    Number(
+                        player.tuvi
+                    ) || 0
+            }
+        );
+
+    // =================================================
+    // 📊 BUFF HIỂN THỊ
+    // =================================================
+
+    const buffText =
+
+        `⚔️ Tu luyện: **+${daoBuff.tuLuyen}%**\n` +
+
+        `❤️ Sinh lực: **+${daoBuff.hp}%**\n` +
+
+        `🔥 Linh lực: **+${daoBuff.linhLuc}%**\n` +
+
+        `🗡️ Công: **+${daoBuff.cong}%**\n` +
+
+        `🛡️ Thủ: **+${daoBuff.thu}%**\n` +
+
+        `🌟 Đột phá: **+${daoBuff.dotPha}%**`;
+
+    // =================================================
+    // 🌌 EMBED KẾT QUẢ
+    // =================================================
+
+    const embed =
+
+        new EmbedBuilder()
+
+            .setColor(
+                getDaoColor(
+                    dao
+                )
+            )
+
+            .setTitle(
+                `${getDaoName(dao)} • HỒNG HOANG ĐẠI LỤC`
+            )
+
+            .setDescription(
+
+                `✨ **${username}** đã chọn con đường **${getDaoName(dao)}**!\n\n` +
+
+                `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+                `🌌 **CON ĐƯỜNG CHỨNG ĐẠO**\n\n` +
+
+                `${getDaoDescription(dao)}\n\n` +
+
+                `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+                `🧬 **LINH CĂN THỨC TỈNH**\n\n` +
+
+                `## ${linhCan.ten}\n\n` +
+
+                `💠 **Phẩm cấp:** ${linhCan.phamCap}\n\n` +
+
+                `🌈 **Thuộc tính:** ${linhCan.thuocTinh}\n\n` +
+
+                `📜 ${linhCan.moTa}\n\n` +
+
+                `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+                `📊 **THIÊN PHÚ CỦA ${getDaoName(dao).toUpperCase()}**\n\n` +
+
+                buffText +
+
+                `\n\n━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+                `🌱 **Cảnh giới:** ${player.canhGioi || "Luyện Khí"} tầng ${player.tang || 1}\n` +
+
+                `⚔️ **Tu Vi:** ${Number(player.tuvi || 0).toLocaleString()}\n` +
+
+                `🔥 **Linh lực:** ${Number(player.linhLuc || 0).toLocaleString()}\n` +
+
+                `❤️ **Sinh lực:** ${Number(player.hp || 0).toLocaleString()}/${Number(player.maxHp || 0).toLocaleString()}\n` +
+
+                `🗡️ **Công:** ${Number(player.cong || 0).toLocaleString()}\n` +
+
+                `🛡️ **Thủ:** ${Number(player.thu || 0).toLocaleString()}\n` +
+
+                `💎 **Linh thạch:** ${Number(player.linhThach || 0).toLocaleString()}\n\n` +
+
+                `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+                `${getDaoName(dao)} đã được ghi nhận.\n` +
+
+                `⚔️ Con đường chứng đạo của ngươi chính thức bắt đầu!`
+            )
+
+            .setFooter({
+
+                text:
+                    `Hồng Hoang Đại Lục • ${getDaoName(dao)}`
+            });
+
+    // =================================================
+    // 📤 HIỂN THỊ
+    // =================================================
+
+    return interaction.update({
+
+        embeds: [
+            embed
+        ],
+
+        components: []
+    });
+}
+
+// =====================================================
+// /BATDAU
+// =====================================================
 
 module.exports = {
 
     data:
+
         new SlashCommandBuilder()
-            .setName("batdau")
+
+            .setName(
+                "batdau"
+            )
+
             .setDescription(
                 "🌌 Bắt đầu con đường tu luyện tại Hồng Hoang"
             ),
 
+    // =================================================
+    // ⚙️ EXECUTE
+    // =================================================
 
     async execute(
         interaction
@@ -44,19 +716,17 @@ module.exports = {
         const username =
             interaction.user.username;
 
-
         // =================================================
-        // 🔍 KIỂM TRA NHÂN VẬT
+        // KIỂM TRA NHÂN VẬT
         // =================================================
 
-        let player =
+        const player =
             db.getPlayer(
                 userId
             );
 
-
         // =================================================
-        // 👤 ĐÃ CÓ NHÂN VẬT
+        // ĐÃ CÓ NHÂN VẬT
         // =================================================
 
         if (player) {
@@ -72,7 +742,6 @@ module.exports = {
 
             let thuocTinhText =
                 "Chưa xác định";
-
 
             if (
                 linhCan &&
@@ -93,58 +762,6 @@ module.exports = {
                     "Chưa xác định";
             }
 
-
-            // =============================================
-            // ⚔️ HIỂN THỊ CON ĐƯỜNG
-            // =============================================
-
-            let daoText =
-                "⚔️ Chính Đạo";
-
-            if (
-                player.dao ===
-                    "madao" ||
-                player.conDuong ===
-                    "madao"
-            ) {
-
-                daoText =
-                    "☠️ Ma Đạo";
-            }
-
-
-            // =============================================
-            // ☠️ THÔNG TIN MA ĐẠO
-            // =============================================
-
-            let maDaoText =
-                "";
-
-            if (
-                player.dao ===
-                    "madao" ||
-                player.conDuong ===
-                    "madao"
-            ) {
-
-                maDaoText =
-                    `\n☠️ **Ma Tu Vi:** ${
-                        Number(
-                            player.maTuVi ||
-                            0
-                        ).toLocaleString()
-                    }\n` +
-
-                    `👹 **Cảnh giới Ma Đạo:** ${
-                        player.maCanhGioi ||
-                        "Ma Đồ"
-                    } tầng ${
-                        player.maTang ||
-                        1
-                    }\n`;
-            }
-
-
             return interaction.reply({
 
                 embeds: [
@@ -152,10 +769,11 @@ module.exports = {
                     new EmbedBuilder()
 
                         .setColor(
-                            player.dao ===
-                                "madao"
-                                ? 0x8b0000
-                                : 0x3498db
+                            getDaoColor(
+                                player.dao ||
+                                player.conDuong ||
+                                "chinhdao"
+                            )
                         )
 
                         .setTitle(
@@ -166,7 +784,11 @@ module.exports = {
 
                             `⚠️ **${username}** đã có nhân vật tại Hồng Hoang.\n\n` +
 
-                            `🛤️ **Con đường:** ${daoText}\n\n` +
+                            `🌌 **Con đường:** ${getDaoName(
+                                player.dao ||
+                                player.conDuong ||
+                                "chinhdao"
+                            )}\n\n` +
 
                             `🧬 **Linh Căn:** ${linhCanText}\n` +
 
@@ -174,25 +796,12 @@ module.exports = {
 
                             `🌈 **Thuộc tính:** ${thuocTinhText}\n\n` +
 
-                            `🌱 **Cảnh giới:** ${
-                                player.canhGioi ||
-                                "Luyện Khí"
-                            } tầng ${
-                                player.tang ||
-                                1
-                            }\n` +
+                            `🌱 **Cảnh giới:** ${player.canhGioi || "Luyện Khí"} tầng ${player.tang || 1}\n` +
 
-                            `⚔️ **Tu Vi:** ${
-                                Number(
-                                    player.tuvi
-                                ).toLocaleString()
-                            }\n` +
+                            `⚔️ **Tu Vi:** ${Number(player.tuvi || 0).toLocaleString()}\n\n` +
 
-                            maDaoText +
-
-                            `\n📜 Dùng \`/tuvi\` để xem toàn bộ thông tin.`
+                            `📜 Dùng \`/tuvi\` để xem toàn bộ thông tin.`
                         )
-
                 ],
 
                 ephemeral:
@@ -200,677 +809,140 @@ module.exports = {
             });
         }
 
-
         // =================================================
-        // 🛤️ CHỌN CON ĐƯỜNG
-        // =================================================
-
-        const menu =
-            new StringSelectMenuBuilder()
-
-                .setCustomId(
-                    `batdau_conduong_${userId}`
-                )
-
-                .setPlaceholder(
-                    "🛤️ Chọn con đường tu luyện..."
-                )
-
-                .addOptions([
-
-                    // =========================================
-                    // ⚔️ CHÍNH ĐẠO
-                    // =========================================
-
-                    {
-                        label:
-                            "⚔️ Chính Đạo",
-
-                        description:
-                            "Tu luyện linh lực, chứng đạo thành tiên",
-
-                        value:
-                            "chinhdao",
-
-                        emoji:
-                            "⚔️"
-                    },
-
-
-                    // =========================================
-                    // ☠️ MA ĐẠO
-                    // =========================================
-
-                    {
-                        label:
-                            "☠️ Ma Đạo",
-
-                        description:
-                            "Tu luyện ma khí, bước lên con đường Ma Tổ",
-
-                        value:
-                            "madao",
-
-                        emoji:
-                            "☠️"
-                    }
-
-                ]);
-
-
-        const row =
-            new ActionRowBuilder()
-                .addComponents(
-                    menu
-                );
-
-
-        // =================================================
-        // 🌌 EMBED CHỌN ĐẠO
+        // 🛡️ MENU CHỌN ĐẠO
         // =================================================
 
         const embed =
-            new EmbedBuilder()
-
-                .setColor(
-                    0x8e44ad
-                )
-
-                .setTitle(
-                    "🌌 HỒNG HOANG ĐẠI LỤC"
-                )
-
-                .setDescription(
-
-                    `✨ **${username}**, ngươi đã bước vào Hồng Hoang.\n\n` +
-
-                    `## 🛤️ HÃY CHỌN CON ĐƯỜNG CỦA NGƯƠI\n\n` +
-
-                    `⚔️ **CHÍNH ĐẠO**\n` +
-                    `> Tu luyện linh lực, hấp thu thiên địa linh khí.\n` +
-                    `> Cảnh giới: **Luyện Khí → Đại Đạo**\n\n` +
-
-                    `☠️ **MA ĐẠO**\n` +
-                    `> Tu luyện ma khí, thôn phệ vạn vật, nghịch thiên chứng đạo.\n` +
-                    `> Cảnh giới: **Ma Đồ → Ma Đạo Chí Tôn**\n\n` +
-
-                    `━━━━━━━━━━━━━━━━━━━━\n\n` +
-
-                    `⚠️ **Hãy lựa chọn cẩn thận!**\n` +
-                    `Con đường được chọn sẽ trở thành con đường tu luyện của ngươi.`
-                )
-
-                .setFooter({
-                    text:
-                        "Hồng Hoang Đại Lục • Thiên mệnh đã định"
-                });
-
-
-        // =================================================
-        // 📤 GỬI MENU
-        // =================================================
-
-        return interaction.reply({
-
-            embeds: [
-                embed
-            ],
-
-            components: [
-                row
-            ],
-
-            ephemeral:
-                true
-        });
-    },
-
-
-    // =====================================================
-    // 🔽 XỬ LÝ SELECT MENU
-    // =====================================================
-
-    async handleSelect(
-        interaction
-    ) {
-
-        const customId =
-            interaction.customId || "";
-
-
-        // Không phải menu của /batdau
-        if (
-            !customId.startsWith(
-                "batdau_conduong_"
-            )
-        ) {
-
-            return false;
-        }
-
-
-        // =================================================
-        // 🔒 LẤY USER ID TỪ MENU
-        // =================================================
-
-        const menuUserId =
-            customId.replace(
-                "batdau_conduong_",
-                ""
+            createDaoEmbed(
+                username
             );
 
-
-        // =================================================
-        // 🚫 NGƯỜI KHÁC KHÔNG ĐƯỢC CHỌN
-        // =================================================
-
-        if (
-            menuUserId !==
-            interaction.user.id
-        ) {
-
-            return interaction.reply({
-
-                content:
-                    "❌ Menu này không dành cho bạn.",
-
-                ephemeral:
-                    true
-            });
-        }
-
-
-        // =================================================
-        // 🔍 KIỂM TRA PLAYER
-        // =================================================
-
-        let player =
-            db.getPlayer(
-                menuUserId
+        const row =
+            createDaoMenu(
+                userId
             );
 
-
-        if (player) {
-
-            return interaction.update({
-
-                content:
-                    "⚠️ Bạn đã có nhân vật rồi.",
-
-                embeds: [],
-
-                components: []
-            });
-        }
-
-
-        // =================================================
-        // 🎯 LẤY CON ĐƯỜNG
-        // =================================================
-
-        const choice =
-            interaction.values[0];
-
-
-        if (
-            choice !==
-                "chinhdao" &&
-            choice !==
-                "madao"
-        ) {
-
-            return interaction.reply({
-
-                content:
-                    "❌ Lựa chọn không hợp lệ.",
-
-                ephemeral:
-                    true
-            });
-        }
-
-
-        // =================================================
-        // 👤 TẠO NHÂN VẬT
-        // =================================================
-
-        player =
-            db.createPlayer(
-                menuUserId,
-                interaction.user.username
-            );
-
-
-        // =================================================
-        // 🛤️ THIẾT LẬP CON ĐƯỜNG
-        // =================================================
-
-        let dao =
-            "chinhdao";
-
-
-        if (
-            choice ===
-            "madao"
-        ) {
-
-            dao =
-                "madao";
-        }
-
-
-        // =================================================
-        // 🧬 QUAY LINH CĂN
-        // =================================================
-
-        const linhCan =
-            db.generateLinhCan();
-
-
-        // =================================================
-        // 📊 CHỈ SỐ BAN ĐẦU
-        // =================================================
-
-        const baseHp =
-            Number(
-                player.maxHp
-            ) || 100;
-
-
-        const baseLinhLuc =
-            Number(
-                player.linhLuc
-            ) || 0;
-
-
-        const baseCong =
-            Number(
-                player.cong
-            ) || 10;
-
-
-        const baseThu =
-            Number(
-                player.thu
-            ) || 5;
-
-
-        // =================================================
-        // 🌟 BUFF LINH CĂN
-        // =================================================
-
-        const buff =
-            linhCan.buff ||
-            {};
-
-
-        const hp =
-            Math.round(
-
-                baseHp *
-
-                (
-                    1 +
-
-                    (
-                        Number(
-                            buff.hp
-                        ) || 0
-                    ) / 100
-                )
-            );
-
-
-        const linhLuc =
-            Math.round(
-
-                baseLinhLuc +
-
-                (
-                    Number(
-                        buff.linhLuc
-                    ) || 0
-                )
-            );
-
-
-        const cong =
-            Math.round(
-
-                baseCong *
-
-                (
-                    1 +
-
-                    (
-                        Number(
-                            buff.cong
-                        ) || 0
-                    ) / 100
-                )
-            );
-
-
-        const thu =
-            Math.round(
-
-                baseThu *
-
-                (
-                    1 +
-
-                    (
-                        Number(
-                            buff.thu
-                        ) || 0
-                    ) / 100
-                )
-            );
-
-
-        // =================================================
-        // 💾 DATA CHUNG
-        // =================================================
-
-        const commonData = {
-
-            linhCan:
-
-                linhCan,
-
-            hp:
-                hp,
-
-            maxHp:
-                hp,
-
-            linhLuc:
-                linhLuc,
-
-            cong:
-                cong,
-
-            thu:
-                thu,
-
-            dao:
-                dao,
-
-            conDuong:
-                dao
-        };
-
-
-        // =================================================
-        // ⚔️ CHÍNH ĐẠO
-        // =================================================
-
-        if (
-            choice ===
-            "chinhdao"
-        ) {
-
-            Object.assign(
-                commonData,
-                {
-
-                    canhGioi:
-                        "Luyện Khí",
-
-                    tang:
-                        1,
-
-                    realm:
-                        1,
-
-                    tuvi:
-                        0,
-
-                    maTuVi:
-                        0,
-
-                    maCanhGioi:
-                        null,
-
-                    maTang:
-                        0
-                }
-            );
-        }
-
-
-        // =================================================
-        // ☠️ MA ĐẠO
-        // =================================================
-
-        if (
-            choice ===
-            "madao"
-        ) {
-
-            Object.assign(
-                commonData,
-                {
-
-                    // =====================================
-                    // CHỈ SỐ CHÍNH ĐẠO VẪN GIỮ
-                    // =====================================
-
-                    canhGioi:
-                        "Luyện Khí",
-
-                    tang:
-                        1,
-
-                    realm:
-                        1,
-
-                    tuvi:
-                        0,
-
-
-                    // =====================================
-                    // ☠️ MA ĐẠO
-                    // =====================================
-
-                    maTuVi:
-                        0,
-
-                    maCanhGioi:
-                        "Ma Đồ",
-
-                    maTang:
-                        1
-                }
-            );
-        }
-
-
-        // =================================================
-        // 💾 LƯU NHÂN VẬT
-        // =================================================
-
-        player =
-            db.updatePlayer(
-
-                menuUserId,
-
-                commonData
-            );
-
-
-        // =================================================
-        // 📊 FORMAT BUFF
-        // =================================================
-
-        const buffText =
-
-            `⚔️ Tu luyện: **+${buff.tuLuyen || 0}%**\n` +
-
-            `❤️ Sinh lực: **+${buff.hp || 0}%**\n` +
-
-            `🔥 Linh lực: **+${buff.linhLuc || 0}%**\n` +
-
-            `🗡️ Công: **+${buff.cong || 0}%**\n` +
-
-            `🛡️ Thủ: **+${buff.thu || 0}%**\n` +
-
-            `🌟 Đột phá: **+${buff.dotPha || 0}%**`;
-
-
-        // =================================================
-        // ☠️ MA ĐẠO
-        // =================================================
-
-        if (
-            choice ===
-            "madao"
-        ) {
-
-            const embed =
-                new EmbedBuilder()
-
-                    .setColor(
-                        0x8b0000
-                    )
-
-                    .setTitle(
-                        "☠️ MA ĐẠO • HỒNG HOANG ĐẠI LỤC"
-                    )
-
-                    .setDescription(
-
-                        `🩸 **${interaction.user.username}** đã lựa chọn con đường **MA ĐẠO**!\n\n` +
-
-                        `━━━━━━━━━━━━━━━━━━━━\n\n` +
-
-                        `☠️ **CON ĐƯỜNG MA ĐẠO ĐÃ MỞ**\n\n` +
-
-                        `👹 **Cảnh giới:** Ma Đồ\n` +
-
-                        `⚫ **Tầng:** 1/9\n` +
-
-                        `🩸 **Ma Tu Vi:** 0\n\n` +
-
-                        `━━━━━━━━━━━━━━━━━━━━\n\n` +
-
-                        `📊 **Chỉ số ban đầu**\n\n` +
-
-                        `❤️ HP: **+${hp}**\n` +
-
-                        `⚔️ Công: **+${cong}**\n` +
-
-                        `🛡️ Thủ: **+${thu}**\n\n` +
-
-                        `━━━━━━━━━━━━━━━━━━━━\n\n` +
-
-                        `🧬 **Linh Căn thức tỉnh**\n\n` +
-
-                        `## ${linhCan.ten}\n\n` +
-
-                        `💠 **Phẩm cấp:** ${linhCan.phamCap}\n` +
-
-                        `🌈 **Thuộc tính:** ${linhCan.thuocTinh}\n\n` +
-
-                        `📜 ${linhCan.moTa}\n\n` +
-
-                        `━━━━━━━━━━━━━━━━━━━━\n\n` +
-
-                        `📊 **Thiên Phú**\n\n` +
-
-                        buffText +
-
-                        `\n\n━━━━━━━━━━━━━━━━━━━━\n\n` +
-
-                        `☠️ Ma Đạo đã được kích hoạt.\n` +
-
-                        `🔥 Hãy dùng các lệnh Ma Đạo để bắt đầu tu luyện!`
-                    )
-
-                    .setFooter({
-
-                        text:
-                            "Hồng Hoang Đại Lục • Ma Đạo"
-                    });
-
-
-            return interaction.update({
+        const message =
+            await interaction.reply({
 
                 embeds: [
                     embed
                 ],
 
-                components: []
+                components: [
+                    row
+                ],
+
+                fetchReply:
+                    true
             });
-        }
-
 
         // =================================================
-        // ⚔️ CHÍNH ĐẠO
+        // 🎯 COLLECTOR
         // =================================================
 
-        const embed =
-            new EmbedBuilder()
+        const collector =
+            message.createMessageComponentCollector({
 
-                .setColor(
-                    0xf1c40f
-                )
+                filter:
+                    i =>
+                        i.user.id ===
+                        userId &&
+                        i.customId ===
+                        `batdau_dao_${userId}`,
 
-                .setTitle(
-                    "⚔️ CHÍNH ĐẠO • HỒNG HOANG ĐẠI LỤC"
-                )
+                time:
+                    120000,
 
-                .setDescription(
+                max:
+                    1
+            });
 
-                    `✨ **${interaction.user.username}** đã lựa chọn **CHÍNH ĐẠO**!\n\n` +
+        // =================================================
+        // 🖱️ CHỌN ĐẠO
+        // =================================================
 
-                    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+        collector.on(
+            "collect",
+            async selectInteraction => {
 
-                    `⚔️ **CON ĐƯỜNG CHÍNH ĐẠO ĐÃ MỞ**\n\n` +
+                const dao =
+                    selectInteraction
+                        .values[0];
 
-                    `🌱 **Cảnh giới:** Luyện Khí\n` +
+                await createCharacter(
 
-                    `🔢 **Tầng:** 1\n` +
+                    selectInteraction,
 
-                    `⚔️ **Tu Vi:** 0\n\n` +
+                    dao
+                );
 
-                    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+                collector.stop(
+                    "selected"
+                );
+            }
+        );
 
-                    `🧬 **Linh Căn thức tỉnh**\n\n` +
+        // =================================================
+        // ⏰ HẾT THỜI GIAN
+        // =================================================
 
-                    `## ${linhCan.ten}\n\n` +
+        collector.on(
+            "end",
+            async (
+                collected,
+                reason
+            ) => {
 
-                    `💠 **Phẩm cấp:** ${linhCan.phamCap}\n` +
+                if (
+                    reason !==
+                    "time"
+                ) {
+                    return;
+                }
 
-                    `🌈 **Thuộc tính:** ${linhCan.thuocTinh}\n\n` +
+                try {
 
-                    `📜 ${linhCan.moTa}\n\n` +
+                    await interaction.editReply({
 
-                    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+                        embeds: [
 
-                    `📊 **Thiên Phú**\n\n` +
+                            new EmbedBuilder()
 
-                    buffText +
+                                .setColor(
+                                    0x7f8c8d
+                                )
 
-                    `\n\n━━━━━━━━━━━━━━━━━━━━\n\n` +
+                                .setTitle(
+                                    "⏰ ĐÃ HẾT THỜI GIAN"
+                                )
 
-                    `⚔️ Con đường chứng đạo của ngươi... chính thức bắt đầu!`
-                )
+                                .setDescription(
 
-                .setFooter({
+                                    `⚠️ **${username}** chưa chọn con đường tu luyện.\n\n` +
 
-                    text:
-                        "Hồng Hoang Đại Lục • Chính Đạo"
-                });
+                                    `Hãy sử dụng lại \`/batdau\` để lựa chọn:\n\n` +
 
+                                    `⚔️ Chính Đạo\n` +
 
-        return interaction.update({
+                                    `☠️ Ma Đạo\n` +
 
-            embeds: [
-                embed
-            ],
+                                    `🐉 Yêu Đạo`
+                                )
+                        ],
 
-            components: []
-        });
+                        components: []
+                    });
+
+                } catch (error) {
+
+                    console.error(
+                        "Lỗi batdau collector:",
+                        error
+                    );
+                }
+            }
+        );
     }
 };
