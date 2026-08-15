@@ -44,6 +44,7 @@ let LINH_CAN = [];
 let THE_CHAT = [];
 
 try {
+
     const linhCanData = require("./linhcan");
 
     LINH_CAN =
@@ -63,6 +64,7 @@ try {
 }
 
 try {
+
     const theChatData =
         require("./thechat");
 
@@ -212,6 +214,7 @@ client.once(
                         "❌ Lỗi hồi máu:",
                         error
                     );
+
                 }
 
             },
@@ -714,6 +717,45 @@ client.on(
                     return interaction.reply({
                         content:
                             "❌ Không tải được hệ thống Menu.",
+                        ephemeral: true
+                    });
+                }
+
+                // ==================================
+                // 🛒 CỬA HÀNG
+                // ==================================
+
+                if (
+                    customId.startsWith("shop_")
+                ) {
+
+                    const cuahang =
+                        client.commands.get(
+                            "cuahang"
+                        );
+
+                    if (!cuahang) {
+
+                        return interaction.reply({
+                            content:
+                                "❌ Không tải được hệ thống Cửa Hàng.",
+                            ephemeral: true
+                        });
+                    }
+
+                    if (
+                        typeof cuahang.handleComponent ===
+                        "function"
+                    ) {
+
+                        return await cuahang.handleComponent(
+                            interaction
+                        );
+                    }
+
+                    return interaction.reply({
+                        content:
+                            "❌ Cửa Hàng chưa hỗ trợ nút này.",
                         ephemeral: true
                     });
                 }
