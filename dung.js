@@ -2,7 +2,7 @@
 // dung.js
 // LỆNH: /dung <tên hoặc ID vật phẩm>
 // Discord.js v14
-// Tương thích cuahang (8).js + database (4).js
+// Tương thích cuahang.js + database.js
 // ============================================================
 
 const {
