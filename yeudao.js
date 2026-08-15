@@ -240,7 +240,7 @@ const DAN_DUOC = DAN_DUOC_NAMES.map((x, i) => ({
 }));
 
 // =====================================================
-// 🧬 15 HUYẾT MẠCH
+// 🧬 15 HUYẾT MẠCH — ĐÃ TĂNG SỨC MẠNH
 // =====================================================
 
 const HUYET_MACH = [
@@ -248,121 +248,121 @@ const HUYET_MACH = [
         id: "to_long",
         ten: "🐉 Tổ Long Huyết Mạch",
         cap: "Thủy Tổ",
-        cong: 500,
-        thu: 450,
-        hp: 1500
+        cong: 12000,
+        thu: 10000,
+        hp: 50000
     },
     {
         id: "bach_ho",
         ten: "🐯 Bạch Hổ Huyết Mạch",
         cap: "Chí Tôn",
-        cong: 650,
-        thu: 300,
-        hp: 1000
+        cong: 8500,
+        thu: 5500,
+        hp: 30000
     },
     {
         id: "chu_tuoc",
         ten: "🔥 Chu Tước Huyết Mạch",
         cap: "Chí Tôn",
-        cong: 550,
-        thu: 350,
-        hp: 1300
+        cong: 9000,
+        thu: 5000,
+        hp: 35000
     },
     {
         id: "huyen_vu",
         ten: "🐢 Huyền Vũ Huyết Mạch",
         cap: "Chí Tôn",
-        cong: 300,
-        thu: 700,
-        hp: 2000
+        cong: 5000,
+        thu: 10000,
+        hp: 60000
     },
     {
         id: "kim_o",
         ten: "☀️ Kim Ô Huyết Mạch",
         cap: "Chí Tôn",
-        cong: 700,
-        thu: 300,
-        hp: 1100
+        cong: 11000,
+        thu: 5000,
+        hp: 32000
     },
     {
         id: "con_bang",
         ten: "🦅 Côn Bằng Huyết Mạch",
         cap: "Hỗn Độn",
-        cong: 750,
-        thu: 500,
-        hp: 1600
+        cong: 16000,
+        thu: 10000,
+        hp: 55000
     },
     {
         id: "thao_thiet",
         ten: "🐷 Thao Thiết Huyết Mạch",
         cap: "Hỗn Độn",
-        cong: 900,
-        thu: 350,
-        hp: 1700
+        cong: 20000,
+        thu: 7000,
+        hp: 60000
     },
     {
         id: "cuu_vi",
         ten: "🦊 Cửu Vĩ Thiên Hồ Huyết Mạch",
         cap: "Thánh",
-        cong: 450,
-        thu: 450,
-        hp: 1000
+        cong: 5000,
+        thu: 4500,
+        hp: 20000
     },
     {
         id: "thien_lang",
         ten: "🐺 Thiên Lang Huyết Mạch",
         cap: "Thiên",
-        cong: 250,
-        thu: 180,
-        hp: 600
+        cong: 2500,
+        thu: 1800,
+        hp: 9000
     },
     {
         id: "thai_co_xa",
         ten: "🐍 Thái Cổ Xà Huyết Mạch",
         cap: "Tiên",
-        cong: 350,
-        thu: 250,
-        hp: 800
+        cong: 4000,
+        thu: 3000,
+        hp: 12000
     },
     {
         id: "ung_long",
         ten: "🐲 Ứng Long Huyết Mạch",
         cap: "Đế",
-        cong: 600,
-        thu: 500,
-        hp: 1400
+        cong: 7500,
+        thu: 6000,
+        hp: 30000
     },
     {
         id: "dang_xa",
         ten: "🐍 Đằng Xà Huyết Mạch",
         cap: "Đế",
-        cong: 500,
-        thu: 550,
-        hp: 1300
+        cong: 6500,
+        thu: 7000,
+        hp: 28000
     },
     {
         id: "kim_su",
         ten: "🦁 Kim Sư Huyết Mạch",
         cap: "Địa",
-        cong: 180,
-        thu: 150,
-        hp: 500
+        cong: 1800,
+        thu: 1500,
+        hp: 7000
     },
     {
         id: "thai_co_tuong",
         ten: "🐘 Thái Cổ Tượng Huyết Mạch",
         cap: "Thánh",
-        cong: 300,
-        thu: 650,
-        hp: 1800
+        cong: 3500,
+        thu: 7500,
+        hp: 40000
     },
     {
         id: "hon_don_yeu",
         ten: "🌌 Hỗn Độn Yêu Huyết Mạch",
         cap: "Thủy Tổ",
-        cong: 1200,
-        thu: 1200,
-        hp: 3000
+        cong: 30000,
+        thu: 28000,
+        hp: 120000
     }
 ];
 
@@ -428,7 +428,7 @@ function savePlayer(player) {
 }
 
 // =====================================================
-// 📊 CHỈ SỐ CƠ BẢN
+// 📊 CHỈ SỐ CƠ BẢN — ĐÃ TĂNG MẠNH
 // =====================================================
 
 function getRealmIndex(yeuDao) {
@@ -450,17 +450,18 @@ function getYeuDaoStats(yeuDao) {
             Number(yeuDao.tang || 1)
         );
 
+    // 🐉 Yêu Đạo tăng sức mạnh theo cấp số nhân
     const base =
-        Math.pow(3, realm) * tang;
+        Math.pow(5, realm) * tang;
 
     let cong =
-        Math.floor(base * 10);
+        Math.floor(base * 35);
 
     let thu =
-        Math.floor(base * 8);
+        Math.floor(base * 30);
 
     let hp =
-        Math.floor(base * 55);
+        Math.floor(base * 180);
 
     if (yeuDao.congPhap) {
         cong +=
@@ -1073,10 +1074,6 @@ async function handleMenu(interaction) {
 
     ensureYeuDao(player);
 
-    // ================================================
-    // QUAY LẠI
-    // ================================================
-
     if (selected === "back") {
         return interaction.update({
             embeds: [
@@ -1099,10 +1096,6 @@ async function handleMenu(interaction) {
             ]
         });
     }
-
-    // ================================================
-    // CẢNH GIỚI
-    // ================================================
 
     if (selected === "canhgioi") {
         return interaction.update({
@@ -1136,10 +1129,6 @@ async function handleMenu(interaction) {
         });
     }
 
-    // ================================================
-    // CÔNG PHÁP
-    // ================================================
-
     if (selected === "congphap") {
         return interaction.update({
             embeds: [
@@ -1155,10 +1144,6 @@ async function handleMenu(interaction) {
                 )
         });
     }
-
-    // ================================================
-    // PHÁP BẢO
-    // ================================================
 
     if (selected === "phapbao") {
         return interaction.update({
@@ -1176,10 +1161,6 @@ async function handleMenu(interaction) {
         });
     }
 
-    // ================================================
-    // ĐAN DƯỢC
-    // ================================================
-
     if (selected === "dando") {
         return interaction.update({
             embeds: [
@@ -1189,10 +1170,6 @@ async function handleMenu(interaction) {
                 makeDanMenu(userId)
         });
     }
-
-    // ================================================
-    // HUYẾT MẠCH
-    // ================================================
 
     if (selected === "huyetmach") {
         return interaction.update({
@@ -1207,10 +1184,6 @@ async function handleMenu(interaction) {
                 )
         });
     }
-
-    // ================================================
-    // CHUYỂN TRANG
-    // ================================================
 
     if (
         selected &&
@@ -1255,10 +1228,6 @@ async function handleMenu(interaction) {
         });
     }
 
-    // ================================================
-    // TRANG BỊ CÔNG PHÁP
-    // ================================================
-
     if (
         selected &&
         selected.startsWith(
@@ -1298,10 +1267,6 @@ async function handleMenu(interaction) {
                 )
         });
     }
-
-    // ================================================
-    // TRANG BỊ PHÁP BẢO
-    // ================================================
 
     if (
         selected &&
@@ -1343,10 +1308,6 @@ async function handleMenu(interaction) {
         });
     }
 
-    // ================================================
-    // TRANG BỊ HUYẾT MẠCH
-    // ================================================
-
     if (
         selected &&
         selected.startsWith(
@@ -1387,10 +1348,6 @@ async function handleMenu(interaction) {
         });
     }
 
-    // ================================================
-    // CHỌN ĐAN DƯỢC
-    // ================================================
-
     if (
         selected &&
         selected.startsWith("dan_")
@@ -1425,10 +1382,6 @@ async function handleMenu(interaction) {
             ephemeral: true
         });
     }
-
-    // ================================================
-    // KHÔNG XÁC ĐỊNH
-    // ================================================
 
     return interaction.reply({
         content:
