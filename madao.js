@@ -132,7 +132,6 @@ const PHAP_BAO = [
     thu: x[3],
     hp: x[4]
 }));
-
 // =====================================================
 // 💊 ĐAN DƯỢC MA ĐẠO
 // =====================================================
@@ -213,11 +212,10 @@ const DAN_DUOC = [
 ];
 
 // =====================================================
-// 🔧 TẠO DỮ LIỆU MA ĐẠO CHO PLAYER CŨ
+// 🔧 KHỞI TẠO DỮ LIỆU MA ĐẠO
 // =====================================================
 
 function ensureMaDao(player) {
-
     if (!player.maDao) {
         player.maDao = {
             canhGioi: "Ma Đồ",
@@ -249,11 +247,10 @@ function ensureMaDao(player) {
 }
 
 // =====================================================
-// 📊 TÍNH CHỈ SỐ MA ĐẠO
+// 📊 CHỈ SỐ MA ĐẠO
 // =====================================================
 
 function getRealmIndex(maDao) {
-
     const index =
         MA_DAO_REALMS.indexOf(maDao.canhGioi);
 
@@ -261,7 +258,6 @@ function getRealmIndex(maDao) {
 }
 
 function getMaDaoStats(maDao) {
-
     const realm =
         getRealmIndex(maDao);
 
@@ -279,15 +275,43 @@ function getMaDaoStats(maDao) {
 }
 
 // =====================================================
-// 📜 CHỌN CÔNG PHÁP
+// 💾 LƯU DỮ LIỆU
+// =====================================================
+
+function savePlayer(player) {
+    try {
+        if (
+            db &&
+            typeof db.updatePlayer === "function"
+        ) {
+            db.updatePlayer(
+                player.id,
+                {
+                    maDao: player.maDao
+                }
+            );
+        }
+    } catch (error) {
+        console.error(
+            "❌ Lỗi lưu dữ liệu Ma Đạo:",
+            error
+        );
+    }
+}
+
+// =====================================================
+// 📜 TRANG BỊ CÔNG PHÁP
 // =====================================================
 
 function equipCongPhap(player, id) {
-
     const item =
-        CONG_PHAP.find(x => x.id === id);
+        CONG_PHAP.find(
+            x => x.id === id
+        );
 
-    if (!item) return false;
+    if (!item) {
+        return false;
+    }
 
     ensureMaDao(player);
 
@@ -295,23 +319,24 @@ function equipCongPhap(player, id) {
         ...item
     };
 
-    db.updatePlayer(player.id, {
-        maDao: player.maDao
-    });
+    savePlayer(player);
 
     return true;
 }
 
 // =====================================================
-// ⚔️ CHỌN PHÁP BẢO
+// ⚔️ TRANG BỊ PHÁP BẢO
 // =====================================================
 
 function equipPhapBao(player, id) {
-
     const item =
-        PHAP_BAO.find(x => x.id === id);
+        PHAP_BAO.find(
+            x => x.id === id
+        );
 
-    if (!item) return false;
+    if (!item) {
+        return false;
+    }
 
     ensureMaDao(player);
 
@@ -319,89 +344,21 @@ function equipPhapBao(player, id) {
         ...item
     };
 
-    db.updatePlayer(player.id, {
-        maDao: player.maDao
-    });
+    savePlayer(player);
 
     return true;
 }
 
 // =====================================================
-// 📜 LỆNH /MADAO
+// ☠️ MENU CHÍNH
 // =====================================================
 
-module.exports = {
-
-    data:
-        new SlashCommandBuilder()
-            .setName("madao")
-            .setDescription(
-                "☠️ Xem hệ thống Ma Đạo"
-            ),
-
-    async execute(interaction) {
-
-        const player =
-            db.getPlayer(
-                interaction.user.id
-            );
-
-        if (!player) {
-
-            return interaction.reply({
-                content:
-                    "⚠️ Hãy dùng `/batdau` trước.",
-                ephemeral: true
-            });
-        }
-
-        const maDao =
-            ensureMaDao(player);
-
-        const stats =
-            getMaDaoStats(maDao);
-
-        db.updatePlayer(
-            player.id,
-            {
-                maDao
-            }
-        );
-
-        const embed =
-            new EmbedBuilder()
-                .setColor(0x8e44ad)
-                .setTitle(
-                    "☠️ MA ĐẠO • HỆ THỐNG TU LUYỆN"
-                )
-                .setDescription([
-                    "╔════════════════════╗",
-                    "      ☠️ **MA ĐẠO**",
-                    "╚════════════════════╝",
-                    "",
-                    `👹 Cảnh giới: **${maDao.canhGioi}**`,
-                    `🌑 Tầng: **${maDao.tang}/9**`,
-                    `🩸 Ma Tu Vi: **${Number(maDao.tuVi).toLocaleString("vi-VN")}**`,
-                    "",
-                    "━━━━━━━━━━━━━━━━━━━━",
-                    "📊 **Chỉ số Ma Đạo**",
-                    "",
-                    `❤️ HP: **+${stats.hp.toLocaleString("vi-VN")}**`,
-                    `⚔️ Công: **+${stats.cong.toLocaleString("vi-VN")}**`,
-                    `🛡️ Thủ: **+${stats.thu.toLocaleString("vi-VN")}**`,
-                    "",
-                    `📜 Công pháp: **${maDao.congPhap?.ten || "Chưa có"}**`,
-                    `⚔️ Pháp bảo: **${maDao.phapBao?.ten || "Chưa có"}**`
-                ].join("\n"))
-                .setFooter({
-                    text:
-                        "☠️ Hồng Hoang Đại Lục • Ma Đạo"
-                });
-
-        const menu =
+function makeMainMenu(userId) {
+    return new ActionRowBuilder()
+        .addComponents(
             new StringSelectMenuBuilder()
                 .setCustomId(
-                    `madao_menu_${interaction.user.id}`
+                    `madao_menu_${userId}`
                 )
                 .setPlaceholder(
                     "☠️ Chọn chức năng Ma Đạo"
@@ -410,21 +367,21 @@ module.exports = {
                     {
                         label: "Xem Công Pháp",
                         description:
-                            "Xem các công pháp Ma Đạo",
+                            "Xem và trang bị công pháp Ma Đạo",
                         value: "congphap",
                         emoji: "📜"
                     },
                     {
                         label: "Xem Pháp Bảo",
                         description:
-                            "Xem các pháp bảo Ma Đạo",
+                            "Xem và trang bị pháp bảo Ma Đạo",
                         value: "phapbao",
                         emoji: "⚔️"
                     },
                     {
                         label: "Xem Đan Dược",
                         description:
-                            "Xem các đan dược Ma Đạo",
+                            "Xem đan dược Ma Đạo",
                         value: "dando",
                         emoji: "💊"
                     },
@@ -435,24 +392,786 @@ module.exports = {
                         value: "canhgioi",
                         emoji: "👹"
                     }
-                ]);
+                ])
+        );
+}
 
-        const row =
-            new ActionRowBuilder()
-                .addComponents(menu);
+// =====================================================
+// 📜 MENU ITEM
+// =====================================================
 
-        await interaction.reply({
-            embeds: [embed],
-            components: [row]
+function makeItemMenu(
+    userId,
+    type,
+    page = 0
+) {
+    const list =
+        type === "congphap"
+            ? CONG_PHAP
+            : PHAP_BAO;
+
+    const pageSize = 25;
+
+    const maxPage =
+        Math.max(
+            0,
+            Math.ceil(
+                list.length / pageSize
+            ) - 1
+        );
+
+    page = Math.max(
+        0,
+        Math.min(
+            Number(page) || 0,
+            maxPage
+        )
+    );
+
+    const start =
+        page * pageSize;
+
+    const items =
+        list.slice(
+            start,
+            start + pageSize
+        );
+
+    const menu =
+        new StringSelectMenuBuilder()
+            .setCustomId(
+                `madao_menu_${userId}_${type}_${page}`
+            )
+            .setPlaceholder(
+                type === "congphap"
+                    ? "📜 Chọn công pháp"
+                    : "⚔️ Chọn pháp bảo"
+            )
+            .addOptions(
+                items.map(item => ({
+                    label:
+                        item.ten
+                            .replace(
+                                /^\S+\s/,
+                                ""
+                            )
+                            .slice(0, 100),
+
+                    description:
+                        `${item.phamCap} • ` +
+                        `Công +${item.cong} • ` +
+                        `Thủ +${item.thu} • ` +
+                        `HP +${item.hp}`
+                            .slice(0, 100),
+
+                    value:
+                        `equip_${item.id}`,
+
+                    emoji:
+                        type === "congphap"
+                            ? "📜"
+                            : "⚔️"
+                }))
+            );
+
+    const rows = [
+        new ActionRowBuilder()
+            .addComponents(menu)
+    ];
+
+    const nav = [];
+
+    if (page > 0) {
+        nav.push({
+            label: "Trang trước",
+            description:
+                `Xem trang ${page}`,
+            value:
+                `page_${page - 1}`,
+            emoji: "⬅️"
         });
-    },
+    }
+
+    if (page < maxPage) {
+        nav.push({
+            label: "Trang sau",
+            description:
+                `Xem trang ${page + 2}`,
+            value:
+                `page_${page + 1}`,
+            emoji: "➡️"
+        });
+    }
+
+    nav.push({
+        label: "Quay lại",
+        description:
+            "Về menu Ma Đạo",
+        value: "back",
+        emoji: "🏠"
+    });
+
+    rows.push(
+        new ActionRowBuilder()
+            .addComponents(
+                new StringSelectMenuBuilder()
+                    .setCustomId(
+                        `madao_menu_${userId}_${type}_nav_${page}`
+                    )
+                    .setPlaceholder(
+                        `Trang ${page + 1}/${maxPage + 1}`
+                    )
+                    .addOptions(nav)
+            )
+    );
+
+    return rows;
+}
+
+// =====================================================
+// 💊 HIỂN THỊ ĐAN DƯỢC
+// =====================================================
+
+function makeDanDuocMenu(userId) {
+    const options =
+        DAN_DUOC.map(item => ({
+            label:
+                item.ten
+                    .replace(
+                        /^\S+\s/,
+                        ""
+                    )
+                    .slice(0, 100),
+
+            description:
+                `${item.phamCap} • ` +
+                (
+                    item.tuvi
+                        ? `Tu Vi +${item.tuvi}`
+                        : item.cong
+                            ? `Công +${item.cong}`
+                            : `HP +${item.hp}`
+                ).slice(0, 100),
+
+            value:
+                `dan_${item.id}`,
+
+            emoji: "💊"
+        }));
+
+    return [
+        new ActionRowBuilder()
+            .addComponents(
+                new StringSelectMenuBuilder()
+                    .setCustomId(
+                        `madao_menu_${userId}_dando`
+                    )
+                    .setPlaceholder(
+                        "💊 Chọn đan dược"
+                    )
+                    .addOptions(options)
+            ),
+        new ActionRowBuilder()
+            .addComponents(
+                new StringSelectMenuBuilder()
+                    .setCustomId(
+                        `madao_menu_${userId}_dando_nav`
+                    )
+                    .setPlaceholder(
+                        "⬅️ Quay lại"
+                    )
+                    .addOptions([
+                        {
+                            label:
+                                "Quay lại menu chính",
+                            description:
+                                "Trở về Ma Đạo",
+                            value: "back",
+                            emoji: "🏠"
+                        }
+                    ])
+            )
+    ];
+}
+
+// =====================================================
+// 👹 HIỂN THỊ CẢNH GIỚI
+// =====================================================
+
+function makeRealmEmbed(maDao) {
+    const index =
+        getRealmIndex(maDao);
+
+    const stats =
+        getMaDaoStats(maDao);
+
+    const next =
+        MA_DAO_REALMS[index + 1];
+
+    const embed =
+        new EmbedBuilder()
+            .setTitle(
+                "☠️ CẢNH GIỚI MA ĐẠO"
+            )
+            .setDescription(
+                [
+                    `👹 Cảnh giới: **${maDao.canhGioi}**`,
+                    `🔥 Tầng: **${maDao.tang}/9**`,
+                    `☠️ Ma Tu Vi: **${Number(maDao.tuVi || 0).toLocaleString()}**`,
+                    "",
+                    `⚔️ Công: **${stats.cong.toLocaleString()}**`,
+                    `🛡️ Thủ: **${stats.thu.toLocaleString()}**`,
+                    `❤️ HP: **${stats.hp.toLocaleString()}**`,
+                    "",
+                    next
+                        ? `➡️ Cảnh giới tiếp theo: **${next}**`
+                        : "🌌 Đã đạt cảnh giới tối cao!"
+                ].join("\n")
+            );
+
+    return embed;
+}
+
+// =====================================================
+// 📜 EMBED CÔNG PHÁP
+// =====================================================
+
+function makeCongPhapEmbed(maDao) {
+    const current =
+        maDao.congPhap;
+
+    const stats =
+        current
+            ? `⚔️ Công +${current.cong}\n` +
+              `🛡️ Thủ +${current.thu}\n` +
+              `❤️ HP +${current.hp}`
+            : "❌ Chưa trang bị công pháp.";
+
+    return new EmbedBuilder()
+        .setTitle(
+            "📜 CÔNG PHÁP MA ĐẠO"
+        )
+        .setDescription(
+            current
+                ? [
+                    `📜 Đang dùng: **${current.ten}**`,
+                    `💠 Phẩm cấp: **${current.phamCap}**`,
+                    "",
+                    stats
+                ].join("\n")
+                : stats
+        )
+        .setFooter({
+            text:
+                "Chọn công pháp bên dưới để trang bị."
+        });
+}
+
+// =====================================================
+// ⚔️ EMBED PHÁP BẢO
+// =====================================================
+
+function makePhapBaoEmbed(maDao) {
+    const current =
+        maDao.phapBao;
+
+    const stats =
+        current
+            ? `⚔️ Công +${current.cong}\n` +
+              `🛡️ Thủ +${current.thu}\n` +
+              `❤️ HP +${current.hp}`
+            : "❌ Chưa trang bị pháp bảo.";
+
+    return new EmbedBuilder()
+        .setTitle(
+            "⚔️ PHÁP BẢO MA ĐẠO"
+        )
+        .setDescription(
+            current
+                ? [
+                    `⚔️ Đang dùng: **${current.ten}**`,
+                    `💠 Phẩm cấp: **${current.phamCap}**`,
+                    "",
+                    stats
+                ].join("\n")
+                : stats
+        )
+        .setFooter({
+            text:
+                "Chọn pháp bảo bên dưới để trang bị."
+        });
+}
+
+// =====================================================
+// 💊 EMBED ĐAN DƯỢC
+// =====================================================
+
+function makeDanEmbed() {
+    return new EmbedBuilder()
+        .setTitle(
+            "💊 ĐAN DƯỢC MA ĐẠO"
+        )
+        .setDescription(
+            DAN_DUOC.map(
+                (item, index) => {
+                    let effect =
+                        item.tuvi
+                            ? `Ma Tu Vi +${item.tuvi.toLocaleString()}`
+                            : item.cong
+                                ? `Công +${item.cong}`
+                                : `HP +${item.hp}`;
+
+                    return (
+                        `**${index + 1}.** ` +
+                        `${item.ten}\n` +
+                        `💠 ${item.phamCap} • ${effect}`
+                    );
+                }
+            ).join("\n\n")
+        );
+}
+
+// =====================================================
+// ☠️ XỬ LÝ MENU MA ĐẠO
+// =====================================================
+
+async function handleMenu(interaction) {
+
+    const customId =
+        interaction.customId || "";
+
+    const userId =
+        interaction.user.id;
+
+    const parts =
+        customId.split("_");
+
+    const selected =
+        interaction.values &&
+        interaction.values[0];
+
+    let player;
+
+    try {
+        if (
+            db &&
+            typeof db.getPlayer === "function"
+        ) {
+            player =
+                db.getPlayer(userId);
+        }
+    } catch (error) {
+        console.error(
+            "❌ Lỗi lấy player Ma Đạo:",
+            error
+        );
+    }
+
+    if (!player) {
+        return interaction.reply({
+            content:
+                "❌ Không tìm thấy dữ liệu nhân vật.",
+            ephemeral: true
+        });
+    }
+
+    ensureMaDao(player);
+
+    // =================================================
+    // MENU CHÍNH
+    // =================================================
+
+    if (
+        selected === "congphap"
+    ) {
+        return interaction.update({
+            embeds: [
+                makeCongPhapEmbed(
+                    player.maDao
+                )
+            ],
+            components:
+                makeItemMenu(
+                    userId,
+                    "congphap",
+                    0
+                )
+        });
+    }
+
+    if (
+        selected === "phapbao"
+    ) {
+        return interaction.update({
+            embeds: [
+                makePhapBaoEmbed(
+                    player.maDao
+                )
+            ],
+            components:
+                makeItemMenu(
+                    userId,
+                    "phapbao",
+                    0
+                )
+        });
+    }
+
+    if (
+        selected === "dando"
+    ) {
+        return interaction.update({
+            embeds: [
+                makeDanEmbed()
+            ],
+            components:
+                makeDanDuocMenu(
+                    userId
+                )
+        });
+    }
+
+    if (
+        selected === "canhgioi"
+    ) {
+        return interaction.update({
+            embeds: [
+                makeRealmEmbed(
+                    player.maDao
+                )
+            ],
+            components: [
+                new ActionRowBuilder()
+                    .addComponents(
+                        new StringSelectMenuBuilder()
+                            .setCustomId(
+                                `madao_menu_${userId}`
+                            )
+                            .setPlaceholder(
+                                "⬅️ Quay lại"
+                            )
+                            .addOptions([
+                                {
+                                    label:
+                                        "Quay lại menu chính",
+                                    description:
+                                        "Trở về Ma Đạo",
+                                    value:
+                                        "back",
+                                    emoji: "🏠"
+                                }
+                            ])
+                    )
+            ]
+        });
+    }
+
+    // =================================================
+    // QUAY LẠI
+    // =================================================
+
+    if (
+        selected === "back"
+    ) {
+        return interaction.update({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle(
+                        "☠️ HỆ THỐNG MA ĐẠO"
+                    )
+                    .setDescription(
+                        "Chọn một chức năng bên dưới."
+                    )
+            ],
+            components: [
+                makeMainMenu(userId)
+            ]
+        });
+    }
+
+    // =================================================
+    // TRANG
+    // =================================================
+
+    if (
+        selected &&
+        selected.startsWith(
+            "page_"
+        )
+    ) {
+        const page =
+            Number(
+                selected
+                    .replace(
+                        "page_",
+                        ""
+                    )
+            );
+
+        const type =
+            parts.includes(
+                "congphap"
+            )
+                ? "congphap"
+                : "phapbao";
+
+        return interaction.update({
+            components:
+                makeItemMenu(
+                    userId,
+                    type,
+                    page
+                )
+        });
+    }
+
+    // =================================================
+    // TRANG BỊ CÔNG PHÁP
+    // =================================================
+
+    if (
+        selected &&
+        selected.startsWith(
+            "equip_ma_congphap_"
+        )
+    ) {
+        const id =
+            selected.replace(
+                "equip_",
+                ""
+            );
+
+        const ok =
+            equipCongPhap(
+                player,
+                id
+            );
+
+        if (!ok) {
+            return interaction.reply({
+                content:
+                    "❌ Không tìm thấy công pháp.",
+                ephemeral: true
+            });
+        }
+
+        return interaction.update({
+            embeds: [
+                makeCongPhapEmbed(
+                    player.maDao
+                )
+            ],
+            components:
+                makeItemMenu(
+                    userId,
+                    "congphap",
+                    0
+                )
+        });
+    }
+
+    // =================================================
+    // TRANG BỊ PHÁP BẢO
+    // =================================================
+
+    if (
+        selected &&
+        selected.startsWith(
+            "equip_ma_phapbao_"
+        )
+    ) {
+        const id =
+            selected.replace(
+                "equip_",
+                ""
+            );
+
+        const ok =
+            equipPhapBao(
+                player,
+                id
+            );
+
+        if (!ok) {
+            return interaction.reply({
+                content:
+                    "❌ Không tìm thấy pháp bảo.",
+                ephemeral: true
+            });
+        }
+
+        return interaction.update({
+            embeds: [
+                makePhapBaoEmbed(
+                    player.maDao
+                )
+            ],
+            components:
+                makeItemMenu(
+                    userId,
+                    "phapbao",
+                    0
+                )
+        });
+    }
+
+    // =================================================
+    // CHỌN ĐAN DƯỢC
+    // =================================================
+
+    if (
+        selected &&
+        selected.startsWith(
+            "dan_"
+        )
+    ) {
+        const id =
+            selected.replace(
+                "dan_",
+                ""
+            );
+
+        const item =
+            DAN_DUOC.find(
+                x => x.id === id
+            );
+
+        if (!item) {
+            return interaction.reply({
+                content:
+                    "❌ Không tìm thấy đan dược.",
+                ephemeral: true
+            });
+        }
+
+        return interaction.reply({
+            content:
+                [
+                    `${item.ten}`,
+                    `💠 Phẩm cấp: **${item.phamCap}**`,
+                    item.tuvi
+                        ? `☠️ Ma Tu Vi: **+${item.tuvi.toLocaleString()}**`
+                        : "",
+                    item.cong
+                        ? `⚔️ Công: **+${item.cong}**`
+                        : "",
+                    item.hp
+                        ? `❤️ HP: **+${item.hp.toLocaleString()}**`
+                        : "",
+                    "",
+                    "💡 Đan dược được hiển thị tại đây."
+                ]
+                    .filter(Boolean)
+                    .join("\n"),
+            ephemeral: true
+        });
+    }
+
+    // =================================================
+    // KHÔNG NHẬN DIỆN
+    // =================================================
+
+    return interaction.reply({
+        content:
+            "❌ Chức năng Ma Đạo này chưa được hỗ trợ.",
+        ephemeral: true
+    });
+}
+
+// =====================================================
+// 📜 LỆNH /MADAO
+// =====================================================
+
+async function execute(interaction) {
+
+    const userId =
+        interaction.user.id;
+
+    let player;
+
+    try {
+        player =
+            db.getPlayer(userId);
+    } catch (error) {
+        console.error(error);
+    }
+
+    if (!player) {
+        return interaction.reply({
+            content:
+                "❌ Bạn chưa có nhân vật. Hãy dùng `/batdau` trước.",
+            ephemeral: true
+        });
+    }
+
+    ensureMaDao(player);
+
+    const stats =
+        getMaDaoStats(
+            player.maDao
+        );
+
+    const embed =
+        new EmbedBuilder()
+            .setTitle(
+                "☠️ HỒNG HOANG — MA ĐẠO"
+            )
+            .setDescription(
+                [
+                    `👹 Cảnh giới: **${player.maDao.canhGioi}**`,
+                    `🔥 Tầng: **${player.maDao.tang}/9**`,
+                    `☠️ Ma Tu Vi: **${Number(player.maDao.tuVi || 0).toLocaleString()}**`,
+                    "",
+                    `⚔️ Công: **${stats.cong.toLocaleString()}**`,
+                    `🛡️ Thủ: **${stats.thu.toLocaleString()}**`,
+                    `❤️ HP: **${stats.hp.toLocaleString()}**`,
+                    "",
+                    player.maDao.congPhap
+                        ? `📜 Công pháp: **${player.maDao.congPhap.ten}**`
+                        : "📜 Công pháp: **Chưa trang bị**",
+                    player.maDao.phapBao
+                        ? `⚔️ Pháp bảo: **${player.maDao.phapBao.ten}**`
+                        : "⚔️ Pháp bảo: **Chưa trang bị**"
+                ].join("\n")
+            )
+            .setFooter({
+                text:
+                    "☠️ Ma Đạo — Hồng Hoang Đại Lục"
+            });
+
+    return interaction.reply({
+        embeds: [embed],
+        components: [
+            makeMainMenu(userId)
+        ]
+    });
+}
+
+// =====================================================
+// 📦 EXPORT
+// =====================================================
+
+module.exports = {
+    data:
+        new SlashCommandBuilder()
+            .setName("madao")
+            .setDescription(
+                "☠️ Mở hệ thống Ma Đạo"
+            ),
+
+    execute,
+
+    handleMenu,
 
     MA_DAO_REALMS,
+
     CONG_PHAP,
+
     PHAP_BAO,
+
     DAN_DUOC,
+
     ensureMaDao,
-    getMaDaoStats,
-    equipCongPhap,
-    equipPhapBao
+
+    getMaDaoStats
 };
