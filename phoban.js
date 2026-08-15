@@ -17,7 +17,7 @@ const {
 const COOLDOWN = 5 * 60 * 1000;
 
 // ==========================================
-// 20 PHÓ BẢN HỒNG HOANG
+// 20 PHÓ BẢN
 // ==========================================
 const DUNGEONS = {
 
@@ -114,7 +114,7 @@ const DUNGEONS = {
 
     "long-toc-thanh-dia": {
         name: "🐲 Long Tộc Thánh Địa",
-        desc: "Thánh địa của những Chân Long cổ đại.",
+        desc: "Thánh địa của Chân Long cổ đại.",
         hpMin: 400000,
         hpMax: 800000,
         atkMin: 40000,
@@ -127,7 +127,7 @@ const DUNGEONS = {
 
     "phuong-hoang-niet-ban": {
         name: "🔥 Phượng Hoàng Niết Bàn",
-        desc: "Nơi bất tử hỏa thiêu đốt vạn vật.",
+        desc: "Bất tử hỏa thiêu đốt vạn vật.",
         hpMin: 600000,
         hpMax: 1200000,
         atkMin: 60000,
@@ -179,7 +179,7 @@ const DUNGEONS = {
 
     "thoi-khong-loan-luu": {
         name: "🌀 Thời Không Loạn Lưu",
-        desc: "Không gian hỗn loạn có thể nghiền nát thần hồn.",
+        desc: "Không gian hỗn loạn nghiền nát thần hồn.",
         hpMin: 2500000,
         hpMax: 5000000,
         atkMin: 250000,
@@ -292,53 +292,52 @@ function random(min, max) {
 }
 
 // ==========================================
-// HỆ THỐNG RƠI ĐỒ
+// BẢNG PHẨM CẤP
 // ==========================================
-
-const LOOT_TABLE = [
+const RARITIES = [
     {
-        rarity: "⚪ Phàm Phẩm",
-        chance: 35,
+        name: "⚪ Phàm Phẩm",
+        weight: 45,
         multiplier: 1
     },
     {
-        rarity: "🟢 Linh Phẩm",
-        chance: 25,
+        name: "🟢 Linh Phẩm",
+        weight: 25,
         multiplier: 2
     },
     {
-        rarity: "🔵 Huyền Phẩm",
-        chance: 18,
+        name: "🔵 Huyền Phẩm",
+        weight: 14,
         multiplier: 4
     },
     {
-        rarity: "🟣 Địa Phẩm",
-        chance: 10,
+        name: "🟣 Địa Phẩm",
+        weight: 8,
         multiplier: 8
     },
     {
-        rarity: "🟠 Thiên Phẩm",
-        chance: 6,
+        name: "🟠 Thiên Phẩm",
+        weight: 5,
         multiplier: 15
     },
     {
-        rarity: "🔴 Thánh Phẩm",
-        chance: 4,
+        name: "🔴 Thánh Phẩm",
+        weight: 2,
         multiplier: 30
     },
     {
-        rarity: "🌌 Hỗn Nguyên",
-        chance: 1.7,
+        name: "🌌 Hỗn Nguyên",
+        weight: 0.8,
         multiplier: 60
     },
     {
-        rarity: "☯️ Hồng Mông",
-        chance: 0.3,
+        name: "☯️ Hồng Mông",
+        weight: 0.2,
         multiplier: 150
     }
 ];
 
-const LOOT_NAMES = [
+const ITEM_NAMES = [
     "🗡️ Hồng Hoang Chiến Kiếm",
     "⚔️ Thái Cổ Sát Kiếm",
     "🛡️ Hỗn Độn Thần Thuẫn",
@@ -354,73 +353,92 @@ const LOOT_NAMES = [
 ];
 
 // ==========================================
-// QUAY PHẨM CẤP
+// QUAY PHẨM
 // ==========================================
-
 function rollRarity(dungeonIndex) {
 
-    let roll = Math.random() * 100;
-
     // Phó bản càng cao càng tăng cơ hội đồ hiếm
-    const bonus = dungeonIndex * 1.2;
+    const bonus =
+        Math.min(
+            dungeonIndex * 0.35,
+            7
+        );
 
-    let current = 0;
+    const total =
+        RARITIES.reduce(
+            (sum, item) =>
+                sum + item.weight,
+            0
+        );
 
-    for (const rarity of LOOT_TABLE) {
+    let roll =
+        Math.random() * total;
 
-        current += rarity.chance;
+    for (let i = 0; i < RARITIES.length; i++) {
 
-        if (
-            roll <
-            current + bonus
-        ) {
-            return rarity;
+        let weight =
+            RARITIES[i].weight;
+
+        // tăng nhẹ đồ hiếm ở phó bản cao
+        if (i >= 4) {
+            weight += bonus;
         }
+
+        if (roll < weight) {
+            return RARITIES[i];
+        }
+
+        roll -= weight;
     }
 
-    return LOOT_TABLE[0];
+    return RARITIES[0];
 }
 
 // ==========================================
-// TẠO ITEM
+// TẠO ĐỒ
 // ==========================================
-
 function generateLoot(dungeonIndex) {
 
     const rarity =
         rollRarity(dungeonIndex);
 
     const name =
-        LOOT_NAMES[
+        ITEM_NAMES[
             random(
                 0,
-                LOOT_NAMES.length - 1
+                ITEM_NAMES.length - 1
             )
         ];
 
+    const basePower =
+        random(10, 50);
+
     const power =
-        random(10, 50) *
-        rarity.multiplier *
-        (1 + dungeonIndex * 0.1);
+        Math.floor(
+            basePower *
+            rarity.multiplier *
+            (1 + dungeonIndex * 0.12)
+        );
 
     return {
-
         id:
-            `loot_${Date.now()}_${Math.floor(
-                Math.random() * 100000
+            `dungeon_${Date.now()}_${Math.floor(
+                Math.random() * 999999
             )}`,
 
         ten:
             name,
 
         phamCap:
-            rarity.rarity,
+            rarity.name,
 
         sucManh:
-            Math.floor(power),
+            power,
 
         moTa:
-            `Báu vật rơi ra từ phó bản Hồng Hoang.`,
+            `Báu vật rơi ra từ ${DUNGEONS[
+                Object.keys(DUNGEONS)[dungeonIndex]
+            ].name}.`,
 
         createdAt:
             Date.now()
@@ -428,24 +446,20 @@ function generateLoot(dungeonIndex) {
 }
 
 // ==========================================
-// MENU PHÓ BẢN
+// MENU
 // ==========================================
-
 function getDungeonMenu() {
 
     return new ActionRowBuilder()
         .addComponents(
 
             new StringSelectMenuBuilder()
-
                 .setCustomId(
                     "chon_pho_ban"
                 )
-
                 .setPlaceholder(
                     "🏯 Chọn phó bản Hồng Hoang..."
                 )
-
                 .addOptions(
 
                     Object.entries(
@@ -474,23 +488,16 @@ function getDungeonMenu() {
 }
 
 // ==========================================
-// COMMAND
+// COMMAND /PHOBAN
 // ==========================================
-
 module.exports = {
 
     data:
         new SlashCommandBuilder()
-
             .setName("phoban")
-
             .setDescription(
                 "Mở danh sách phó bản Hồng Hoang"
             ),
-
-    // ======================================
-    // /PHOBAN
-    // ======================================
 
     async execute(interaction) {
 
@@ -502,10 +509,8 @@ module.exports = {
         if (!p) {
 
             return interaction.reply({
-
                 content:
                     "⚠️ Hãy dùng `/batdau` trước.",
-
                 ephemeral: true
             });
         }
@@ -532,19 +537,16 @@ module.exports = {
 
         const embed =
             new EmbedBuilder()
-
                 .setTitle(
                     "🏯 PHÓ BẢN HỒNG HOANG"
                 )
-
                 .setDescription(
                     "⚔️ **20 PHÓ BẢN HỒNG HOANG**\n\n" +
                     "Chọn phó bản bên dưới để chiến đấu.\n" +
                     "📈 Độ khó tăng dần.\n" +
-                    "🎁 Phó bản càng cao càng dễ rơi đồ hiếm.\n" +
+                    "🎁 Phó bản càng cao càng có cơ hội rơi đồ hiếm.\n" +
                     "⏱️ Cooldown: **5 phút**"
                 )
-
                 .setFooter({
                     text:
                         "⚔️ Hồng Hoang không dành cho kẻ yếu!"
@@ -563,9 +565,8 @@ module.exports = {
     },
 
     // ======================================
-    // XỬ LÝ MENU
+    // XỬ LÝ CHỌN PHÓ BẢN
     // ======================================
-
     async handleSelect(interaction) {
 
         if (
@@ -583,15 +584,11 @@ module.exports = {
 
         if (!p) {
 
-            await interaction.reply({
-
+            return interaction.reply({
                 content:
                     "⚠️ Hãy dùng `/batdau` trước.",
-
                 ephemeral: true
             });
-
-            return true;
         }
 
         const remaining =
@@ -603,7 +600,7 @@ module.exports = {
 
         if (remaining > 0) {
 
-            await interaction.reply({
+            return interaction.reply({
 
                 content:
                     `⏳ Phó bản đang hồi phục. Còn **${Math.ceil(
@@ -612,8 +609,6 @@ module.exports = {
 
                 ephemeral: true
             });
-
-            return true;
         }
 
         const dungeonId =
@@ -624,27 +619,22 @@ module.exports = {
 
         if (!dungeon) {
 
-            await interaction.reply({
-
+            return interaction.reply({
                 content:
                     "❌ Không tìm thấy phó bản.",
-
                 ephemeral: true
             });
-
-            return true;
         }
 
+        // ==================================
+        // CHỈ SỐ PHÓ BẢN
+        // ==================================
         const dungeonIndex =
             Object.keys(
                 DUNGEONS
             ).indexOf(
                 dungeonId
             );
-
-        // ==================================
-        // TẠO QUÁI
-        // ==================================
 
         const enemyHp =
             random(
@@ -668,14 +658,11 @@ module.exports = {
         // ==================================
         // TỶ LỆ THẮNG
         // ==================================
-
         const winChance =
             Math.min(
                 0.85,
-
                 Math.max(
                     0.03,
-
                     power /
                     (enemyHp * 1.5)
                 )
@@ -688,7 +675,6 @@ module.exports = {
         // ==================================
         // THẤT BẠI
         // ==================================
-
         if (!win) {
 
             const damage =
@@ -704,9 +690,7 @@ module.exports = {
                 );
 
             updatePlayer(
-
                 interaction.user.id,
-
                 {
                     lastDungeon:
                         Date.now(),
@@ -716,30 +700,24 @@ module.exports = {
                 }
             );
 
-            await interaction.update({
+            return interaction.update({
 
                 embeds: [
 
                     new EmbedBuilder()
-
                         .setTitle(
                             "💀 PHÓ BẢN THẤT BẠI"
                         )
-
                         .setDescription(
                             `Bạn bị đánh lui khỏi **${dungeon.name}**.`
                         )
-
                         .addFields(
 
                             {
                                 name:
                                     "👹 HP yêu thú",
-
                                 value:
-                                    enemyHp
-                                        .toLocaleString(),
-
+                                    enemyHp.toLocaleString(),
                                 inline:
                                     true
                             },
@@ -747,11 +725,8 @@ module.exports = {
                             {
                                 name:
                                     "⚔️ Công yêu thú",
-
                                 value:
-                                    enemyAtk
-                                        .toLocaleString(),
-
+                                    enemyAtk.toLocaleString(),
                                 inline:
                                     true
                             },
@@ -759,11 +734,8 @@ module.exports = {
                             {
                                 name:
                                     "❤️ HP còn",
-
                                 value:
-                                    newHp
-                                        .toLocaleString(),
-
+                                    newHp.toLocaleString(),
                                 inline:
                                     true
                             },
@@ -771,13 +743,10 @@ module.exports = {
                             {
                                 name:
                                     "📊 Tỷ lệ thắng",
-
                                 value:
                                     `${(
-                                        winChance *
-                                        100
+                                        winChance * 100
                                     ).toFixed(1)}%`,
-
                                 inline:
                                     true
                             },
@@ -785,17 +754,13 @@ module.exports = {
                             {
                                 name:
                                     "⏱️ Hồi lại",
-
                                 value:
                                     "5 phút",
-
                                 inline:
                                     true
                             }
                         )
-
                         .setFooter({
-
                             text:
                                 "⚔️ Hồng Hoang đã đánh bại bạn!"
                         })
@@ -803,14 +768,11 @@ module.exports = {
 
                 components: []
             });
-
-            return true;
         }
 
         // ==================================
-        // THẮNG
+        // PHẦN THƯỞNG
         // ==================================
-
         const exp =
             random(
                 dungeon.expMin,
@@ -826,7 +788,6 @@ module.exports = {
         // ==================================
         // RƠI ĐỒ
         // ==================================
-
         const loot =
             generateLoot(
                 dungeonIndex
@@ -840,15 +801,11 @@ module.exports = {
         );
 
         // ==================================
-        // CẬP NHẬT PLAYER
+        // CẬP NHẬT NHÂN VẬT
         // ==================================
-
         updatePlayer(
-
             interaction.user.id,
-
             {
-
                 lastDungeon:
                     Date.now(),
 
@@ -867,8 +824,7 @@ module.exports = {
                 hp:
                     Math.min(
                         p.maxHp || 100,
-                        (p.hp || 1) +
-                        20
+                        (p.hp || 1) + 20
                     )
             }
         );
@@ -876,31 +832,25 @@ module.exports = {
         // ==================================
         // KẾT QUẢ
         // ==================================
-
         const embed =
             new EmbedBuilder()
-
                 .setTitle(
                     "🏆 PHÓ BẢN HOÀN THÀNH"
                 )
-
                 .setDescription(
                     `🔥 Bạn đã chinh phục **${dungeon.name}**!\n\n` +
-                    `🎁 **ĐỒ RƠI:**\n` +
+                    `🎁 **VẬT PHẨM RƠI:**\n` +
                     `**${loot.ten}**\n` +
                     `${loot.phamCap}\n` +
                     `⚔️ Sức mạnh: **${loot.sucManh.toLocaleString()}**`
                 )
-
                 .addFields(
 
                     {
                         name:
                             "✨ Kinh nghiệm",
-
                         value:
                             `+${exp.toLocaleString()}`,
-
                         inline:
                             true
                     },
@@ -908,10 +858,8 @@ module.exports = {
                     {
                         name:
                             "💎 Linh thạch",
-
                         value:
                             `+${stones.toLocaleString()}`,
-
                         inline:
                             true
                     },
@@ -919,10 +867,8 @@ module.exports = {
                     {
                         name:
                             "❤️ Hồi phục",
-
                         value:
                             "+20 HP",
-
                         inline:
                             true
                     },
@@ -930,10 +876,8 @@ module.exports = {
                     {
                         name:
                             "🎁 Phẩm cấp",
-
                         value:
                             loot.phamCap,
-
                         inline:
                             true
                     },
@@ -941,11 +885,8 @@ module.exports = {
                     {
                         name:
                             "⚔️ Sức mạnh đồ",
-
                         value:
-                            loot.sucManh
-                                .toLocaleString(),
-
+                            loot.sucManh.toLocaleString(),
                         inline:
                             true
                     },
@@ -953,22 +894,18 @@ module.exports = {
                     {
                         name:
                             "⏱️ Lượt tiếp theo",
-
                         value:
                             "Sau 5 phút",
-
                         inline:
                             true
                     }
                 )
-
                 .setFooter({
-
                     text:
                         "🎁 Vật phẩm đã được lưu vào túi đồ!"
                 });
 
-        await interaction.update({
+        return interaction.update({
 
             embeds: [
                 embed
@@ -976,7 +913,5 @@ module.exports = {
 
             components: []
         });
-
-        return true;
     }
 };
