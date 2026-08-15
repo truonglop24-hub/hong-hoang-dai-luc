@@ -2,742 +2,521 @@ const {
     SlashCommandBuilder,
     EmbedBuilder,
     ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle
+    StringSelectMenuBuilder
 } = require("discord.js");
 
 const { getPlayer, updatePlayer } = require("./database");
 
-// ======================================================
-// ⏱️ COOLDOWN PHÓ BẢN: 5 PHÚT
-// ======================================================
+// =============================
+// COOLDOWN: 5 PHÚT
+// =============================
 const COOLDOWN = 5 * 60 * 1000;
 
-// ======================================================
-// 🏯 DANH SÁCH PHÓ BẢN
-// ======================================================
-const PHO_BAN = {
-    thanh_lam: {
-        name: "🌲 Thanh Vân Cổ Lâm",
-        enemy: "🐺 Thanh Lang Yêu",
-        difficulty: "⭐ Dễ",
-        minPower: 0,
-        hpMin: 90,
-        hpMax: 140,
-        atkMin: 10,
-        atkMax: 18,
-        expMin: 50,
-        expMax: 90,
-        stoneMin: 40,
-        stoneMax: 80,
-        heal: 15
+// =============================
+// 20 PHÓ BẢN HỒNG HOANG
+// =============================
+const DUNGEONS = {
+    "thung-lung-hong-hoang": {
+        name: "🌋 Thung Lũng Hồng Hoang",
+        desc: "Yêu thú cổ đại hung bạo.",
+        hpMin: 10000, hpMax: 20000,
+        atkMin: 1500, atkMax: 3500,
+        expMin: 500, expMax: 1500,
+        stoneMin: 500, stoneMax: 2000
     },
 
-    huyet_sac: {
-        name: "🩸 Huyết Sắc Ma Cốc",
-        enemy: "👹 Huyết Ma",
-        difficulty: "⭐⭐ Khá",
-        minPower: 80,
-        hpMin: 140,
-        hpMax: 210,
-        atkMin: 18,
-        atkMax: 28,
-        expMin: 90,
-        expMax: 150,
-        stoneMin: 70,
-        stoneMax: 130,
-        heal: 20
+    "son-hai-bi-canh": {
+        name: "🏔️ Sơn Hải Bí Cảnh",
+        desc: "Bí cảnh cổ xưa đầy đại yêu.",
+        hpMin: 15000, hpMax: 30000,
+        atkMin: 2000, atkMax: 4500,
+        expMin: 800, expMax: 2500,
+        stoneMin: 800, stoneMax: 3000
     },
 
-    loi_vuc: {
-        name: "⚡ Cửu Thiên Lôi Vực",
-        enemy: "⚡ Lôi Thú",
-        difficulty: "⭐⭐⭐ Khó",
-        minPower: 150,
-        hpMin: 200,
-        hpMax: 290,
-        atkMin: 25,
-        atkMax: 38,
-        expMin: 140,
-        expMax: 220,
-        stoneMin: 110,
-        stoneMax: 190,
-        heal: 25
+    "yeu-hoang-coc": {
+        name: "🐉 Yêu Hoàng Cốc",
+        desc: "Lãnh địa của Yêu Hoàng.",
+        hpMin: 25000, hpMax: 50000,
+        atkMin: 3000, atkMax: 6500,
+        expMin: 1200, expMax: 4000,
+        stoneMin: 1200, stoneMax: 5000
     },
 
-    bang_nguyen: {
-        name: "❄️ Cực Bắc Băng Nguyên",
-        enemy: "🐲 Băng Giáp Long",
-        difficulty: "⭐⭐⭐ Khó",
-        minPower: 230,
-        hpMin: 280,
-        hpMax: 390,
-        atkMin: 32,
-        atkMax: 46,
-        expMin: 200,
-        expMax: 310,
-        stoneMin: 160,
-        stoneMax: 270,
-        heal: 30
+    "bat-hoang-co-gioi": {
+        name: "⚔️ Bát Hoang Cổ Giới",
+        desc: "Cổ giới tử địa.",
+        hpMin: 40000, hpMax: 80000,
+        atkMin: 5000, atkMax: 10000,
+        expMin: 2000, expMax: 7000,
+        stoneMin: 2000, stoneMax: 8000
     },
 
-    van_yeu: {
-        name: "🐉 Vạn Yêu Sơn Mạch",
-        enemy: "🦖 Đại Yêu Vương",
-        difficulty: "⭐⭐⭐⭐ Rất khó",
-        minPower: 330,
-        hpMin: 380,
-        hpMax: 520,
-        atkMin: 42,
-        atkMax: 58,
-        expMin: 280,
-        expMax: 430,
-        stoneMin: 230,
-        stoneMax: 380,
-        heal: 35
+    "hon-don-thap": {
+        name: "🌌 Hỗn Độn Tháp",
+        desc: "Hỗn Độn yêu thú cực mạnh.",
+        hpMin: 70000, hpMax: 150000,
+        atkMin: 8000, atkMax: 18000,
+        expMin: 4000, expMax: 12000,
+        stoneMin: 4000, stoneMax: 15000
     },
 
-    ma_cung: {
-        name: "😈 Vạn Ma Cổ Cung",
-        enemy: "👿 Ma Tướng",
-        difficulty: "⭐⭐⭐⭐ Rất khó",
-        minPower: 450,
-        hpMin: 500,
-        hpMax: 680,
-        atkMin: 52,
-        atkMax: 70,
-        expMin: 380,
-        expMax: 560,
-        stoneMin: 320,
-        stoneMax: 520,
-        heal: 40
+    "thien-dao-cam-dia": {
+        name: "☯️ Thiên Đạo Cấm Địa",
+        desc: "Cấm địa tối thượng Hồng Hoang.",
+        hpMin: 150000, hpMax: 300000,
+        atkMin: 15000, atkMax: 35000,
+        expMin: 10000, expMax: 30000,
+        stoneMin: 10000, stoneMax: 50000
     },
 
-    chien_truong: {
-        name: "⚔️ Thượng Cổ Chiến Trường",
-        enemy: "🗿 Chiến Hồn Thượng Cổ",
-        difficulty: "⭐⭐⭐⭐⭐ Cực khó",
-        minPower: 600,
-        hpMin: 650,
-        hpMax: 850,
-        atkMin: 65,
-        atkMax: 88,
-        expMin: 520,
-        expMax: 760,
-        stoneMin: 450,
-        stoneMax: 720,
-        heal: 45
+    "van-co-than-son": {
+        name: "⛰️ Vạn Cổ Thần Sơn",
+        desc: "Thần sơn tồn tại từ thời khai thiên.",
+        hpMin: 250000, hpMax: 500000,
+        atkMin: 25000, atkMax: 50000,
+        expMin: 15000, expMax: 40000,
+        stoneMin: 15000, stoneMax: 70000
     },
 
-    hon_don: {
-        name: "🌌 Hỗn Độn Thâm Uyên",
-        enemy: "👁️ Hỗn Độn Cổ Thú",
-        difficulty: "⭐⭐⭐⭐⭐⭐ Địa ngục",
-        minPower: 800,
-        hpMin: 850,
-        hpMax: 1100,
-        atkMin: 80,
-        atkMax: 110,
-        expMin: 700,
-        expMax: 1000,
-        stoneMin: 650,
-        stoneMax: 1000,
-        heal: 50
+    "long-toc-thanh-dia": {
+        name: "🐲 Long Tộc Thánh Địa",
+        desc: "Thánh địa của những Chân Long cổ đại.",
+        hpMin: 400000, hpMax: 800000,
+        atkMin: 40000, atkMax: 80000,
+        expMin: 20000, expMax: 60000,
+        stoneMin: 20000, stoneMax: 100000
+    },
+
+    "phuong-hoang-niet-ban": {
+        name: "🔥 Phượng Hoàng Niết Bàn",
+        desc: "Nơi bất tử hỏa thiêu đốt vạn vật.",
+        hpMin: 600000, hpMax: 1200000,
+        atkMin: 60000, atkMax: 120000,
+        expMin: 30000, expMax: 90000,
+        stoneMin: 30000, stoneMax: 150000
+    },
+
+    "ky-lan-than-vuc": {
+        name: "🦄 Kỳ Lân Thần Vực",
+        desc: "Thần vực của Thượng Cổ Kỳ Lân.",
+        hpMin: 900000, hpMax: 1800000,
+        atkMin: 90000, atkMax: 180000,
+        expMin: 40000, expMax: 120000,
+        stoneMin: 40000, stoneMax: 200000
+    },
+
+    "thai-co-ma-vuc": {
+        name: "👹 Thái Cổ Ma Vực",
+        desc: "Ma khí bao phủ toàn bộ thiên địa.",
+        hpMin: 1200000, hpMax: 2500000,
+        atkMin: 120000, atkMax: 250000,
+        expMin: 60000, expMax: 180000,
+        stoneMin: 60000, stoneMax: 300000
+    },
+
+    "vo-tan-huyet-hai": {
+        name: "🩸 Vô Tận Huyết Hải",
+        desc: "Huyết hải nơi vô số đại năng vẫn lạc.",
+        hpMin: 1800000, hpMax: 3500000,
+        atkMin: 180000, atkMax: 350000,
+        expMin: 80000, expMax: 250000,
+        stoneMin: 80000, stoneMax: 400000
+    },
+
+    "thoi-khong-loan-luu": {
+        name: "🌀 Thời Không Loạn Lưu",
+        desc: "Không gian hỗn loạn có thể nghiền nát thần hồn.",
+        hpMin: 2500000, hpMax: 5000000,
+        atkMin: 250000, atkMax: 500000,
+        expMin: 100000, expMax: 350000,
+        stoneMin: 100000, stoneMax: 500000
+    },
+
+    "hon-nguyen-thanh-canh": {
+        name: "☯️ Hỗn Nguyên Thánh Cảnh",
+        desc: "Thánh cảnh chỉ cường giả đỉnh cao mới dám bước vào.",
+        hpMin: 3500000, hpMax: 7000000,
+        atkMin: 350000, atkMax: 700000,
+        expMin: 150000, expMax: 500000,
+        stoneMin: 150000, stoneMax: 700000
+    },
+
+    "thien-dinh-phe-khu": {
+        name: "🏯 Thiên Đình Phế Khư",
+        desc: "Tàn tích Thiên Đình cổ đại.",
+        hpMin: 5000000, hpMax: 10000000,
+        atkMin: 500000, atkMax: 1000000,
+        expMin: 200000, expMax: 700000,
+        stoneMin: 200000, stoneMax: 1000000
+    },
+
+    "dia-phu-u-minh": {
+        name: "💀 Địa Phủ U Minh",
+        desc: "U Minh giới nơi vạn hồn tụ hội.",
+        hpMin: 7000000, hpMax: 14000000,
+        atkMin: 700000, atkMax: 1400000,
+        expMin: 300000, expMax: 1000000,
+        stoneMin: 300000, stoneMax: 1500000
+    },
+
+    "thanh-thien-co-lo": {
+        name: "🌌 Thanh Thiên Cổ Lộ",
+        desc: "Con đường cổ dẫn tới cảnh giới tối cao.",
+        hpMin: 10000000, hpMax: 20000000,
+        atkMin: 1000000, atkMax: 2000000,
+        expMin: 500000, expMax: 1500000,
+        stoneMin: 500000, stoneMax: 2500000
+    },
+
+    "dai-dao-cam-khu": {
+        name: "⚡ Đại Đạo Cấm Khu",
+        desc: "Cấm khu bị Đại Đạo nguyền rủa.",
+        hpMin: 15000000, hpMax: 30000000,
+        atkMin: 1500000, atkMax: 3000000,
+        expMin: 800000, expMax: 2500000,
+        stoneMin: 800000, stoneMax: 4000000
+    },
+
+    "vo-thuong-than-vuc": {
+        name: "👑 Vô Thượng Thần Vực",
+        desc: "Thần vực của những tồn tại vô thượng.",
+        hpMin: 25000000, hpMax: 50000000,
+        atkMin: 2500000, atkMax: 5000000,
+        expMin: 1500000, expMax: 5000000,
+        stoneMin: 1500000, stoneMax: 8000000
+    },
+
+    "hong-hoang-chung-cuc": {
+        name: "🌠 HỒNG HOANG CHUNG CỰC",
+        desc: "Phó bản cuối cùng, chỉ tồn tại tối thượng mới có cơ hội sống sót.",
+        hpMin: 50000000, hpMax: 100000000,
+        atkMin: 5000000, atkMax: 10000000,
+        expMin: 3000000, expMax: 10000000,
+        stoneMin: 3000000, stoneMax: 20000000
     }
 };
 
-// ======================================================
-// 🔧 HÀM TIỆN ÍCH
-// ======================================================
-function randomInt(min, max) {
+// =============================
+// RANDOM
+// =============================
+function random(min, max) {
     return Math.floor(
         Math.random() * (max - min + 1)
     ) + min;
 }
 
-function getNumber(value, fallback = 0) {
-    const n = Number(value);
-
-    return Number.isFinite(n)
-        ? n
-        : fallback;
-}
-
-function formatCooldown(ms) {
-    const totalSeconds =
-        Math.ceil(ms / 1000);
-
-    const minutes =
-        Math.floor(totalSeconds / 60);
-
-    const seconds =
-        totalSeconds % 60;
-
-    if (minutes > 0) {
-        return `${minutes} phút ${seconds} giây`;
-    }
-
-    return `${seconds} giây`;
-}
-
-function getPower(player) {
-    const cong =
-        getNumber(player.cong);
-
-    const thu =
-        getNumber(player.thu);
-
-    const linhLuc =
-        getNumber(player.linhLuc);
-
-    return (
-        cong +
-        thu +
-        Math.floor(linhLuc / 20)
+// =============================
+// MENU CHỌN PHÓ BẢN
+// =============================
+function getDungeonMenu() {
+    return new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+            .setCustomId("chon_pho_ban")
+            .setPlaceholder("🏯 Chọn phó bản Hồng Hoang...")
+            .addOptions(
+                Object.entries(DUNGEONS).map(
+                    ([id, dungeon]) => ({
+                        label: dungeon.name.replace(/^.+?\s/, ""),
+                        value: id,
+                        description: dungeon.desc.slice(0, 100)
+                    })
+                )
+            )
     );
 }
 
-// ======================================================
-// 🏯 TẠO MENU PHÓ BẢN
-// ======================================================
-function createDungeonMenu(player) {
+// =============================
+// /PHOBAN
+// =============================
+module.exports = {
 
-    const power =
-        getPower(player);
+    data: new SlashCommandBuilder()
+        .setName("phoban")
+        .setDescription("Mở danh sách phó bản Hồng Hoang"),
 
-    const embed =
-        new EmbedBuilder()
-            .setColor(0x8e44ad)
+    async execute(interaction) {
+
+        const p = getPlayer(interaction.user.id);
+
+        if (!p) {
+            return interaction.reply({
+                content: "⚠️ Hãy dùng `/batdau` trước.",
+                ephemeral: true
+            });
+        }
+
+        const remaining =
+            COOLDOWN -
+            (Date.now() - (p.lastDungeon || 0));
+
+        if (remaining > 0) {
+            return interaction.reply({
+                content:
+                    `⏳ Phó bản đang hồi phục. Còn **${Math.ceil(
+                        remaining / 60000
+                    )} phút**.`,
+                ephemeral: true
+            });
+        }
+
+        const embed = new EmbedBuilder()
             .setTitle("🏯 PHÓ BẢN HỒNG HOANG")
             .setDescription(
-                "🌌 **Chọn một phó bản để tiến vào chiến đấu.**\n\n" +
-                `⚔️ Chiến lực hiện tại: **${power.toLocaleString()}**\n` +
-                "⏱️ Mỗi lần tham gia phó bản sẽ **hồi 5 phút**.\n\n" +
-                "👇 **Chọn phó bản bên dưới:**"
+                "⚔️ **20 PHÓ BẢN HỒNG HOANG**\n\n" +
+                "Chọn phó bản bên dưới để tiến vào chiến đấu.\n" +
+                "📈 Độ khó tăng dần từ trên xuống.\n" +
+                "⏱️ Mỗi lượt hồi sau **5 phút**."
             )
             .setFooter({
-                text:
-                    "🌌 Hồng Hoang Đại Lục • Phó Bản"
+                text: "⏱️ Cooldown: 5 phút"
             });
 
-    const buttons =
-        Object.entries(PHO_BAN)
-            .map(([id, dungeon]) => {
+        return interaction.reply({
+            embeds: [embed],
+            components: [getDungeonMenu()]
+        });
+    },
 
-                const locked =
-                    power < dungeon.minPower;
+    // =============================
+    // XỬ LÝ MENU
+    // =============================
+    async handleSelect(interaction) {
 
-                const emoji =
-                    dungeon.name.match(/^\S+/u)?.[0]
-                    || "🏯";
+        if (
+            !interaction.isStringSelectMenu() ||
+            interaction.customId !== "chon_pho_ban"
+        ) {
+            return false;
+        }
 
-                const label =
-                    dungeon.name
-                        .replace(
-                            /^[🌲🩸⚡❄️🐉😈⚔️🌌]\s*/u,
-                            ""
-                        )
-                        .trim();
+        const p = getPlayer(interaction.user.id);
 
-                return new ButtonBuilder()
-                    .setCustomId(
-                        `phoban_enter_${id}`
-                    )
-                    .setLabel(label)
-                    .setEmoji(emoji)
-                    .setStyle(
-                        locked
-                            ? ButtonStyle.Secondary
-                            : ButtonStyle.Primary
-                    )
-                    .setDisabled(locked);
+        if (!p) {
+            await interaction.reply({
+                content: "⚠️ Hãy dùng `/batdau` trước.",
+                ephemeral: true
             });
+            return true;
+        }
 
-    const rows = [];
+        const remaining =
+            COOLDOWN -
+            (Date.now() - (p.lastDungeon || 0));
 
-    // 4 nút mỗi hàng
-    for (
-        let i = 0;
-        i < buttons.length;
-        i += 4
-    ) {
+        if (remaining > 0) {
+            await interaction.reply({
+                content:
+                    `⏳ Phó bản đang hồi phục. Còn **${Math.ceil(
+                        remaining / 60000
+                    )} phút**.`,
+                ephemeral: true
+            });
+            return true;
+        }
 
-        rows.push(
-            new ActionRowBuilder()
-                .addComponents(
-                    buttons.slice(i, i + 4)
-                )
-        );
-    }
+        const dungeon =
+            DUNGEONS[interaction.values[0]];
 
-    rows.push(
-        new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId(
-                        "phoban_info"
-                    )
-                    .setLabel(
-                        "📜 Thông tin phó bản"
-                    )
-                    .setStyle(
-                        ButtonStyle.Secondary
-                    )
+        if (!dungeon) {
+            await interaction.reply({
+                content: "❌ Không tìm thấy phó bản.",
+                ephemeral: true
+            });
+            return true;
+        }
+
+        // =============================
+        // TẠO YÊU THÚ
+        // =============================
+
+        const enemyHp =
+            random(
+                dungeon.hpMin,
+                dungeon.hpMax
+            );
+
+        const enemyAtk =
+            random(
+                dungeon.atkMin,
+                dungeon.atkMax
+            );
+
+        const power =
+            p.cong +
+            p.thu +
+            Math.floor(p.linhLuc / 20);
+
+        // Tỷ lệ thắng rất thấp nếu người chơi yếu
+        const winChance = Math.min(
+            0.85,
+            Math.max(
+                0.03,
+                power / (enemyHp * 1.5)
             )
-    );
+        );
 
-    return {
-        embeds: [embed],
-        components: rows
-    };
-}
+        const win =
+            Math.random() < winChance;
 
-// ======================================================
-// 📜 THÔNG TIN PHÓ BẢN
-// ======================================================
-async function showDungeonInfo(
-    interaction
-) {
+        // =============================
+        // THẤT BẠI
+        // =============================
 
-    const lines =
-        Object.values(PHO_BAN)
-            .map(dungeon => {
+        if (!win) {
 
-                return (
-                    `${dungeon.name} — **${dungeon.difficulty}**\n` +
-                    `👹 ${dungeon.enemy} • ` +
-                    `⚔️ Chiến lực yêu cầu: **${dungeon.minPower}**`
+            const damage =
+                Math.floor(enemyAtk / 2);
+
+            const newHp =
+                Math.max(
+                    1,
+                    p.hp - damage
                 );
+
+            updatePlayer(
+                interaction.user.id,
+                {
+                    lastDungeon: Date.now(),
+                    hp: newHp
+                }
+            );
+
+            await interaction.update({
+
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("💀 PHÓ BẢN THẤT BẠI")
+                        .setDescription(
+                            `Bạn bị đánh lui khỏi **${dungeon.name}**.`
+                        )
+                        .addFields(
+                            {
+                                name: "⚔️ Phó bản",
+                                value: dungeon.name,
+                                inline: true
+                            },
+                            {
+                                name: "👹 HP yêu thú",
+                                value: enemyHp.toLocaleString(),
+                                inline: true
+                            },
+                            {
+                                name: "⚔️ Công yêu thú",
+                                value: enemyAtk.toLocaleString(),
+                                inline: true
+                            },
+                            {
+                                name: "❤️ HP còn",
+                                value: newHp.toLocaleString(),
+                                inline: true
+                            },
+                            {
+                                name: "📊 Tỷ lệ thắng",
+                                value:
+                                    `${(winChance * 100).toFixed(1)}%`,
+                                inline: true
+                            },
+                            {
+                                name: "⏱️ Hồi lại",
+                                value: "5 phút",
+                                inline: true
+                            }
+                        )
+                        .setFooter({
+                            text: "Hồng Hoang không dành cho kẻ yếu!"
+                        })
+                ],
+
+                components: []
             });
 
-    const embed =
-        new EmbedBuilder()
-            .setColor(0x3498db)
-            .setTitle(
-                "📜 THÔNG TIN PHÓ BẢN"
-            )
-            .setDescription(
-                lines.join("\n\n") +
-                "\n\n⏱️ **Cooldown: 5 phút**"
+            return true;
+        }
+
+        // =============================
+        // THẮNG
+        // =============================
+
+        const exp =
+            random(
+                dungeon.expMin,
+                dungeon.expMax
             );
 
-    return interaction.reply({
-        embeds: [embed],
-        ephemeral: true
-    });
-}
-
-// ======================================================
-// ⚔️ VÀO PHÓ BẢN
-// ======================================================
-async function enterDungeon(
-    interaction,
-    dungeonId
-) {
-
-    const p =
-        getPlayer(
-            interaction.user.id
-        );
-
-    if (!p) {
-
-        return interaction.reply({
-            content:
-                "⚠️ Hãy dùng `/batdau` trước.",
-            ephemeral: true
-        });
-    }
-
-    const dungeon =
-        PHO_BAN[dungeonId];
-
-    if (!dungeon) {
-
-        return interaction.reply({
-            content:
-                "❌ Phó bản không tồn tại.",
-            ephemeral: true
-        });
-    }
-
-    // ==================================================
-    // ⏱️ KIỂM TRA COOLDOWN
-    // ==================================================
-
-    const lastDungeon =
-        getNumber(
-            p.lastDungeon,
-            0
-        );
-
-    const remaining =
-        COOLDOWN -
-        (
-            Date.now() -
-            lastDungeon
-        );
-
-    if (remaining > 0) {
-
-        return interaction.reply({
-            content:
-                `⏳ **Phó bản đang hồi phục!**\n\n` +
-                `🕐 Còn **${formatCooldown(
-                    remaining
-                )}** mới có thể tham gia lại.`,
-            ephemeral: true
-        });
-    }
-
-    // ==================================================
-    // ⚔️ KIỂM TRA CHIẾN LỰC
-    // ==================================================
-
-    const power =
-        getPower(p);
-
-    if (
-        power <
-        dungeon.minPower
-    ) {
-
-        return interaction.reply({
-            content:
-                `🔒 **Chưa đủ chiến lực!**\n\n` +
-                `🏯 Phó bản: **${dungeon.name}**\n` +
-                `⚔️ Yêu cầu: **${dungeon.minPower}**\n` +
-                `💪 Chiến lực của bạn: **${power}**`,
-            ephemeral: true
-        });
-    }
-
-    // ==================================================
-    // 👹 TẠO QUÁI
-    // ==================================================
-
-    const enemyHp =
-        randomInt(
-            dungeon.hpMin,
-            dungeon.hpMax
-        );
-
-    const enemyAtk =
-        randomInt(
-            dungeon.atkMin,
-            dungeon.atkMax
-        );
-
-    // ==================================================
-    // ⚔️ TÍNH CHIẾN LỰC
-    // ==================================================
-
-    const attackPower =
-        getNumber(p.cong) +
-        Math.floor(
-            getNumber(p.linhLuc) / 25
-        );
-
-    const defensePower =
-        getNumber(p.thu);
-
-    const combatPower =
-        power +
-        attackPower * 0.35 +
-        defensePower * 0.25;
-
-    const enemyPower =
-        enemyHp * 0.9 +
-        enemyAtk * 3;
-
-    const roll =
-        Math.random() * 100;
-
-    const win =
-        combatPower * 0.72 +
-        roll >
-        enemyPower * 0.78;
-
-    const now =
-        Date.now();
-
-    // ==================================================
-    // 💀 THẤT BẠI
-    // ==================================================
-
-    if (!win) {
-
-        const currentHp =
-            Math.max(
-                1,
-                getNumber(
-                    p.hp,
-                    1
-                )
-            );
-
-        const damage =
-            randomInt(
-                Math.max(
-                    1,
-                    Math.floor(
-                        enemyAtk * 0.5
-                    )
-                ),
-                Math.max(
-                    1,
-                    enemyAtk
-                )
-            );
-
-        const newHp =
-            Math.max(
-                1,
-                currentHp - damage
+        const stones =
+            random(
+                dungeon.stoneMin,
+                dungeon.stoneMax
             );
 
         updatePlayer(
             interaction.user.id,
             {
-                lastDungeon: now,
-                hp: newHp
+                lastDungeon: Date.now(),
+
+                kinhNghiem:
+                    p.kinhNghiem + exp,
+
+                linhThach:
+                    p.linhThach + stones,
+
+                phoBanDaHoanThanh:
+                    (p.phoBanDaHoanThanh || 0) + 1,
+
+                hp:
+                    Math.min(
+                        p.maxHp,
+                        p.hp + 20
+                    )
             }
         );
 
         const embed =
             new EmbedBuilder()
-                .setColor(0xe74c3c)
-                .setTitle(
-                    "💀 PHÓ BẢN THẤT BẠI"
-                )
+                .setTitle("🏆 PHÓ BẢN HOÀN THÀNH")
                 .setDescription(
-                    `🏯 **${dungeon.name}**\n\n` +
-                    `👹 Kẻ địch: **${dungeon.enemy}**\n` +
-                    `💥 Bạn đã bị đánh lui khỏi phó bản.\n\n` +
-                    `❤️ HP mất: **-${damage}**\n` +
-                    `❤️ HP còn lại: **${newHp}/${getNumber(
-                        p.maxHp,
-                        newHp
-                    )}**\n\n` +
-                    `⏱️ Phó bản đã bắt đầu hồi **5 phút**.`
+                    `🔥 Bạn đã chinh phục **${dungeon.name}**!`
+                )
+                .addFields(
+                    {
+                        name: "✨ Kinh nghiệm",
+                        value:
+                            `+${exp.toLocaleString()}`,
+                        inline: true
+                    },
+                    {
+                        name: "💎 Linh thạch",
+                        value:
+                            `+${stones.toLocaleString()}`,
+                        inline: true
+                    },
+                    {
+                        name: "❤️ Hồi phục",
+                        value: "+20 HP",
+                        inline: true
+                    },
+                    {
+                        name: "📊 Tỷ lệ thắng",
+                        value:
+                            `${(winChance * 100).toFixed(1)}%`,
+                        inline: true
+                    },
+                    {
+                        name: "⏱️ Lượt tiếp theo",
+                        value: "Sau 5 phút",
+                        inline: true
+                    }
                 )
                 .setFooter({
-                    text:
-                        "🌌 Hồng Hoang Đại Lục"
+                    text: "⚔️ Hồng Hoang đã được chinh phục!"
                 });
 
-        return interaction.update({
+        await interaction.update({
             embeds: [embed],
             components: []
         });
-    }
 
-    // ==================================================
-    // 🏆 THẮNG
-    // ==================================================
-
-    const exp =
-        randomInt(
-            dungeon.expMin,
-            dungeon.expMax
-        );
-
-    const stones =
-        randomInt(
-            dungeon.stoneMin,
-            dungeon.stoneMax
-        );
-
-    const currentHp =
-        getNumber(
-            p.hp,
-            1
-        );
-
-    const maxHp =
-        Math.max(
-            1,
-            getNumber(
-                p.maxHp,
-                currentHp
-            )
-        );
-
-    const newHp =
-        Math.min(
-            maxHp,
-            currentHp +
-            dungeon.heal
-        );
-
-    const oldCompleted =
-        getNumber(
-            p.phoBanDaHoanThanh,
-            0
-        );
-
-    updatePlayer(
-        interaction.user.id,
-        {
-            lastDungeon: now,
-
-            kinhNghiem:
-                getNumber(
-                    p.kinhNghiem,
-                    0
-                ) + exp,
-
-            linhThach:
-                getNumber(
-                    p.linhThach,
-                    0
-                ) + stones,
-
-            phoBanDaHoanThanh:
-                oldCompleted + 1,
-
-            hp: newHp
-        }
-    );
-
-    const embed =
-        new EmbedBuilder()
-            .setColor(0x2ecc71)
-            .setTitle(
-                "🏆 PHÓ BẢN HOÀN THÀNH"
-            )
-            .setDescription(
-                `🏯 **${dungeon.name}**\n\n` +
-                `👹 Kẻ địch: **${dungeon.enemy}**\n` +
-                `⭐ Độ khó: **${dungeon.difficulty}**\n\n` +
-                `🎁 **Phần thưởng nhận được:**`
-            )
-            .addFields(
-                {
-                    name:
-                        "✨ Kinh nghiệm",
-                    value:
-                        `+${exp.toLocaleString()}`,
-                    inline: true
-                },
-                {
-                    name:
-                        "💎 Linh thạch",
-                    value:
-                        `+${stones.toLocaleString()}`,
-                    inline: true
-                },
-                {
-                    name:
-                        "❤️ Hồi phục",
-                    value:
-                        `+${dungeon.heal} HP`,
-                    inline: true
-                },
-                {
-                    name:
-                        "⚔️ Chiến lực",
-                    value:
-                        power.toLocaleString(),
-                    inline: true
-                },
-                {
-                    name:
-                        "🏆 Tổng phó bản",
-                    value:
-                        `${(
-                            oldCompleted + 1
-                        ).toLocaleString()}`,
-                    inline: true
-                }
-            )
-            .setFooter({
-                text:
-                    "⏱️ Phó bản hồi sau 5 phút • Hồng Hoang Đại Lục"
-            });
-
-    return interaction.update({
-        embeds: [embed],
-        components: []
-    });
-}
-
-// ======================================================
-// 🧾 SLASH COMMAND
-// ======================================================
-module.exports = {
-
-    data:
-        new SlashCommandBuilder()
-            .setName("phoban")
-            .setDescription(
-                "🏯 Mở danh sách phó bản Hồng Hoang"
-            ),
-
-    // ==================================================
-    // /phoban
-    // ==================================================
-
-    async execute(interaction) {
-
-        const p =
-            getPlayer(
-                interaction.user.id
-            );
-
-        if (!p) {
-
-            return interaction.reply({
-                content:
-                    "⚠️ Hãy dùng `/batdau` trước.",
-                ephemeral: true
-            });
-        }
-
-        return interaction.reply(
-            createDungeonMenu(p)
-        );
-    },
-
-    // ==================================================
-    // 🔘 XỬ LÝ BUTTON
-    // ==================================================
-
-    async handleComponent(
-        interaction
-    ) {
-
-        const id =
-            interaction.customId || "";
-
-        if (
-            id ===
-            "phoban_info"
-        ) {
-
-            return showDungeonInfo(
-                interaction
-            );
-        }
-
-        if (
-            !id.startsWith(
-                "phoban_enter_"
-            )
-        ) {
-
-            return false;
-        }
-
-        const dungeonId =
-            id.replace(
-                "phoban_enter_",
-                ""
-            );
-
-        return enterDungeon(
-            interaction,
-            dungeonId
-        );
+        return true;
     }
 };
