@@ -6,6 +6,7 @@ const path = require("path");
 // =====================================================
 
 const DATA_DIR = "/app/data";
+
 const DB_FILE = path.join(
     DATA_DIR,
     "players.json"
@@ -26,6 +27,10 @@ if (!fs.existsSync(DATA_DIR)) {
     });
 }
 
+// =====================================================
+// DATABASE
+// =====================================================
+
 let players = {};
 
 // =====================================================
@@ -34,8 +39,8 @@ let players = {};
 
 function load() {
 
-    // Nếu Volume chưa có database
-    // nhưng file cũ tồn tại thì copy sang Volume
+    // Nếu Railway Volume chưa có database
+    // nhưng file cũ tồn tại thì copy sang
 
     if (
         !fs.existsSync(DB_FILE) &&
@@ -62,7 +67,9 @@ function load() {
         }
     }
 
-    if (!fs.existsSync(DB_FILE)) {
+    if (
+        !fs.existsSync(DB_FILE)
+    ) {
 
         players = {};
 
@@ -124,14 +131,10 @@ function save() {
 load();
 
 // =====================================================
-// LINH CĂN
+// 🌌 LINH CĂN
 // =====================================================
 
 const LINH_CAN = [
-
-    // =================================================
-    // HỒNG MÔNG
-    // =================================================
 
     {
         id: "hong_mong",
@@ -152,6 +155,7 @@ const LINH_CAN = [
             "Căn cơ tối thượng, được sinh ra trước cả Hồng Hoang.",
 
         buff: {
+
             tuLuyen: 150,
             hp: 120,
             linhLuc: 150,
@@ -160,10 +164,6 @@ const LINH_CAN = [
             dotPha: 40
         }
     },
-
-    // =================================================
-    // HỖN ĐỘN
-    // =================================================
 
     {
         id: "hon_don",
@@ -184,6 +184,7 @@ const LINH_CAN = [
             "Thân mang khí Hỗn Độn, có khả năng dung nạp vạn đạo.",
 
         buff: {
+
             tuLuyen: 100,
             hp: 90,
             linhLuc: 120,
@@ -192,10 +193,6 @@ const LINH_CAN = [
             dotPha: 30
         }
     },
-
-    // =================================================
-    // HỖN NGUYÊN
-    // =================================================
 
     {
         id: "hon_nguyen",
@@ -216,6 +213,7 @@ const LINH_CAN = [
             "Đạo căn hiếm thấy, con đường chứng đạo rộng mở.",
 
         buff: {
+
             tuLuyen: 75,
             hp: 70,
             linhLuc: 90,
@@ -224,10 +222,6 @@ const LINH_CAN = [
             dotPha: 25
         }
     },
-
-    // =================================================
-    // TIÊN THIÊN
-    // =================================================
 
     {
         id: "tien_thien",
@@ -248,6 +242,7 @@ const LINH_CAN = [
             "Tiên thiên mà sinh, hấp thu linh khí cực nhanh.",
 
         buff: {
+
             tuLuyen: 50,
             hp: 50,
             linhLuc: 65,
@@ -256,10 +251,6 @@ const LINH_CAN = [
             dotPha: 20
         }
     },
-
-    // =================================================
-    // THÁNH PHẨM
-    // =================================================
 
     {
         id: "thanh_pham",
@@ -280,6 +271,7 @@ const LINH_CAN = [
             "Linh căn cấp Thánh, được vô số tu sĩ mơ ước.",
 
         buff: {
+
             tuLuyen: 35,
             hp: 35,
             linhLuc: 45,
@@ -288,10 +280,6 @@ const LINH_CAN = [
             dotPha: 15
         }
     },
-
-    // =================================================
-    // THIÊN PHẨM
-    // =================================================
 
     {
         id: "thien_pham",
@@ -312,6 +300,7 @@ const LINH_CAN = [
             "Thiên tư hơn người, con đường tu luyện thuận lợi.",
 
         buff: {
+
             tuLuyen: 25,
             hp: 25,
             linhLuc: 30,
@@ -320,10 +309,6 @@ const LINH_CAN = [
             dotPha: 10
         }
     },
-
-    // =================================================
-    // ĐỊA PHẨM
-    // =================================================
 
     {
         id: "dia_pham",
@@ -344,6 +329,7 @@ const LINH_CAN = [
             "Căn cơ tốt, đủ khả năng bước vào hàng cường giả.",
 
         buff: {
+
             tuLuyen: 18,
             hp: 18,
             linhLuc: 20,
@@ -352,10 +338,6 @@ const LINH_CAN = [
             dotPha: 7
         }
     },
-
-    // =================================================
-    // HUYỀN PHẨM
-    // =================================================
 
     {
         id: "huyen_pham",
@@ -376,6 +358,7 @@ const LINH_CAN = [
             "Linh căn khá tốt, có tư chất tu luyện.",
 
         buff: {
+
             tuLuyen: 12,
             hp: 12,
             linhLuc: 15,
@@ -384,10 +367,6 @@ const LINH_CAN = [
             dotPha: 5
         }
     },
-
-    // =================================================
-    // HOÀNG PHẨM
-    // =================================================
 
     {
         id: "hoang_pham",
@@ -408,6 +387,7 @@ const LINH_CAN = [
             "Linh căn phổ thông, con đường tu luyện bình thường.",
 
         buff: {
+
             tuLuyen: 7,
             hp: 7,
             linhLuc: 8,
@@ -416,10 +396,6 @@ const LINH_CAN = [
             dotPha: 3
         }
     },
-
-    // =================================================
-    // PHÀM PHẨM
-    // =================================================
 
     {
         id: "pham_pham",
@@ -440,6 +416,7 @@ const LINH_CAN = [
             "Linh căn yếu, con đường tu luyện vô cùng gian nan.",
 
         buff: {
+
             tuLuyen: 2,
             hp: 2,
             linhLuc: 3,
@@ -451,13 +428,14 @@ const LINH_CAN = [
 ];
 
 // =====================================================
-// THUỘC TÍNH LINH CĂN
+// 🌈 THUỘC TÍNH LINH CĂN
 // =====================================================
 
 const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "🔥 Hỏa",
+
         bonus: {
             cong: 10,
             linhLuc: 5
@@ -466,6 +444,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "💧 Thủy",
+
         bonus: {
             hp: 10,
             linhLuc: 5
@@ -474,6 +453,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "🌳 Mộc",
+
         bonus: {
             hp: 8,
             tuLuyen: 5
@@ -482,6 +462,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "🪨 Thổ",
+
         bonus: {
             thu: 12,
             hp: 5
@@ -490,6 +471,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "⚡ Lôi",
+
         bonus: {
             cong: 15,
             dotPha: 3
@@ -498,6 +480,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "🌪️ Phong",
+
         bonus: {
             cong: 8,
             tuLuyen: 8
@@ -506,6 +489,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "❄️ Băng",
+
         bonus: {
             thu: 8,
             dotPha: 5
@@ -514,6 +498,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "☀️ Quang",
+
         bonus: {
             linhLuc: 10,
             hp: 5
@@ -522,6 +507,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "🌑 Ám",
+
         bonus: {
             cong: 12,
             thu: 5
@@ -530,6 +516,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "☯️ Âm Dương",
+
         bonus: {
             hp: 10,
             linhLuc: 10,
@@ -540,6 +527,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "🌌 Hỗn Độn",
+
         bonus: {
             tuLuyen: 15,
             linhLuc: 15,
@@ -551,6 +539,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "🌠 Không Gian",
+
         bonus: {
             tuLuyen: 10,
             cong: 10
@@ -559,6 +548,7 @@ const LINH_CAN_THUOC_TINH = [
 
     {
         ten: "⏳ Thời Gian",
+
         bonus: {
             tuLuyen: 20,
             dotPha: 5
@@ -567,7 +557,7 @@ const LINH_CAN_THUOC_TINH = [
 ];
 
 // =====================================================
-// QUAY PHẨM CẤP LINH CĂN
+// 🎲 QUAY LINH CĂN
 // =====================================================
 
 function rollLinhCan() {
@@ -604,24 +594,25 @@ function rollLinhCan() {
 }
 
 // =====================================================
-// QUAY THUỘC TÍNH
+// 🎲 QUAY THUỘC TÍNH
 // =====================================================
 
 function rollThuocTinh(
     linhCan
 ) {
 
-    // Hồng Mông
     if (
         linhCan.id ===
         "hong_mong"
     ) {
 
         return {
+
             ten:
                 "☯️ Hồng Mông",
 
             bonus: {
+
                 tuLuyen: 25,
                 hp: 20,
                 linhLuc: 25,
@@ -632,17 +623,18 @@ function rollThuocTinh(
         };
     }
 
-    // Hỗn Độn
     if (
         linhCan.id ===
         "hon_don"
     ) {
 
         return {
+
             ten:
                 "🌌 Hỗn Độn",
 
             bonus: {
+
                 tuLuyen: 20,
                 linhLuc: 20,
                 cong: 15,
@@ -652,17 +644,18 @@ function rollThuocTinh(
         };
     }
 
-    // Hỗn Nguyên
     if (
         linhCan.id ===
         "hon_nguyen"
     ) {
 
         return {
+
             ten:
                 "🔱 Hỗn Nguyên",
 
             bonus: {
+
                 tuLuyen: 15,
                 linhLuc: 15,
                 cong: 12,
@@ -684,7 +677,7 @@ function rollThuocTinh(
 }
 
 // =====================================================
-// TÍNH BUFF CUỐI
+// 🧬 TÍNH BUFF
 // =====================================================
 
 function buildLinhCan(
@@ -745,7 +738,7 @@ function buildLinhCan(
 }
 
 // =====================================================
-// TẠO LINH CĂN HOÀN CHỈNH
+// 🌌 TẠO LINH CĂN
 // =====================================================
 
 function generateLinhCan() {
@@ -765,7 +758,7 @@ function generateLinhCan() {
 }
 
 // =====================================================
-// PLAYER MẶC ĐỊNH
+// 👤 PLAYER MẶC ĐỊNH
 // =====================================================
 
 function createPlayer(
@@ -892,7 +885,7 @@ function createPlayer(
 }
 
 // =====================================================
-// LẤY PLAYER
+// 👤 LẤY PLAYER
 // =====================================================
 
 function getPlayer(
@@ -907,12 +900,11 @@ function getPlayer(
         return null;
     }
 
-    // =================================================
-    // MIGRATION CHO PLAYER CŨ
-    // Không xóa dữ liệu cũ
-    // =================================================
-
     let changed = false;
+
+    // =================================================
+    // MIGRATION PLAYER CŨ
+    // =================================================
 
     if (
         player.tuvi === undefined
@@ -1081,7 +1073,7 @@ function getPlayer(
 }
 
 // =====================================================
-// UPDATE PLAYER
+// ✏️ UPDATE PLAYER
 // =====================================================
 
 function updatePlayer(
@@ -1109,7 +1101,7 @@ function updatePlayer(
 }
 
 // =====================================================
-// TẤT CẢ PLAYER
+// 👥 TẤT CẢ PLAYER
 // =====================================================
 
 function getAllPlayers() {
@@ -1118,62 +1110,87 @@ function getAllPlayers() {
         players
     );
 }
+
 // =====================================================
-// ❤️ HỆ THỐNG HỒI MÁU TỰ ĐỘNG
-// ❤️ Hồi 1% MAX HP mỗi giây
+// ❤️ HỒI MÁU TỰ ĐỘNG
+// 1% MAX HP MỖI GIÂY
 // =====================================================
 
 function regenerateAllPlayers() {
 
     let changed = false;
 
-    for (const player of Object.values(players)) {
+    for (
+        const player
+        of Object.values(players)
+    ) {
 
-        if (!player) continue;
+        if (!player) {
+            continue;
+        }
 
-        const maxHp = Math.max(
-            1,
-            Number(player.maxHp || 1)
-        );
+        const maxHp =
+            Math.max(
+                1,
+                Number(
+                    player.maxHp || 1
+                )
+            );
 
-        const hp = Math.max(
-            0,
-            Number(player.hp || 0)
-        );
+        const hp =
+            Math.max(
+                0,
+                Number(
+                    player.hp || 0
+                )
+            );
 
-        // Đã đầy máu
-        if (hp >= maxHp) {
+        if (
+            hp >= maxHp
+        ) {
             continue;
         }
 
         // HP = 0 không tự hồi sinh
-        if (hp <= 0) {
+        if (
+            hp <= 0
+        ) {
             continue;
         }
 
-        // Hồi 1% Max HP mỗi giây
-        const heal = Math.max(
-            1,
-            Math.floor(maxHp * 0.01)
-        );
+        const heal =
+            Math.max(
+                1,
+                Math.floor(
+                    maxHp * 0.01
+                )
+            );
 
-        const newHp = Math.min(
-            maxHp,
-            hp + heal
-        );
+        const newHp =
+            Math.min(
+                maxHp,
+                hp + heal
+            );
 
-        if (newHp !== hp) {
-            player.hp = newHp;
+        if (
+            newHp !== hp
+        ) {
+
+            player.hp =
+                newHp;
+
             changed = true;
         }
     }
 
     if (changed) {
+
         save();
     }
 }
+
 // =====================================================
-// THÊM ITEM
+// 🎒 THÊM ITEM
 // =====================================================
 
 function addItem(
@@ -1183,7 +1200,9 @@ function addItem(
 ) {
 
     const player =
-        getPlayer(userId);
+        getPlayer(
+            userId
+        );
 
     if (!player) {
 
@@ -1207,33 +1226,219 @@ function addItem(
 }
 
 // =====================================================
-// EXPORT
+// ♻️ RESET 1 PLAYER
+// =====================================================
+
+function resetPlayer(
+    userId,
+    username
+) {
+
+    players[userId] = {
+
+        id:
+            userId,
+
+        username:
+            username || "Unknown",
+
+        // ===============================
+        // TU VI
+        // ===============================
+
+        tuvi:
+            0,
+
+        canhGioi:
+            "Luyện Khí",
+
+        tang:
+            1,
+
+        realm:
+            1,
+
+        kinhNghiem:
+            0,
+
+        // ===============================
+        // LINH CĂN
+        // ===============================
+
+        linhCan:
+            null,
+
+        // ===============================
+        // LINH LỰC
+        // ===============================
+
+        linhLuc:
+            0,
+
+        linhThach:
+            100,
+
+        // ===============================
+        // CHỈ SỐ
+        // ===============================
+
+        hp:
+            100,
+
+        maxHp:
+            100,
+
+        cong:
+            10,
+
+        thu:
+            5,
+
+        // ===============================
+        // TRẠNG THÁI
+        // ===============================
+
+        beQuan:
+            false,
+
+        beQuanEnd:
+            0,
+
+        lastTrain:
+            0,
+
+        lastDungeon:
+            0,
+
+        lastBoss:
+            0,
+
+        // ===============================
+        // THỐNG KÊ
+        // ===============================
+
+        bossDaGiet:
+            0,
+
+        phoBanDaHoanThanh:
+            0,
+
+        // ===============================
+        // TÚI ĐỒ
+        // ===============================
+
+        tuiDo: {
+
+            danDuoc: [],
+
+            vatPham: [],
+
+            linhThu: []
+        },
+
+        createdAt:
+            Date.now()
+    };
+
+    save();
+
+    return players[userId];
+}
+
+// =====================================================
+// ☠️ RESET TOÀN BỘ DATA
+// =====================================================
+
+function resetAllPlayers() {
+
+    const count =
+        Object.keys(
+            players
+        ).length;
+
+    // XÓA TOÀN BỘ NHÂN VẬT
+    players = {};
+
+    // LƯU DATABASE RỖNG
+    save();
+
+    console.log(
+        `☠️ Đã reset toàn bộ ${count} người chơi.`
+    );
+
+    return count;
+}
+
+// =====================================================
+// 🧹 XÓA HẲN FILE DATABASE
+// Dùng nếu cần reset thủ công hoàn toàn
+// =====================================================
+
+function deleteDatabaseFile() {
+
+    try {
+
+        if (
+            fs.existsSync(
+                DB_FILE
+            )
+        ) {
+
+            fs.unlinkSync(
+                DB_FILE
+            );
+        }
+
+        players = {};
+
+        console.log(
+            "🗑️ Đã xóa players.json."
+        );
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "❌ Không thể xóa players.json:",
+            error
+        );
+
+        return false;
+    }
+}
+
+// =====================================================
+// 📦 EXPORT
 // =====================================================
 
 module.exports = {
 
+    // PLAYER
     createPlayer,
-
     getPlayer,
-
     updatePlayer,
-
     getAllPlayers,
-    
+
+    // HP
     regenerateAllPlayers,
-    
+
+    // ITEM
     addItem,
 
+    // DATABASE
     save,
 
-    // Linh Căn
+    // RESET
+    resetPlayer,
+    resetAllPlayers,
+    deleteDatabaseFile,
+
+    // LINH CĂN
     generateLinhCan,
-
     rollLinhCan,
-
     rollThuocTinh,
 
     LINH_CAN,
-
     LINH_CAN_THUOC_TINH
 };
