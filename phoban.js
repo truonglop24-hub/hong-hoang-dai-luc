@@ -12,13 +12,15 @@ const {
 } = require("./database");
 
 // ==========================================
-// COOLDOWN 5 PHÚT
+// ⏱️ COOLDOWN 5 PHÚT
 // ==========================================
+
 const COOLDOWN = 5 * 60 * 1000;
 
 // ==========================================
-// 20 PHÓ BẢN
+// 🏯 20 PHÓ BẢN HỒNG HOANG
 // ==========================================
+
 const DUNGEONS = {
 
     "thung-lung-hong-hoang": {
@@ -283,8 +285,10 @@ const DUNGEONS = {
 };
 
 // ==========================================
-// RANDOM
+// RANDOM CHỈ DÙNG ĐỂ TẠO CHỈ SỐ / PHẦN THƯỞNG
+// Không dùng để quyết định thắng thua
 // ==========================================
+
 function random(min, max) {
     return Math.floor(
         Math.random() * (max - min + 1)
@@ -292,8 +296,9 @@ function random(min, max) {
 }
 
 // ==========================================
-// BẢNG PHẨM CẤP
+// PHẨM CẤP ĐỒ
 // ==========================================
+
 const RARITIES = [
     {
         name: "⚪ Phàm Phẩm",
@@ -337,6 +342,10 @@ const RARITIES = [
     }
 ];
 
+// ==========================================
+// DANH SÁCH VẬT PHẨM
+// ==========================================
+
 const ITEM_NAMES = [
     "🗡️ Hồng Hoang Chiến Kiếm",
     "⚔️ Thái Cổ Sát Kiếm",
@@ -355,9 +364,9 @@ const ITEM_NAMES = [
 // ==========================================
 // QUAY PHẨM
 // ==========================================
+
 function rollRarity(dungeonIndex) {
 
-    // Phó bản càng cao càng tăng cơ hội đồ hiếm
     const bonus =
         Math.min(
             dungeonIndex * 0.35,
@@ -374,12 +383,15 @@ function rollRarity(dungeonIndex) {
     let roll =
         Math.random() * total;
 
-    for (let i = 0; i < RARITIES.length; i++) {
+    for (
+        let i = 0;
+        i < RARITIES.length;
+        i++
+    ) {
 
         let weight =
             RARITIES[i].weight;
 
-        // tăng nhẹ đồ hiếm ở phó bản cao
         if (i >= 4) {
             weight += bonus;
         }
@@ -395,12 +407,18 @@ function rollRarity(dungeonIndex) {
 }
 
 // ==========================================
-// TẠO ĐỒ
+// TẠO ĐỒ RƠI
 // ==========================================
-function generateLoot(dungeonIndex) {
+
+function generateLoot(
+    dungeonIndex,
+    dungeonName
+) {
 
     const rarity =
-        rollRarity(dungeonIndex);
+        rollRarity(
+            dungeonIndex
+        );
 
     const name =
         ITEM_NAMES[
@@ -417,10 +435,14 @@ function generateLoot(dungeonIndex) {
         Math.floor(
             basePower *
             rarity.multiplier *
-            (1 + dungeonIndex * 0.12)
+            (
+                1 +
+                dungeonIndex * 0.12
+            )
         );
 
     return {
+
         id:
             `dungeon_${Date.now()}_${Math.floor(
                 Math.random() * 999999
@@ -436,9 +458,7 @@ function generateLoot(dungeonIndex) {
             power,
 
         moTa:
-            `Báu vật rơi ra từ ${DUNGEONS[
-                Object.keys(DUNGEONS)[dungeonIndex]
-            ].name}.`,
+            `Báu vật rơi ra từ ${dungeonName}.`,
 
         createdAt:
             Date.now()
@@ -446,8 +466,9 @@ function generateLoot(dungeonIndex) {
 }
 
 // ==========================================
-// MENU
+// MENU CHỌN PHÓ BẢN
 // ==========================================
+
 function getDungeonMenu() {
 
     return new ActionRowBuilder()
@@ -473,14 +494,20 @@ function getDungeonMenu() {
                                         /^.+?\s/,
                                         ""
                                     )
-                                    .slice(0, 100),
+                                    .slice(
+                                        0,
+                                        100
+                                    ),
 
                             value:
                                 id,
 
                             description:
                                 dungeon.desc
-                                    .slice(0, 100)
+                                    .slice(
+                                        0,
+                                        100
+                                    )
                         })
                     )
                 )
@@ -490,6 +517,7 @@ function getDungeonMenu() {
 // ==========================================
 // COMMAND /PHOBAN
 // ==========================================
+
 module.exports = {
 
     data:
@@ -543,7 +571,8 @@ module.exports = {
                 .setDescription(
                     "⚔️ **20 PHÓ BẢN HỒNG HOANG**\n\n" +
                     "Chọn phó bản bên dưới để chiến đấu.\n" +
-                    "📈 Độ khó tăng dần.\n" +
+                    "📈 Độ khó tăng dần rất mạnh.\n" +
+                    "⚔️ Kết quả dựa hoàn toàn vào Dame/Thủ/HP.\n" +
                     "🎁 Phó bản càng cao càng có cơ hội rơi đồ hiếm.\n" +
                     "⏱️ Cooldown: **5 phút**"
                 )
@@ -564,9 +593,10 @@ module.exports = {
         });
     },
 
-    // ======================================
-    // XỬ LÝ CHỌN PHÓ BẢN
-    // ======================================
+    // ==========================================
+    // XỬ LÝ SELECT MENU
+    // ==========================================
+
     async handleSelect(interaction) {
 
         if (
@@ -626,9 +656,10 @@ module.exports = {
             });
         }
 
-        // ==================================
-        // CHỈ SỐ PHÓ BẢN
-        // ==================================
+        // ======================================
+        // CHỈ SỐ BOSS
+        // ======================================
+
         const dungeonIndex =
             Object.keys(
                 DUNGEONS
@@ -648,55 +679,142 @@ module.exports = {
                 dungeon.atkMax
             );
 
-        const power =
-            (p.cong || 0) +
-            (p.thu || 0) +
-            Math.floor(
-                (p.linhLuc || 0) / 20
-            );
+        // ======================================
+        // DAME NGƯỜI CHƠI
+        // ======================================
 
-        // ==================================
-        // TỶ LỆ THẮNG
-        // ==================================
-        const winChance =
-            Math.min(
-                0.85,
-                Math.max(
-                    0.03,
-                    power /
-                    (enemyHp * 1.5)
+        const playerDamage =
+            Math.max(
+                1,
+
+                Number(
+                    p.cong || 0
+                ) +
+
+                Math.floor(
+                    Number(
+                        p.linhLuc || 0
+                    ) / 20
                 )
             );
 
+        // ======================================
+        // THỦ NGƯỜI CHƠI
+        // ======================================
+
+        const playerDefense =
+            Math.max(
+                0,
+                Number(
+                    p.thu || 0
+                )
+            );
+
+        // ======================================
+        // DAME BOSS SAU PHÒNG THỦ
+        // ======================================
+
+        const bossDamage =
+            Math.max(
+                1,
+                enemyAtk -
+                playerDefense
+            );
+
+        // ======================================
+        // HP CHIẾN ĐẤU
+        // ======================================
+
+        let bossHp =
+            enemyHp;
+
+        let playerHp =
+            Math.max(
+                1,
+                Number(
+                    p.hp || 1
+                )
+            );
+
+        let turns = 0;
+
+        let totalDamageDealt = 0;
+
+        let totalDamageTaken = 0;
+
+        // ======================================
+        // ⚔️ CHIẾN ĐẤU THỰC TẾ
+        //
+        // KHÔNG RANDOM THẮNG / THUA
+        // ======================================
+
+        while (
+            playerHp > 0 &&
+            bossHp > 0
+        ) {
+
+            turns++;
+
+            // Người chơi đánh
+            const dealt =
+                Math.min(
+                    playerDamage,
+                    bossHp
+                );
+
+            bossHp -= dealt;
+
+            totalDamageDealt +=
+                dealt;
+
+            // Boss chết
+            if (
+                bossHp <= 0
+            ) {
+                break;
+            }
+
+            // Boss đánh lại
+            const taken =
+                Math.min(
+                    bossDamage,
+                    playerHp
+                );
+
+            playerHp -= taken;
+
+            totalDamageTaken +=
+                taken;
+
+            // An toàn chống vòng lặp vô hạn
+            if (
+                turns >= 100000
+            ) {
+                break;
+            }
+        }
+
         const win =
-            Math.random() <
-            winChance;
+            bossHp <= 0;
 
-        // ==================================
-        // THẤT BẠI
-        // ==================================
+        // ======================================
+        // LƯU COOLDOWN
+        // ======================================
+
         if (!win) {
-
-            const damage =
-                Math.floor(
-                    enemyAtk / 2
-                );
-
-            const newHp =
-                Math.max(
-                    1,
-                    (p.hp || 1) -
-                    damage
-                );
 
             updatePlayer(
                 interaction.user.id,
                 {
+
                     lastDungeon:
                         Date.now(),
 
                     hp:
-                        newHp
+                        Math.max(
+                            1,
+                            playerHp
+                        )
                 }
             );
 
@@ -709,7 +827,7 @@ module.exports = {
                             "💀 PHÓ BẢN THẤT BẠI"
                         )
                         .setDescription(
-                            `Bạn bị đánh lui khỏi **${dungeon.name}**.`
+                            `Bạn đã chiến đấu trực tiếp với **${dungeon.name}** nhưng không thể hạ được yêu thú.`
                         )
                         .addFields(
 
@@ -724,7 +842,7 @@ module.exports = {
 
                             {
                                 name:
-                                    "⚔️ Công yêu thú",
+                                    "⚔️ Dame yêu thú",
                                 value:
                                     enemyAtk.toLocaleString(),
                                 inline:
@@ -733,36 +851,43 @@ module.exports = {
 
                             {
                                 name:
-                                    "❤️ HP còn",
+                                    "⚔️ Dame của bạn",
                                 value:
-                                    newHp.toLocaleString(),
+                                    playerDamage.toLocaleString(),
                                 inline:
                                     true
                             },
 
                             {
                                 name:
-                                    "📊 Tỷ lệ thắng",
+                                    "🛡️ Thủ của bạn",
                                 value:
-                                    `${(
-                                        winChance * 100
-                                    ).toFixed(1)}%`,
+                                    playerDefense.toLocaleString(),
                                 inline:
                                     true
                             },
 
                             {
                                 name:
-                                    "⏱️ Hồi lại",
+                                    "❤️ HP còn lại",
                                 value:
-                                    "5 phút",
+                                    playerHp.toLocaleString(),
+                                inline:
+                                    true
+                            },
+
+                            {
+                                name:
+                                    "🔄 Số lượt đánh",
+                                value:
+                                    turns.toLocaleString(),
                                 inline:
                                     true
                             }
                         )
                         .setFooter({
                             text:
-                                "⚔️ Hồng Hoang đã đánh bại bạn!"
+                                "⏱️ Lượt phó bản tiếp theo sau 5 phút."
                         })
                 ],
 
@@ -770,9 +895,10 @@ module.exports = {
             });
         }
 
-        // ==================================
+        // ======================================
         // PHẦN THƯỞNG
-        // ==================================
+        // ======================================
+
         const exp =
             random(
                 dungeon.expMin,
@@ -785,53 +911,72 @@ module.exports = {
                 dungeon.stoneMax
             );
 
-        // ==================================
-        // RƠI ĐỒ
-        // ==================================
+        // ======================================
+        // 🎁 RƠI ĐỒ
+        // ======================================
+
         const loot =
             generateLoot(
-                dungeonIndex
+                dungeonIndex,
+                dungeon.name
             );
 
-        // Lưu vào túi đồ
+        // ======================================
+        // LƯU ĐỒ VÀO TÚI
+        // ======================================
+
         addItem(
             interaction.user.id,
             "vatPham",
             loot
         );
 
-        // ==================================
+        // ======================================
         // CẬP NHẬT NHÂN VẬT
-        // ==================================
+        // ======================================
+
         updatePlayer(
             interaction.user.id,
             {
+
                 lastDungeon:
                     Date.now(),
 
                 kinhNghiem:
-                    (p.kinhNghiem || 0) +
+                    Number(
+                        p.kinhNghiem || 0
+                    ) +
                     exp,
 
                 linhThach:
-                    (p.linhThach || 0) +
+                    Number(
+                        p.linhThach || 0
+                    ) +
                     stones,
 
                 phoBanDaHoanThanh:
-                    (p.phoBanDaHoanThanh || 0) +
+                    Number(
+                        p.phoBanDaHoanThanh || 0
+                    ) +
                     1,
 
                 hp:
                     Math.min(
-                        p.maxHp || 100,
-                        (p.hp || 1) + 20
+                        Number(
+                            p.maxHp || 100
+                        ),
+                        Math.max(
+                            1,
+                            playerHp
+                        )
                     )
             }
         );
 
-        // ==================================
-        // KẾT QUẢ
-        // ==================================
+        // ======================================
+        // 🏆 KẾT QUẢ
+        // ======================================
+
         const embed =
             new EmbedBuilder()
                 .setTitle(
@@ -839,7 +984,15 @@ module.exports = {
                 )
                 .setDescription(
                     `🔥 Bạn đã chinh phục **${dungeon.name}**!\n\n` +
-                    `🎁 **VẬT PHẨM RƠI:**\n` +
+
+                    `⚔️ **KẾT QUẢ CHIẾN ĐẤU**\n` +
+                    `• Dame mỗi lượt: **${playerDamage.toLocaleString()}**\n` +
+                    `• Dame boss mỗi lượt: **${bossDamage.toLocaleString()}**\n` +
+                    `• Tổng dame gây ra: **${totalDamageDealt.toLocaleString()}**\n` +
+                    `• Tổng dame nhận: **${totalDamageTaken.toLocaleString()}**\n` +
+                    `• Số lượt đánh: **${turns.toLocaleString()}**\n\n` +
+
+                    `🎁 **VẬT PHẨM RƠI**\n` +
                     `**${loot.ten}**\n` +
                     `${loot.phamCap}\n` +
                     `⚔️ Sức mạnh: **${loot.sucManh.toLocaleString()}**`
@@ -866,9 +1019,9 @@ module.exports = {
 
                     {
                         name:
-                            "❤️ Hồi phục",
+                            "❤️ HP còn lại",
                         value:
-                            "+20 HP",
+                            playerHp.toLocaleString(),
                         inline:
                             true
                     },
