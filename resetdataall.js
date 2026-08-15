@@ -57,5 +57,3 @@ module.exports = {
         });
     }
 };
-
-ID "1263416165372268607" đã được đặt vào "ADMIN_IDS", đúng với phần kiểm tra quyền trong file gốc.
