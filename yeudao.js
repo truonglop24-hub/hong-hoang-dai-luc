@@ -830,6 +830,7 @@ function makeDanMenu(userId) {
                     )
                     .addOptions(options)
             ),
+
         new ActionRowBuilder()
             .addComponents(
                 new StringSelectMenuBuilder()
@@ -1025,7 +1026,7 @@ function makeHuyetMachListEmbed() {
                 (item, i) =>
                     `**${i + 1}.** ${item.ten}\n` +
                     `💠 ${item.cap} • ` +
-                    `⚔️ +${item.cong} • `🛡️ +${item.thu} • ` +
+                    `⚔️ +${item.cong} • 🛡️ +${item.thu} • ` +
                     `❤️ +${item.hp}`
             ).join("\n\n")
         );
