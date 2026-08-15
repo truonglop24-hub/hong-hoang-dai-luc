@@ -4,460 +4,529 @@ const { getPlayer, updatePlayer } = require("./database");
 const COOLDOWN = 30 * 60 * 1000;
 
 // =====================================================
-// DANH SÁCH BOSS
+// 👹 DANH SÁCH BOSS
 // =====================================================
 
 const bosses = [
-    {
-        name: "🐺 Lang Yêu",
-        hp: 800,
-        reward: 300,
-        item: "🐺 Lang Nha",
-        dropChance: 100
-    },
-    {
-        name: "🦂 Huyết Hạt Ma",
-        hp: 1500,
-        reward: 600,
-        item: "🦂 Huyết Tinh",
-        dropChance: 100
-    },
-    {
-        name: "🐍 Thanh Xà Vương",
-        hp: 2500,
-        reward: 1000,
-        item: "🐍 Thanh Xà Lân",
-        dropChance: 100
-    },
-    {
-        name: "🦅 Kim Sí Điểu",
-        hp: 4000,
-        reward: 1600,
-        item: "🪶 Kim Sí Vũ",
-        dropChance: 100
-    },
-    {
-        name: "🐉 Hắc Long",
-        hp: 6500,
-        reward: 2500,
-        item: "🐉 Hắc Long Lân",
-        dropChance: 100
-    },
-    {
-        name: "👹 Thao Thiết",
-        hp: 9500,
-        reward: 4000,
-        item: "🦴 Thao Thiết Cốt",
-        dropChance: 100
-    },
-    {
-        name: "🔥 Chu Tước Ma Vương",
-        hp: 14000,
-        reward: 6500,
-        item: "🔥 Chu Tước Hỏa Tinh",
-        dropChance: 100
-    },
-    {
-        name: "🌊 Huyền Vũ Ma Thần",
-        hp: 20000,
-        reward: 9000,
-        item: "🐢 Huyền Vũ Giáp",
-        dropChance: 100
-    },
-    {
-        name: "⚡ Lôi Đình Ma Quân",
-        hp: 28000,
-        reward: 13000,
-        item: "⚡ Lôi Đình Tinh",
-        dropChance: 100
-    },
-    {
-        name: "🌑 Cửu U Ma Đế",
-        hp: 38000,
-        reward: 18000,
-        item: "🌑 Cửu U Hồn Tinh",
-        dropChance: 100
-    },
-    {
-        name: "👁️ Thiên Nhãn Ma Tôn",
-        hp: 50000,
-        reward: 25000,
-        item: "👁️ Thiên Nhãn Tinh",
-        dropChance: 100
-    },
-    {
-        name: "☠️ Vạn Cổ Thi Ma",
-        hp: 65000,
-        reward: 33000,
-        item: "☠️ Thi Ma Cốt",
-        dropChance: 100
-    },
-    {
-        name: "🌌 Hỗn Độn Ma Thần",
-        hp: 85000,
-        reward: 45000,
-        item: "🌌 Hỗn Độn Tinh",
-        dropChance: 100
-    },
-    {
-        name: "👑 Hồng Hoang Ma Tổ",
-        hp: 110000,
-        reward: 60000,
-        item: "🩸 Ma Tổ Chi Huyết",
-        dropChance: 100
-    },
-
-    // =================================================
-    // BOSS CUỐI
-    // =================================================
-
-    {
-        name: "🔱 THIÊN ĐẠO MA THẦN",
-        hp: 150000,
-        reward: 100000,
-        item: "🔱 Thiên Đạo Ma Hạch",
-        dropChance: 100,
-        keyDropChance: 0.5
-    }
+    { name: "🐉 Hắc Long", hp: 400, reward: 250 },
+    { name: "👹 Thao Thiết", hp: 550, reward: 350 },
+    { name: "🔥 Chu Tước Ma Vương", hp: 700, reward: 500 },
+    { name: "🌑 Cửu U Ma Đế", hp: 900, reward: 750 }
 ];
 
 // =====================================================
-// THÊM VẬT PHẨM
+// ⚔️ 😈 🐺 BUFF 3 ĐẠO
 // =====================================================
 
-function addItem(player, itemName, amount = 1) {
-    if (!player.tuiDo) {
-        player.tuiDo = {
-            danDuoc: [],
-            vatPham: [],
-            linhThu: []
-        };
+const DAO_BUFFS = {
+    chinhdao: {
+        name: "⚔️ Chính Đạo",
+        cong: 10,
+        thu: 25,
+        hp: 20
+    },
+
+    madao: {
+        name: "😈 Ma Đạo",
+        cong: 30,
+        thu: -10,
+        hp: 0
+    },
+
+    yeudao: {
+        name: "🐺 Yêu Đạo",
+        cong: 15,
+        thu: 20,
+        hp: 40
+    }
+};
+
+// =====================================================
+// 🔧 LẤY ĐẠO
+// =====================================================
+
+function normalizeDao(player) {
+
+    const dao =
+        player?.dao ||
+        player?.conDuong ||
+        player?.phuongDao ||
+        "chinhdao";
+
+    const value =
+        String(dao)
+            .toLowerCase()
+            .trim();
+
+    if (
+        value === "madao" ||
+        value === "ma dao" ||
+        value.includes("ma đạo")
+    ) {
+        return "madao";
     }
 
-    if (!Array.isArray(player.tuiDo.vatPham)) {
-        player.tuiDo.vatPham = [];
+    if (
+        value === "yeudao" ||
+        value === "yeu dao" ||
+        value.includes("yêu đạo")
+    ) {
+        return "yeudao";
     }
 
-    const list = player.tuiDo.vatPham;
+    return "chinhdao";
+}
 
-    const foundObject = list.find(
-        item =>
-            typeof item === "object" &&
-            item !== null &&
-            String(item.name).toLowerCase() ===
-                itemName.toLowerCase()
-    );
-
-    if (foundObject) {
-        foundObject.amount =
-            Number(foundObject.amount || 0) + amount;
-        return;
-    }
-
-    const foundStringIndex = list.findIndex(
-        item =>
-            typeof item === "string" &&
-            item.toLowerCase() === itemName.toLowerCase()
-    );
-
-    if (foundStringIndex !== -1) {
-        list.splice(foundStringIndex, 1);
-
-        list.push({
-            name: itemName,
-            amount: amount + 1
-        });
-
-        return;
-    }
-
-    list.push({
-        name: itemName,
-        amount
-    });
+function getDaoBuff(player) {
+    return DAO_BUFFS[
+        normalizeDao(player)
+    ];
 }
 
 // =====================================================
-// TỶ LỆ
+// ⚔️ TÍNH SỨC CHIẾN ĐẤU
 // =====================================================
 
-function rollPercent(chance) {
-    return Math.random() * 100 < chance;
+function getPlayerPower(player) {
+
+    const buff =
+        getDaoBuff(player);
+
+    const cong =
+        Number(
+            player.cong || 0
+        );
+
+    const thu =
+        Number(
+            player.thu || 0
+        );
+
+    const linhLuc =
+        Number(
+            player.linhLuc || 0
+        );
+
+    const hp =
+        Number(
+            player.maxHp ||
+            player.hp ||
+            100
+        );
+
+    // Buff Công
+    const buffCong =
+        cong *
+        (
+            1 +
+            buff.cong / 100
+        );
+
+    // Buff Thủ
+    const buffThu =
+        Math.max(
+            0,
+            thu *
+            (
+                1 +
+                buff.thu / 100
+            )
+        );
+
+    // Buff HP
+    const buffHp =
+        hp *
+        (
+            1 +
+            buff.hp / 100
+        );
+
+    return Math.floor(
+
+        buffCong * 2 +
+
+        buffThu +
+
+        Math.floor(
+            linhLuc / 10
+        ) +
+
+        buffHp / 10
+
+    );
 }
 
 // =====================================================
-// COMMAND BOSS
+// 🎯 TÍNH HP SAU KHI BỊ BOSS ĐÁNH
+// =====================================================
+
+function getDamage(player) {
+
+    const buff =
+        getDaoBuff(player);
+
+    let damage = 30;
+
+    /*
+     * Yêu Đạo có HP +40%
+     * nên chịu đòn tốt hơn.
+     */
+
+    if (
+        buff.hp > 0
+    ) {
+
+        damage =
+            Math.max(
+                10,
+                Math.floor(
+                    damage *
+                    (
+                        1 -
+                        buff.hp / 200
+                    )
+                )
+            );
+    }
+
+    /*
+     * Chính Đạo có Thủ +25%
+     * nên giảm thêm sát thương.
+     */
+
+    if (
+        buff.thu > 0
+    ) {
+
+        damage =
+            Math.max(
+                5,
+                Math.floor(
+                    damage *
+                    (
+                        1 -
+                        buff.thu / 250
+                    )
+                )
+            );
+    }
+
+    /*
+     * Ma Đạo Thủ -10%
+     * nên chịu sát thương nhiều hơn.
+     */
+
+    if (
+        buff.thu < 0
+    ) {
+
+        damage =
+            Math.floor(
+                damage *
+                (
+                    1 +
+                    Math.abs(
+                        buff.thu
+                    ) / 100
+                )
+            );
+    }
+
+    return Math.max(
+        1,
+        damage
+    );
+}
+
+// =====================================================
+// 🎲 RANDOM BOSS
+// =====================================================
+
+function getRandomBoss() {
+
+    return bosses[
+        Math.floor(
+            Math.random() *
+            bosses.length
+        )
+    ];
+}
+
+// =====================================================
+// 🏆 COMMAND /BOSS
 // =====================================================
 
 module.exports = {
+
     data: new SlashCommandBuilder()
+
         .setName("boss")
-        .setDescription("Thách đấu Boss Hồng Hoang"),
+
+        .setDescription(
+            "Thách đấu Boss Hồng Hoang"
+        ),
 
     async execute(interaction) {
-        try {
-            const p = getPlayer(interaction.user.id);
 
-            if (!p) {
-                return interaction.reply({
-                    content: "⚠️ Hãy dùng `/batdau` trước.",
-                    ephemeral: true
-                });
-            }
+        const userId =
+            interaction.user.id;
 
-            // =================================================
-            // COOLDOWN
-            // =================================================
+        const p =
+            getPlayer(
+                userId
+            );
 
-            const remaining =
-                COOLDOWN -
-                (Date.now() - (p.lastBoss || 0));
+        // =================================================
+        // ❌ CHƯA CÓ NHÂN VẬT
+        // =================================================
 
-            if (remaining > 0) {
-                return interaction.reply({
-                    content:
-                        `⏳ Boss chưa xuất hiện lại.\n` +
-                        `Còn **${Math.ceil(
-                            remaining / 60000
-                        )} phút**.`,
-                    ephemeral: true
-                });
-            }
+        if (!p) {
 
-            // =================================================
-            // CHỌN BOSS
-            // =================================================
+            return interaction.reply({
 
-            const boss =
-                bosses[
-                    Math.floor(
-                        Math.random() * bosses.length
-                    )
-                ];
+                content:
+                    "⚠️ Hãy dùng `/batdau` trước.",
 
-            // =================================================
-            // SỨC CHIẾN ĐẤU
-            // =================================================
+                ephemeral:
+                    true
+            });
+        }
 
-            const playerPower =
-                (Number(p.cong) || 0) * 2 +
-                (Number(p.thu) || 0) +
-                Math.floor(
-                    (Number(p.linhLuc) || 0) / 10
+        // =================================================
+        // ⏳ COOLDOWN
+        // =================================================
+
+        const remaining =
+            COOLDOWN -
+            (
+                Date.now() -
+                (
+                    p.lastBoss ||
+                    0
+                )
+            );
+
+        if (
+            remaining > 0
+        ) {
+
+            return interaction.reply({
+
+                content:
+                    `⏳ Boss chưa xuất hiện lại. Còn **${Math.ceil(remaining / 60000)} phút**.`,
+
+                ephemeral:
+                    true
+            });
+        }
+
+        // =================================================
+        // 👹 BOSS
+        // =================================================
+
+        const boss =
+            getRandomBoss();
+
+        // =================================================
+        // ⚔️ ĐẠO
+        // =================================================
+
+        const dao =
+            getDaoBuff(p);
+
+        // =================================================
+        // ⚔️ SỨC CHIẾN ĐẤU
+        // =================================================
+
+        const playerPower =
+            getPlayerPower(p);
+
+        const roll =
+            Math.random() * 300;
+
+        const win =
+            playerPower +
+            roll >=
+            boss.hp;
+
+        // =================================================
+        // 💀 THUA
+        // =================================================
+
+        if (!win) {
+
+            const damage =
+                getDamage(p);
+
+            const newHp =
+                Math.max(
+                    1,
+                    Number(
+                        p.hp || 0
+                    ) -
+                    damage
                 );
-
-            const roll = Math.random() * 300;
-
-            const win =
-                playerPower + roll >= boss.hp;
-
-            // =================================================
-            // THUA
-            // =================================================
-
-            if (!win) {
-                const hpMoi =
-                    Math.max(
-                        1,
-                        (Number(p.hp) || 100) - 30
-                    );
-
-                updatePlayer(
-                    interaction.user.id,
-                    {
-                        lastBoss: Date.now(),
-                        hp: hpMoi
-                    }
-                );
-
-                return interaction.reply({
-                    content:
-                        `💀 **${boss.name}** quá mạnh!\n\n` +
-                        `⚔️ Sức chiến đấu: **${playerPower}**\n` +
-                        `👹 HP Boss: **${boss.hp}**\n` +
-                        `🎲 May mắn: **${Math.floor(roll)}**\n\n` +
-                        `❤️ HP còn lại: **${hpMoi}**`
-                });
-            }
-
-            // =================================================
-            // THẮNG
-            // =================================================
-
-            const exp = Number(boss.reward) || 0;
-            const stones = Number(boss.reward) || 0;
-
-            // =================================================
-            // COPY TÚI ĐỒ
-            // =================================================
-
-            const tuiDo = {
-                ...(p.tuiDo || {}),
-
-                danDuoc: Array.isArray(p.tuiDo?.danDuoc)
-                    ? [...p.tuiDo.danDuoc]
-                    : [],
-
-                vatPham: Array.isArray(p.tuiDo?.vatPham)
-                    ? [...p.tuiDo.vatPham]
-                    : [],
-
-                linhThu: Array.isArray(p.tuiDo?.linhThu)
-                    ? [...p.tuiDo.linhThu]
-                    : []
-            };
-
-            const playerTemp = {
-                ...p,
-                tuiDo
-            };
-
-            // =================================================
-            // DROP VẬT PHẨM BOSS
-            // =================================================
-
-            let dropText = `🎁 **${boss.item} ×1**`;
-
-            if (rollPercent(boss.dropChance)) {
-                addItem(
-                    playerTemp,
-                    boss.item,
-                    1
-                );
-            } else {
-                dropText =
-                    `❌ ${boss.item} không rơi`;
-            }
-
-            // =================================================
-            // CHÌA KHÓA TIÊN GIỚI
-            // =================================================
-
-            let keyDropped = false;
-
-            if (
-                boss.keyDropChance &&
-                rollPercent(boss.keyDropChance)
-            ) {
-                addItem(
-                    playerTemp,
-                    "🔑 Chìa Khóa Tiên Giới",
-                    1
-                );
-
-                keyDropped = true;
-            }
-
-            // =================================================
-            // LƯU
-            // =================================================
 
             updatePlayer(
-                interaction.user.id,
+                userId,
                 {
-                    lastBoss: Date.now(),
 
-                    kinhNghiem:
-                        (Number(p.kinhNghiem) || 0) +
-                        exp,
+                    lastBoss:
+                        Date.now(),
 
-                    linhThach:
-                        (Number(p.linhThach) || 0) +
-                        stones,
+                    hp:
+                        newHp
 
-                    bossDaGiet:
-                        (Number(p.bossDaGiet) || 0) +
-                        1,
-
-                    tuiDo: playerTemp.tuiDo
                 }
             );
 
-            // =================================================
-            // EMBED
-            // =================================================
-
-            const embed =
-                new EmbedBuilder()
-                    .setTitle("🏆 BOSS BỊ ĐÁNH BẠI")
-                    .setDescription(
-                        `Bạn đã chém giết **${boss.name}**!`
-                    )
-                    .addFields(
-                        {
-                            name: "⚔️ Sức chiến đấu",
-                            value: `${playerPower}`,
-                            inline: true
-                        },
-                        {
-                            name: "👹 HP Boss",
-                            value: `${boss.hp}`,
-                            inline: true
-                        },
-                        {
-                            name: "✨ Kinh nghiệm",
-                            value: `+${exp}`,
-                            inline: true
-                        },
-                        {
-                            name: "💎 Linh thạch",
-                            value: `+${stones}`,
-                            inline: true
-                        },
-                        {
-                            name: "🎁 Vật phẩm rơi",
-                            value: dropText,
-                            inline: false
-                        }
-                    )
-                    .setFooter({
-                        text:
-                            "Boss sẽ hồi sinh sau 30 phút"
-                    });
-
-            // =================================================
-            // RƠI CHÌA KHÓA
-            // =================================================
-
-            if (keyDropped) {
-                embed.addFields({
-                    name: "🌟 ĐẠI CƠ DUYÊN!",
-                    value:
-                        "🔑 **CHÌA KHÓA TIÊN GIỚI ×1**\n" +
-                        "Bạn đã may mắn nhận được chìa khóa mở đường lên Tiên Giới!",
-                    inline: false
-                });
-
-                embed.setTitle(
-                    "🌌 THIÊN ĐẠO GIÁNG LÂM!"
-                );
-            } else if (boss.keyDropChance) {
-                embed.addFields({
-                    name: "🔑 Chìa Khóa Tiên Giới",
-                    value:
-                        `Không rơi lần này.\n` +
-                        `Tỷ lệ rơi: **${boss.keyDropChance}%**`,
-                    inline: false
-                });
-            }
-
             return interaction.reply({
-                embeds: [embed]
+
+                content:
+
+                    `💀 **${boss.name}** quá mạnh!\n\n` +
+
+                    `🌌 Đạo: **${dao.name}**\n` +
+
+                    `⚔️ Sức chiến đấu: **${playerPower}**\n` +
+
+                    `🎲 Lực chiến ngẫu nhiên: **+${Math.floor(roll)}**\n` +
+
+                    `❤️ HP mất: **-${damage}**\n` +
+
+                    `❤️ HP còn: **${newHp}**`
+
             });
-
-        } catch (error) {
-            console.error(
-                "LỖI BOSS:",
-                error
-            );
-
-            if (!interaction.replied) {
-                return interaction.reply({
-                    content:
-                        "❌ Có lỗi xảy ra khi đánh Boss.",
-                    ephemeral: true
-                });
-            }
         }
-    }
+
+        // =================================================
+        // 🎁 THẮNG
+        // =================================================
+
+        const exp =
+            boss.reward;
+
+        const stones =
+            boss.reward;
+
+        updatePlayer(
+            userId,
+            {
+
+                lastBoss:
+                    Date.now(),
+
+                kinhNghiem:
+                    Number(
+                        p.kinhNghiem ||
+                        0
+                    ) +
+                    exp,
+
+                linhThach:
+                    Number(
+                        p.linhThach ||
+                        0
+                    ) +
+                    stones,
+
+                bossDaGiet:
+                    Number(
+                        p.bossDaGiet ||
+                        0
+                    ) +
+                    1
+
+            }
+        );
+
+        // =================================================
+        // 🏆 EMBED
+        // =================================================
+
+        const embed =
+            new EmbedBuilder()
+
+                .setTitle(
+                    "🏆 BOSS BỊ ĐÁNH BẠI"
+                )
+
+                .setDescription(
+
+                    `⚔️ Bạn đã chém giết **${boss.name}**!\n\n` +
+
+                    `🌌 Con đường: **${dao.name}**\n\n` +
+
+                    `⚔️ Sức chiến đấu: **${playerPower}**\n` +
+
+                    `🎲 Lực chiến ngẫu nhiên: **+${Math.floor(roll)}**`
+
+                )
+
+                .addFields(
+
+                    {
+                        name:
+                            "✨ Kinh nghiệm",
+
+                        value:
+                            `+${exp}`,
+
+                        inline:
+                            true
+                    },
+
+                    {
+                        name:
+                            "💎 Linh thạch",
+
+                        value:
+                            `+${stones}`,
+
+                        inline:
+                            true
+                    },
+
+                    {
+                        name:
+                            "🌌 Buff Đạo",
+
+                        value:
+                            `${dao.name}\n` +
+                            `⚔️ Công +${dao.cong}%\n` +
+                            `🛡️ Thủ ${dao.thu >= 0 ? "+" : ""}${dao.thu}%\n` +
+                            `❤️ HP +${dao.hp}%`,
+
+                        inline:
+                            false
+                    }
+
+                )
+
+                .setFooter({
+
+                    text:
+                        "Boss sẽ hồi sinh sau 30 phút"
+
+                });
+
+        return interaction.reply({
+
+            embeds:
+                [embed]
+
+        });
+    },
+
+    // =================================================
+    // 📦 EXPORT
+    // =================================================
+
+    bosses,
+
+    DAO_BUFFS,
+
+    getPlayerPower,
+
+    getDaoBuff
 };
