@@ -7,6 +7,11 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
+const {
+    getPlayer,
+    updatePlayer
+} = require("./database");
+
 // ======================================================
 // CẤU HÌNH NHÓM VẬT PHẨM KHÔNG ĐƯỢC DÙNG
 // ======================================================
@@ -128,14 +133,7 @@ function xacDinhLoai(item) {
 }
 
 // ======================================================
-// LẤY ID CỦA VẬT PHẨM
-//
-// Hỗ trợ nhiều kiểu đặt ID:
-// id
-// itemId
-// itemID
-// ma
-// item_id
+// LẤY ID VẬT PHẨM
 // ======================================================
 
 function layIdVatPham(item) {
@@ -168,36 +166,157 @@ function layTenVatPham(item) {
 }
 
 // ======================================================
-// LẤY TÚI ĐỒ
+// GẮN CATEGORY NỘI BỘ
+// ======================================================
+
+function taoItemTrongTui(item, category) {
+
+    if (!item || typeof item !== "object") {
+        return item;
+    }
+
+    try {
+
+        Object.defineProperty(
+            item,
+            "__dungCategory",
+            {
+                value: category,
+                writable: true,
+                configurable: true,
+                enumerable: false
+            }
+        );
+
+    } catch {
+
+        item.__dungCategory = category;
+    }
+
+    return item;
+}
+
+// ======================================================
+// LẤY TOÀN BỘ TÚI ĐỒ
+// ======================================================
+//
+// Shop hiện tại lưu:
+//
+// player.tuiDo[category] = [item, item, ...]
+//
+// Vì vậy /dung phải quét toàn bộ category.
 // ======================================================
 
 async function layTuiDo(userId) {
 
-    if (!global.tuiDoNguoiChoi) {
-        global.tuiDoNguoiChoi = {};
+    const player = getPlayer(userId);
+
+    if (!player) {
+        return null;
     }
 
-    if (!global.tuiDoNguoiChoi[userId]) {
+    const tuiDo = player.tuiDo || {};
+    const items = [];
 
-        global.tuiDoNguoiChoi[userId] = {
-            items: []
-        };
+    for (
+        const [category, danhSach]
+        of Object.entries(tuiDo)
+    ) {
+
+        if (!Array.isArray(danhSach)) {
+            continue;
+        }
+
+        for (const item of danhSach) {
+
+            items.push(
+                taoItemTrongTui(
+                    item,
+                    category
+                )
+            );
+        }
     }
 
-    return global.tuiDoNguoiChoi[userId];
+    return {
+        player,
+        tuiDo,
+        items
+    };
 }
 
 // ======================================================
-// LƯU TÚI ĐỒ
+// LƯU LẠI TÚI ĐỒ
 // ======================================================
 
 async function luuTuiDo(userId, data) {
 
-    if (!global.tuiDoNguoiChoi) {
-        global.tuiDoNguoiChoi = {};
+    const player = getPlayer(userId);
+
+    if (!player) {
+        return false;
     }
 
-    global.tuiDoNguoiChoi[userId] = data;
+    const oldTuiDo =
+        player.tuiDo || {};
+
+    const newTuiDo = {};
+
+    // Giữ nguyên toàn bộ category
+    for (
+        const category
+        of Object.keys(oldTuiDo)
+    ) {
+
+        newTuiDo[category] = [];
+    }
+
+    const items =
+        Array.isArray(data?.items)
+            ? data.items
+            : [];
+
+    for (const item of items) {
+
+        if (
+            !item ||
+            typeof item !== "object"
+        ) {
+            continue;
+        }
+
+        const category =
+            item.__dungCategory ||
+            item.category ||
+            item.nhom ||
+            "dacBiet";
+
+        if (
+            !Array.isArray(
+                newTuiDo[category]
+            )
+        ) {
+            newTuiDo[category] = [];
+        }
+
+        const cleanItem = {
+            ...item
+        };
+
+        // Không lưu biến nội bộ
+        delete cleanItem.__dungCategory;
+
+        newTuiDo[category].push(
+            cleanItem
+        );
+    }
+
+    updatePlayer(
+        userId,
+        {
+            tuiDo: newTuiDo
+        }
+    );
 
     return true;
 }
@@ -206,17 +325,25 @@ async function luuTuiDo(userId, data) {
 // TÌM THEO ID
 // ======================================================
 
-function timVatPhamTheoId(items, idCanTim) {
+function timVatPhamTheoId(
+    items,
+    idCanTim
+) {
 
-    const search = String(idCanTim)
-        .trim()
-        .toLowerCase();
+    const search =
+        String(idCanTim)
+            .trim()
+            .toLowerCase();
 
     return items.find(item => {
 
-        const id = layIdVatPham(item);
+        const id =
+            layIdVatPham(item);
 
-        if (id === null || id === undefined) {
+        if (
+            id === null ||
+            id === undefined
+        ) {
             return false;
         }
 
@@ -230,35 +357,48 @@ function timVatPhamTheoId(items, idCanTim) {
 // TÌM THEO TÊN CHÍNH XÁC
 // ======================================================
 
-function timVatPhamTheoTen(items, tenCanTim) {
+function timVatPhamTheoTen(
+    items,
+    tenCanTim
+) {
 
-    const search = chuanHoa(tenCanTim);
+    const search =
+        chuanHoa(tenCanTim);
 
     return items.find(item => {
 
-        const ten = chuanHoa(
-            layTenVatPham(item)
-        );
+        const ten =
+            chuanHoa(
+                layTenVatPham(item)
+            );
 
         return ten === search;
     });
 }
 
 // ======================================================
-// TÌM GẦN ĐÚNG THEO TÊN
+// TÌM GẦN ĐÚNG
 // ======================================================
 
-function timVatPhamGanDung(items, tenCanTim) {
+function timVatPhamGanDung(
+    items,
+    tenCanTim
+) {
 
-    const search = chuanHoa(tenCanTim);
+    const search =
+        chuanHoa(tenCanTim);
 
     return items.find(item => {
 
-        const ten = chuanHoa(
-            layTenVatPham(item)
-        );
+        const ten =
+            chuanHoa(
+                layTenVatPham(item)
+            );
 
-        if (!ten || !search) {
+        if (
+            !ten ||
+            !search
+        ) {
             return false;
         }
 
@@ -271,19 +411,14 @@ function timVatPhamGanDung(items, tenCanTim) {
 
 // ======================================================
 // TÌM VẬT PHẨM
-//
-// THỨ TỰ:
-// 1. ID
-// 2. Tên chính xác
-// 3. Tên gần đúng
 // ======================================================
 
-function timVatPham(items, input) {
+function timVatPham(
+    items,
+    input
+) {
 
-    // -------------------------------
-    // TÌM THEO ID
-    // -------------------------------
-
+    // Tìm ID
     let item =
         timVatPhamTheoId(
             items,
@@ -294,10 +429,7 @@ function timVatPham(items, input) {
         return item;
     }
 
-    // -------------------------------
-    // TÌM THEO TÊN CHÍNH XÁC
-    // -------------------------------
-
+    // Tìm tên chính xác
     item =
         timVatPhamTheoTen(
             items,
@@ -308,10 +440,7 @@ function timVatPham(items, input) {
         return item;
     }
 
-    // -------------------------------
-    // TÌM TÊN GẦN ĐÚNG
-    // -------------------------------
-
+    // Tìm gần đúng
     return timVatPhamGanDung(
         items,
         input
@@ -322,7 +451,10 @@ function timVatPham(items, input) {
 // TRỪ 1 VẬT PHẨM
 // ======================================================
 
-function truVatPham(items, item) {
+function truVatPham(
+    items,
+    item
+) {
 
     const index =
         items.indexOf(item);
@@ -331,33 +463,42 @@ function truVatPham(items, item) {
         return false;
     }
 
-    const soLuong = Number(
-        item.amount ??
-        item.soluong ??
-        item.quantity ??
-        1
-    );
+    const soLuong =
+        Number(
+            item.amount ??
+            item.soluong ??
+            item.quantity ??
+            1
+        );
 
     if (soLuong <= 1) {
 
-        items.splice(index, 1);
+        items.splice(
+            index,
+            1
+        );
 
     } else {
 
-        if (item.amount !== undefined) {
+        if (
+            item.amount !==
+            undefined
+        ) {
 
             item.amount =
                 soLuong - 1;
 
         } else if (
-            item.soluong !== undefined
+            item.soluong !==
+            undefined
         ) {
 
             item.soluong =
                 soLuong - 1;
 
         } else if (
-            item.quantity !== undefined
+            item.quantity !==
+            undefined
         ) {
 
             item.quantity =
@@ -374,7 +515,7 @@ function truVatPham(items, item) {
 }
 
 // ======================================================
-// XỬ LÝ ĐAN DƯỢC
+// DÙNG ĐAN DƯỢC
 // ======================================================
 
 async function dungDanDuoc(
@@ -396,7 +537,7 @@ async function dungDanDuoc(
 }
 
 // ======================================================
-// XỬ LÝ PHÁP BẢO
+// DÙNG PHÁP BẢO
 // ======================================================
 
 async function dungPhapBao(
@@ -418,7 +559,7 @@ async function dungPhapBao(
 }
 
 // ======================================================
-// XỬ LÝ CÔNG PHÁP
+// DÙNG CÔNG PHÁP
 // ======================================================
 
 async function dungCongPhap(
@@ -440,7 +581,7 @@ async function dungCongPhap(
 }
 
 // ======================================================
-// XỬ LÝ LINH THÚ
+// DÙNG LINH THÚ
 // ======================================================
 
 async function dungLinhThu(
@@ -462,7 +603,7 @@ async function dungLinhThu(
 }
 
 // ======================================================
-// XỬ LÝ VẬT PHẨM THÔNG THƯỜNG
+// DÙNG VẬT PHẨM THƯỜNG
 // ======================================================
 
 async function dungVatPham(
@@ -508,33 +649,43 @@ async function dungVatPham(
 
 module.exports = {
 
-    data: new SlashCommandBuilder()
+    data:
+        new SlashCommandBuilder()
 
-        .setName("dung")
+            .setName("dung")
 
-        .setDescription(
-            "Sử dụng vật phẩm bằng tên hoặc ID"
-        )
+            .setDescription(
+                "Sử dụng vật phẩm bằng tên hoặc ID"
+            )
 
-        .addStringOption(option =>
-            option
+            .addStringOption(
+                option =>
+                    option
 
-                .setName("vatpham")
+                        .setName(
+                            "vatpham"
+                        )
 
-                .setDescription(
-                    "Nhập tên hoặc ID vật phẩm"
-                )
+                        .setDescription(
+                            "Nhập tên hoặc ID vật phẩm"
+                        )
 
-                .setRequired(true)
+                        .setRequired(
+                            true
+                        )
 
-                .setAutocomplete(true)
-        ),
+                        .setAutocomplete(
+                            true
+                        )
+            ),
 
     // ==================================================
     // AUTOCOMPLETE
     // ==================================================
 
-    async autocomplete(interaction) {
+    async autocomplete(
+        interaction
+    ) {
 
         try {
 
@@ -542,92 +693,123 @@ module.exports = {
                 interaction.user.id;
 
             const tui =
-                await layTuiDo(userId);
+                await layTuiDo(
+                    userId
+                );
 
             const items =
-                tui.items || [];
+                tui?.items || [];
 
             const input =
                 interaction.options
-                    .getString("vatpham")
-                    ?.toLowerCase() || "";
+                    .getString(
+                        "vatpham"
+                    )
+                    ?.toLowerCase() ||
+                "";
 
-            const ketQua = items
+            const ketQua =
+                items
 
-                .filter(item => {
+                    .filter(
+                        item => {
 
-                    if (
-                        laVatPhamKhongTheDung(
-                            item
-                        )
-                    ) {
-                        return false;
-                    }
+                            if (
+                                laVatPhamKhongTheDung(
+                                    item
+                                )
+                            ) {
+                                return false;
+                            }
 
-                    const ten =
-                        layTenVatPham(item)
-                            .toLowerCase();
+                            const ten =
+                                layTenVatPham(
+                                    item
+                                )
+                                    .toLowerCase();
 
-                    const id =
-                        layIdVatPham(item);
+                            const id =
+                                layIdVatPham(
+                                    item
+                                );
 
-                    const idText =
-                        id === null ||
-                        id === undefined
-                            ? ""
-                            : String(id)
-                                .toLowerCase();
+                            const idText =
+                                id === null ||
+                                id === undefined
+                                    ? ""
+                                    : String(
+                                        id
+                                    )
+                                        .toLowerCase();
 
-                    return (
-                        ten.includes(input) ||
-                        idText.includes(input)
+                            return (
+                                ten.includes(
+                                    input
+                                ) ||
+                                idText.includes(
+                                    input
+                                )
+                            );
+                        }
+                    )
+
+                    .slice(
+                        0,
+                        25
                     );
-                })
-
-                .slice(0, 25);
 
             await interaction.respond(
 
-                ketQua.map(item => {
+                ketQua.map(
+                    item => {
 
-                    const ten =
-                        String(
-                            layTenVatPham(item)
-                        );
-
-                    const id =
-                        layIdVatPham(item);
-
-                    let hienThi =
-                        ten;
-
-                    if (
-                        id !== null &&
-                        id !== undefined
-                    ) {
-
-                        hienThi =
-                            `${ten} | ID: ${id}`;
-                    }
-
-                    return {
-
-                        name:
-                            hienThi.slice(
-                                0,
-                                100
-                            ),
-
-                        value:
+                        const ten =
                             String(
-                                layIdVatPham(item) ??
-                                layTenVatPham(item)
-                            ).slice(
-                                0,
-                                100
-                            )
-                    };
-                })
+                                layTenVatPham(
+                                    item
+                                )
+                            );
+
+                        const id =
+                            layIdVatPham(
+                                item
+                            );
+
+                        let hienThi =
+                            ten;
+
+                        if (
+                            id !== null &&
+                            id !== undefined
+                        ) {
+
+                            hienThi =
+                                `${ten} | ID: ${id}`;
+                        }
+
+                        return {
+
+                            name:
+                                hienThi.slice(
+                                    0,
+                                    100
+                                ),
+
+                            value:
+                                String(
+                                    layIdVatPham(
+                                        item
+                                    ) ??
+                                    layTenVatPham(
+                                        item
+                                    )
+                                ).slice(
+                                    0,
+                                    100
+                                )
+                        };
+                    }
+                )
             );
 
         } catch (error) {
@@ -639,7 +821,9 @@ module.exports = {
 
             try {
 
-                await interaction.respond([]);
+                await interaction.respond(
+                    []
+                );
 
             } catch {}
         }
@@ -649,13 +833,17 @@ module.exports = {
     // EXECUTE
     // ==================================================
 
-    async execute(interaction) {
+    async execute(
+        interaction
+    ) {
 
         try {
 
             const input =
                 interaction.options
-                    .getString("vatpham")
+                    .getString(
+                        "vatpham"
+                    )
                     ?.trim();
 
             if (!input) {
@@ -677,11 +865,15 @@ module.exports = {
             // ------------------------------------------
 
             const tui =
-                await layTuiDo(userId);
+                await layTuiDo(
+                    userId
+                );
 
             if (
                 !tui ||
-                !Array.isArray(tui.items)
+                !Array.isArray(
+                    tui.items
+                )
             ) {
 
                 return interaction.reply({
@@ -697,7 +889,7 @@ module.exports = {
                 tui.items;
 
             // ------------------------------------------
-            // TÌM VẬT PHẨM THEO ID HOẶC TÊN
+            // TÌM VẬT PHẨM
             // ------------------------------------------
 
             const item =
@@ -705,10 +897,6 @@ module.exports = {
                     items,
                     input
                 );
-
-            // ------------------------------------------
-            // KHÔNG CÓ VẬT PHẨM
-            // ------------------------------------------
 
             if (!item) {
 
@@ -722,17 +910,23 @@ module.exports = {
             }
 
             const ten =
-                layTenVatPham(item);
+                layTenVatPham(
+                    item
+                );
 
             const id =
-                layIdVatPham(item);
+                layIdVatPham(
+                    item
+                );
 
             // ------------------------------------------
-            // KIỂM TRA VẬT PHẨM KHÔNG ĐƯỢC DÙNG
+            // KIỂM TRA KHÔNG ĐƯỢC DÙNG
             // ------------------------------------------
 
             if (
-                laVatPhamKhongTheDung(item)
+                laVatPhamKhongTheDung(
+                    item
+                )
             ) {
 
                 return interaction.reply({
@@ -749,12 +943,14 @@ module.exports = {
             // ------------------------------------------
 
             const loai =
-                xacDinhLoai(item);
+                xacDinhLoai(
+                    item
+                );
 
             let ketQua;
 
             // ------------------------------------------
-            // XỬ LÝ VẬT PHẨM
+            // XỬ LÝ
             // ------------------------------------------
 
             switch (loai) {
@@ -811,7 +1007,7 @@ module.exports = {
             }
 
             // ------------------------------------------
-            // SỬ DỤNG THẤT BẠI
+            // DÙNG THẤT BẠI
             // ------------------------------------------
 
             if (
@@ -851,7 +1047,7 @@ module.exports = {
             }
 
             // ------------------------------------------
-            // LƯU TÚI ĐỒ
+            // LƯU LẠI
             // ------------------------------------------
 
             await luuTuiDo(
