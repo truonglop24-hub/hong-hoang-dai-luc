@@ -66,28 +66,13 @@ const DAO_PATHS = {
 
 const CHINH_DAO_BUFF = {
 
-    // ✨ Tu vi nhận được
     tuVi: 20,
-
-    // ❤️ HP
     hp: 20,
-
-    // 🔥 Linh lực
     linhLuc: 0,
-
-    // ⚔️ Sát thương / Công
     cong: 10,
-
-    // 🛡️ Phòng thủ
     thu: 25,
-
-    // ⚡ Tốc độ tu luyện
     tuLuyen: 15,
-
-    // 🌟 Tỷ lệ đột phá
     dotPha: 5,
-
-    // 🩸 Hút máu
     hutMau: 0
 };
 
@@ -98,28 +83,13 @@ const CHINH_DAO_BUFF = {
 
 const MA_DAO_BUFF = {
 
-    // ✨ Tu vi nhận được
     tuVi: 15,
-
-    // ❤️ HP
     hp: 0,
-
-    // 🔥 Linh lực
     linhLuc: 0,
-
-    // ⚔️ Sát thương / Công
     cong: 30,
-
-    // 🛡️ Phòng thủ
     thu: -10,
-
-    // ⚡ Tốc độ tu luyện
     tuLuyen: 10,
-
-    // 🌟 Tỷ lệ đột phá
     dotPha: 15,
-
-    // 🩸 Hút máu
     hutMau: 15
 };
 
@@ -130,28 +100,13 @@ const MA_DAO_BUFF = {
 
 const YEU_DAO_BUFF = {
 
-    // ✨ Tu vi nhận được
     tuVi: 10,
-
-    // ❤️ HP
     hp: 40,
-
-    // 🔥 Linh lực
     linhLuc: 0,
-
-    // ⚔️ Sát thương / Công
     cong: 15,
-
-    // 🛡️ Phòng thủ
     thu: 20,
-
-    // ⚡ Tốc độ tu luyện
     tuLuyen: 5,
-
-    // 🌟 Tỷ lệ đột phá
     dotPha: 0,
-
-    // 🩸 Hút máu
     hutMau: 0
 };
 
@@ -275,6 +230,7 @@ function getDaoDescription(dao) {
 // =====================================================
 
 function formatBuffValue(value) {
+
     return value >= 0
         ? `+${value}%`
         : `${value}%`;
@@ -406,7 +362,7 @@ function createDaoEmbed(username) {
 
             `━━━━━━━━━━━━━━━━━━━━\n\n` +
 
-            `⚠️ **Hãy lựa chọn con đường của ngươi.**\n` +
+            `⚠️ **Hãy lựa chọn con đường của ngươi.**\n\n` +
 
             `Lựa chọn này sẽ quyết định sức mạnh và con đường tu luyện của nhân vật.`
         )
@@ -415,6 +371,312 @@ function createDaoEmbed(username) {
             text:
                 "🌌 Hồng Hoang Đại Lục • Thiên mệnh đã định"
         });
+}
+
+
+// =====================================================
+// 🧭 MENU CHỨC NĂNG RIÊNG THEO ĐẠO
+// =====================================================
+
+const DAO_FUNCTIONS = [
+
+    {
+        value: "tuvi",
+        label: "📊 Tu Vi",
+        description:
+            "Xem cảnh giới, tầng và tu vi"
+    },
+
+    {
+        value: "dotpha",
+        label: "⚡ Đột Phá",
+        description:
+            "Đột phá tầng bằng Cửu Trọng Lôi Kiếp"
+    },
+
+    {
+        value: "cuahang",
+        label: "🏪 Cửa Hàng",
+        description:
+            "Mua pháp bảo, đan dược và vật phẩm"
+    },
+
+    {
+        value: "dando",
+        label: "💊 Đan Dược",
+        description:
+            "Xem và sử dụng đan dược"
+    },
+
+    {
+        value: "boss",
+        label: "🐉 Boss",
+        description:
+            "Khiêu chiến Boss Hồng Hoang"
+    },
+
+    {
+        value: "pvp",
+        label: "⚔️ PVP",
+        description:
+            "Giao chiến với người chơi khác"
+    },
+
+    {
+        value: "bxh",
+        label: "🏆 Bảng Xếp Hạng",
+        description:
+            "Xem các bảng xếp hạng"
+    },
+
+    {
+        value: "help",
+        label: "📖 Hướng Dẫn",
+        description:
+            "Xem hướng dẫn hệ thống"
+    }
+];
+
+
+// =====================================================
+// 🧭 TẠO MENU CHỨC NĂNG
+// =====================================================
+
+function createDaoFunctionMenu(
+    userId,
+    dao
+) {
+
+    const path =
+        DAO_PATHS[dao] ||
+        DAO_PATHS.chinhdao;
+
+    const menu =
+        new StringSelectMenuBuilder()
+
+            .setCustomId(
+                `dao_functions_${userId}_${dao}`
+            )
+
+            .setPlaceholder(
+                `${path.icon} Chọn chức năng ${path.name}...`
+            )
+
+            .addOptions(
+
+                DAO_FUNCTIONS.map(
+                    item => ({
+
+                        label:
+                            item.label,
+
+                        description:
+                            item.description,
+
+                        value:
+                            item.value
+                    })
+                )
+            );
+
+    return new ActionRowBuilder()
+        .addComponents(menu);
+}
+
+
+// =====================================================
+// 🧭 EMBED MENU CHỨC NĂNG
+// =====================================================
+
+function createDaoFunctionEmbed(
+    username,
+    dao,
+    player
+) {
+
+    const path =
+        DAO_PATHS[dao] ||
+        DAO_PATHS.chinhdao;
+
+    return new EmbedBuilder()
+
+        .setColor(
+            path.color
+        )
+
+        .setTitle(
+            `${path.icon} MENU ${path.name}`
+        )
+
+        .setDescription(
+
+            `✨ **${username}**, đây là menu riêng của **${path.name}**.\n\n` +
+
+            `📌 Các chức năng giống nhau cho cả 3 đạo, nhưng menu và giao diện được tách riêng theo con đường tu luyện.\n\n` +
+
+            `🌱 **Cảnh giới:** ${player?.canhGioi || "Luyện Khí"} tầng ${player?.tang || 1}\n` +
+
+            `⚔️ **Tu Vi:** ${Number(player?.tuvi || 0).toLocaleString()}\n` +
+
+            `💎 **Linh Thạch:** ${Number(player?.linhThach || 0).toLocaleString()}\n\n` +
+
+            `👇 **Chọn chức năng bên dưới để sử dụng.**`
+        )
+
+        .setFooter({
+            text:
+                `Hồng Hoang Đại Lục • ${path.name}`
+        });
+}
+
+
+// =====================================================
+// ⚙️ GẮN XỬ LÝ MENU
+// =====================================================
+
+async function attachDaoFunctionMenu(
+    message,
+    client,
+    userId,
+    dao
+) {
+
+    const collector =
+        message.createMessageComponentCollector({
+
+            filter:
+                i =>
+                    i.user.id ===
+                        userId &&
+
+                    i.customId ===
+                        `dao_functions_${userId}_${dao}`,
+
+            time:
+                300000
+        });
+
+
+    collector.on(
+        "collect",
+        async selectInteraction => {
+
+            const commandName =
+                selectInteraction
+                    .values[0];
+
+            const command =
+                client?.commands?.get(
+                    commandName
+                );
+
+
+            if (
+                !command ||
+                typeof command.execute !==
+                    "function"
+            ) {
+
+                return selectInteraction.reply({
+
+                    content:
+                        `❌ Lệnh **/${commandName}** chưa được nạp trong bot. Hãy kiểm tra file lệnh hoặc index.js.`,
+
+                    ephemeral:
+                        true
+                });
+            }
+
+
+            try {
+
+                await command.execute(
+                    selectInteraction
+                );
+
+            } catch (error) {
+
+                console.error(
+                    `Lỗi chạy menu ${dao} -> /${commandName}:`,
+                    error
+                );
+
+
+                if (
+                    !selectInteraction.replied &&
+                    !selectInteraction.deferred
+                ) {
+
+                    await selectInteraction.reply({
+
+                        content:
+                            `❌ Không thể mở chức năng **/${commandName}**. Kiểm tra file lệnh này có yêu cầu ChatInputCommandInteraction/options hay không.`,
+
+                        ephemeral:
+                            true
+                    }).catch(
+                        () => {}
+                    );
+                }
+            }
+        }
+    );
+
+
+    collector.on(
+        "end",
+        async () => {
+
+            try {
+
+                const rows =
+                    message.components?.map(
+                        row => {
+
+                            const components =
+                                row.components?.map(
+                                    component => {
+
+                                        if (
+                                            component.type !==
+                                            3
+                                        ) {
+                                            return component;
+                                        }
+
+                                        return {
+                                            ...component,
+                                            disabled: true
+                                        };
+                                    }
+                                );
+
+                            return {
+                                ...row,
+                                components
+                            };
+                        }
+                    );
+
+
+                if (rows) {
+
+                    await message.edit({
+
+                        components:
+                            rows
+
+                    }).catch(
+                        () => {}
+                    );
+                }
+
+            } catch (_) {}
+        }
+    );
+
+
+    return collector;
 }
 
 
@@ -545,6 +807,7 @@ async function createCharacter(
 
     let hp =
         Math.round(
+
             baseHp *
             (
                 1 +
@@ -556,8 +819,10 @@ async function createCharacter(
             )
         );
 
+
     hp =
         Math.round(
+
             hp *
             (
                 1 +
@@ -572,7 +837,9 @@ async function createCharacter(
 
     let linhLuc =
         Math.round(
+
             baseLinhLuc +
+
             (
                 Number(
                     linhCanBuff.linhLuc
@@ -580,8 +847,10 @@ async function createCharacter(
             )
         );
 
+
     linhLuc =
         Math.round(
+
             linhLuc *
             (
                 1 +
@@ -596,9 +865,12 @@ async function createCharacter(
 
     let cong =
         Math.round(
+
             baseCong *
+
             (
                 1 +
+
                 (
                     Number(
                         linhCanBuff.cong
@@ -607,8 +879,10 @@ async function createCharacter(
             )
         );
 
+
     cong =
         Math.round(
+
             cong *
             (
                 1 +
@@ -623,9 +897,12 @@ async function createCharacter(
 
     let thu =
         Math.round(
+
             baseThu *
+
             (
                 1 +
+
                 (
                     Number(
                         linhCanBuff.thu
@@ -634,8 +911,10 @@ async function createCharacter(
             )
         );
 
+
     thu =
         Math.round(
+
             thu *
             (
                 1 +
@@ -653,9 +932,12 @@ async function createCharacter(
             player.tuvi
         ) || 0;
 
+
     const tuVi =
         Math.floor(
+
             baseTuVi *
+
             (
                 1 +
                 daoBuff.tuVi / 100
@@ -687,12 +969,14 @@ async function createCharacter(
                 phuongDao:
                     dao,
 
+
                 // ===============================
                 // 🧬 LINH CĂN
                 // ===============================
 
                 linhCan:
                     linhCan,
+
 
                 // ===============================
                 // ❤️ CHỈ SỐ
@@ -713,6 +997,7 @@ async function createCharacter(
                 thu:
                     thu,
 
+
                 // ===============================
                 // 🌱 CẢNH GIỚI
                 // ===============================
@@ -725,12 +1010,14 @@ async function createCharacter(
                     player.tang ||
                     1,
 
+
                 // ===============================
                 // ✨ TU VI
                 // ===============================
 
                 tuvi:
                     tuVi,
+
 
                 // ===============================
                 // 📊 BUFF ĐẠO
@@ -855,14 +1142,43 @@ async function createCharacter(
     // 📤 HIỂN THỊ
     // =================================================
 
-    return interaction.update({
+    const updatedMessage =
+        await interaction.update({
 
-        embeds: [
-            embed
-        ],
+            embeds: [
+                embed,
+                createDaoFunctionEmbed(
+                    username,
+                    dao,
+                    player
+                )
+            ],
 
-        components: []
-    });
+            components: [
+                createDaoFunctionMenu(
+                    userId,
+                    dao
+                )
+            ],
+
+            fetchReply:
+                true
+        });
+
+
+    await attachDaoFunctionMenu(
+
+        updatedMessage,
+
+        interaction.client,
+
+        userId,
+
+        dao
+    );
+
+
+    return updatedMessage;
 }
 
 
@@ -955,49 +1271,73 @@ module.exports = {
                 "chinhdao";
 
 
-            return interaction.reply({
+            const existingMessage =
+                await interaction.reply({
 
-                embeds: [
+                    embeds: [
 
-                    new EmbedBuilder()
+                        new EmbedBuilder()
 
-                        .setColor(
-                            getDaoColor(
-                                dao
+                            .setColor(
+                                getDaoColor(
+                                    dao
+                                )
                             )
+
+                            .setTitle(
+                                "🌌 HỒNG HOANG ĐẠI LỤC"
+                            )
+
+                            .setDescription(
+
+                                `⚠️ **${username}** đã có nhân vật tại Hồng Hoang.\n\n` +
+
+                                `🌌 **Con đường:** ${getDaoName(dao)}\n\n` +
+
+                                `📊 **Buff hiện tại:**\n` +
+
+                                `${getDaoBuffText(dao)}\n\n` +
+
+                                `🧬 **Linh Căn:** ${linhCanText}\n` +
+
+                                `💠 **Phẩm cấp:** ${phamCapText}\n` +
+
+                                `🌈 **Thuộc tính:** ${thuocTinhText}\n\n` +
+
+                                `🌱 **Cảnh giới:** ${player.canhGioi || "Luyện Khí"} tầng ${player.tang || 1}\n` +
+
+                                `⚔️ **Tu Vi:** ${Number(player.tuvi || 0).toLocaleString()}\n\n` +
+
+                                `👇 Chọn chức năng ${getDaoName(dao)} ở menu bên dưới.`
+                            )
+                    ],
+
+                    components: [
+
+                        createDaoFunctionMenu(
+                            userId,
+                            dao
                         )
+                    ],
 
-                        .setTitle(
-                            "🌌 HỒNG HOANG ĐẠI LỤC"
-                        )
+                    fetchReply:
+                        true
+                });
 
-                        .setDescription(
 
-                            `⚠️ **${username}** đã có nhân vật tại Hồng Hoang.\n\n` +
+            await attachDaoFunctionMenu(
 
-                            `🌌 **Con đường:** ${getDaoName(dao)}\n\n` +
+                existingMessage,
 
-                            `📊 **Buff hiện tại:**\n` +
+                interaction.client,
 
-                            `${getDaoBuffText(dao)}\n\n` +
+                userId,
 
-                            `🧬 **Linh Căn:** ${linhCanText}\n` +
+                dao
+            );
 
-                            `💠 **Phẩm cấp:** ${phamCapText}\n` +
 
-                            `🌈 **Thuộc tính:** ${thuocTinhText}\n\n` +
-
-                            `🌱 **Cảnh giới:** ${player.canhGioi || "Luyện Khí"} tầng ${player.tang || 1}\n` +
-
-                            `⚔️ **Tu Vi:** ${Number(player.tuvi || 0).toLocaleString()}\n\n` +
-
-                            `📜 Dùng \`/tuvi\` để xem toàn bộ thông tin.`
-                        )
-                ],
-
-                ephemeral:
-                    true
-            });
+            return existingMessage;
         }
 
 
