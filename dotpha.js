@@ -364,11 +364,14 @@ function getTierRequiredTuVi(
 // ⚡ DAME LÔI KIẾP
 // =====================================================
 //
-// QUAN TRỌNG:
-// Dame Lôi Kiếp chỉ còn 40% dame gốc.
-// Không có random tỷ lệ ở đây.
-// Không dùng random để quyết định vượt kiếp.
+// DAME GỐC = 40%
 //
+// Sau đó tăng theo:
+// 1. Cảnh giới
+// 2. Tầng 1 → 12
+// 3. Trọng Lôi Kiếp 1 → 9
+//
+// Không random tỷ lệ vượt kiếp.
 // =====================================================
 
 function getLightningDamage(
@@ -385,14 +388,86 @@ function getLightningDamage(
     const buff =
         getDaoBuff(player);
 
+    const realmIndex =
+        getRealmIndex(player);
+
+    const tier =
+        getTier(player);
+
     // ================================================
-    // ⚡ DAME GỐC GIẢM CÒN 40%
+    // ⚡ DAME GỐC CHỈ CÒN 40%
     // ================================================
 
     let damage =
         Number(
             lightning.damage
         ) * 0.4;
+
+    // ================================================
+    // 📈 HỆ SỐ CẢNH GIỚI
+    // ================================================
+
+    const realmMultiplier = [
+        1,      // Phàm Nhân
+        2,      // Luyện Khí
+        3,      // Trúc Cơ
+        4,      // Kim Đan
+        5,      // Nguyên Anh
+        7,      // Hóa Thần
+        9,      // Luyện Hư
+        12,     // Hợp Thể
+        15,     // Đại Thừa
+        18,     // Độ Kiếp
+        22,     // Chân Tiên
+        30      // Đại Đạo
+    ];
+
+    const realmBonus =
+        realmMultiplier[
+            Math.min(
+                Math.max(
+                    0,
+                    realmIndex
+                ),
+                realmMultiplier.length - 1
+            )
+        ] || 1;
+
+    damage *= realmBonus;
+
+    // ================================================
+    // 📊 HỆ SỐ TẦNG 1 → 12
+    //
+    // Tầng 1  = x1.00
+    // Tầng 2  = x1.08
+    // ...
+    // Tầng 12 = x1.88
+    // ================================================
+
+    const tierMultiplier =
+        1 +
+        (
+            (tier - 1) * 0.08
+        );
+
+    damage *= tierMultiplier;
+
+    // ================================================
+    // ⚡ HỆ SỐ TRỌNG LÔI KIẾP
+    //
+    // Nhất trọng = x1.00
+    // Nhị trọng  = x1.10
+    // ...
+    // Cửu trọng  = x1.80
+    // ================================================
+
+    const lightningMultiplier =
+        1 +
+        (
+            (index - 1) * 0.10
+        );
+
+    damage *= lightningMultiplier;
 
     // ================================================
     // 🛡️ BUFF THỦ
@@ -580,7 +655,7 @@ async function processLightning(
                     {
                         name: "⚡ Dame Lôi Kiếp",
                         value:
-                            `40% dame gốc`,
+                            `40% dame gốc + hệ số cảnh giới/tầng/trọng`,
                         inline: true
                     }
                 )
@@ -1310,7 +1385,7 @@ module.exports = {
 
                     `⚡ Sắp đối mặt với **9 Trọng Lôi Kiếp**.\n\n` +
 
-                    `💥 Dame Lôi Kiếp: **40% dame gốc**\n\n` +
+                    `💥 Dame Lôi Kiếp: **40% dame gốc + tăng theo cảnh giới/tầng/trọng**\n\n` +
 
                     `✨ **Không có random tỷ lệ. Bấm chịu Lôi Kiếp là chắc chắn vượt qua.**`
                 )
