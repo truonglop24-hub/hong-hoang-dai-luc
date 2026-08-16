@@ -1,5 +1,12 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { getPlayer, updatePlayer } = require("./database");
+const {
+    SlashCommandBuilder,
+    EmbedBuilder
+} = require("discord.js");
+
+const {
+    getPlayer,
+    updatePlayer
+} = require("./database");
 
 // =====================================================
 // ⏳ COOLDOWN TU LUYỆN
@@ -7,73 +14,251 @@ const { getPlayer, updatePlayer } = require("./database");
 
 const COOLDOWN = 15 * 1000;
 
+
 // =====================================================
-// ⚡ TỐC ĐỘ TU LUYỆN THEO CẢNH GIỚI
+// 🌌 CẢNH GIỚI RIÊNG 3 ĐẠO
 // =====================================================
-//
-// Tốc độ gốc của từng cảnh giới ×4
-//
-// Ví dụ:
-// Phàm Nhân 1 ×4 = 4
-// Luyện Khí 5 ×4 = 20
-// Trúc Cơ 15 ×4 = 60
-// Kim Đan 40 ×4 = 160
-//
+
+const DAO_REALMS = {
+
+    // ⚔️ CHÍNH ĐẠO
+    chinhdao: [
+        "Phàm Nhân",
+        "Luyện Khí",
+        "Trúc Cơ",
+        "Kim Đan",
+        "Nguyên Anh",
+        "Hóa Thần",
+        "Luyện Hư",
+        "Hợp Thể",
+        "Đại Thừa",
+        "Độ Kiếp",
+        "Tiên Nhân",
+        "Chân Tiên",
+        "Thiên Tiên",
+        "Huyền Tiên",
+        "Kim Tiên",
+        "Thánh Nhân",
+        "Thiên Đạo",
+        "Đại Đạo"
+    ],
+
+    // 😈 MA ĐẠO
+    madao: [
+        "Ma Phàm",
+        "Ma Khí",
+        "Ma Cơ",
+        "Ma Đan",
+        "Ma Anh",
+        "Ma Thần",
+        "Ma Hư",
+        "Ma Hợp",
+        "Ma Thừa",
+        "Ma Kiếp",
+        "Ma Tiên",
+        "Chân Ma",
+        "Thiên Ma",
+        "Huyền Ma",
+        "Kim Ma",
+        "Ma Thánh",
+        "Ma Đạo",
+        "Ma Tổ"
+    ],
+
+    // 🐺 YÊU ĐẠO
+    yeudao: [
+        "Yêu Phàm",
+        "Yêu Khí",
+        "Yêu Cơ",
+        "Yêu Đan",
+        "Yêu Anh",
+        "Yêu Thần",
+        "Yêu Hư",
+        "Yêu Hợp",
+        "Yêu Thừa",
+        "Yêu Kiếp",
+        "Yêu Tiên",
+        "Chân Yêu",
+        "Thiên Yêu",
+        "Huyền Yêu",
+        "Kim Yêu",
+        "Yêu Thánh",
+        "Yêu Đạo",
+        "Yêu Tổ"
+    ]
+};
+
+
+// =====================================================
+// ⚡ TỐC ĐỘ TU LUYỆN ×3
 // =====================================================
 
 const CULTIVATION_SPEED = {
 
-    "Phàm Nhân": 1 * 4,
+    // ⚔️ CHÍNH ĐẠO
+    "Phàm Nhân": 1 * 3,
+    "Luyện Khí": 5 * 3,
+    "Trúc Cơ": 15 * 3,
+    "Kim Đan": 40 * 3,
+    "Nguyên Anh": 100 * 3,
+    "Hóa Thần": 250 * 3,
+    "Luyện Hư": 600 * 3,
+    "Hợp Thể": 1500 * 3,
+    "Đại Thừa": 3500 * 3,
+    "Độ Kiếp": 8000 * 3,
+    "Tiên Nhân": 20000 * 3,
+    "Chân Tiên": 50000 * 3,
+    "Thiên Tiên": 120000 * 3,
+    "Huyền Tiên": 300000 * 3,
+    "Kim Tiên": 750000 * 3,
+    "Thánh Nhân": 2000000 * 3,
+    "Thiên Đạo": 10000000 * 3,
+    "Đại Đạo": 50000000 * 3,
 
-    "Luyện Khí": 5 * 4,
+    // 😈 MA ĐẠO
+    "Ma Phàm": 1 * 3,
+    "Ma Khí": 5 * 3,
+    "Ma Cơ": 15 * 3,
+    "Ma Đan": 40 * 3,
+    "Ma Anh": 100 * 3,
+    "Ma Thần": 250 * 3,
+    "Ma Hư": 600 * 3,
+    "Ma Hợp": 1500 * 3,
+    "Ma Thừa": 3500 * 3,
+    "Ma Kiếp": 8000 * 3,
+    "Ma Tiên": 20000 * 3,
+    "Chân Ma": 50000 * 3,
+    "Thiên Ma": 120000 * 3,
+    "Huyền Ma": 300000 * 3,
+    "Kim Ma": 750000 * 3,
+    "Ma Thánh": 2000000 * 3,
+    "Ma Đạo": 10000000 * 3,
+    "Ma Tổ": 50000000 * 3,
 
-    "Trúc Cơ": 15 * 4,
-
-    "Kim Đan": 40 * 4,
-
-    "Nguyên Anh": 100 * 4,
-
-    "Hóa Thần": 250 * 4,
-
-    "Luyện Hư": 600 * 4,
-
-    "Hợp Thể": 1500 * 4,
-
-    "Đại Thừa": 3500 * 4,
-
-    "Độ Kiếp": 8000 * 4,
-
-    "Tiên Nhân": 20000 * 4,
-
-    "Chân Tiên": 50000 * 4,
-
-    "Thiên Tiên": 120000 * 4,
-
-    "Huyền Tiên": 300000 * 4,
-
-    "Kim Tiên": 750000 * 4,
-
-    "Thánh Nhân": 2000000 * 4,
-
-    "Thiên Đạo": 10000000 * 4,
-
-    "Đại Đạo": 50000000 * 4
-
+    // 🐺 YÊU ĐẠO
+    "Yêu Phàm": 1 * 3,
+    "Yêu Khí": 5 * 3,
+    "Yêu Cơ": 15 * 3,
+    "Yêu Đan": 40 * 3,
+    "Yêu Anh": 100 * 3,
+    "Yêu Thần": 250 * 3,
+    "Yêu Hư": 600 * 3,
+    "Yêu Hợp": 1500 * 3,
+    "Yêu Thừa": 3500 * 3,
+    "Yêu Kiếp": 8000 * 3,
+    "Yêu Tiên": 20000 * 3,
+    "Chân Yêu": 50000 * 3,
+    "Thiên Yêu": 120000 * 3,
+    "Huyền Yêu": 300000 * 3,
+    "Kim Yêu": 750000 * 3,
+    "Yêu Thánh": 2000000 * 3,
+    "Yêu Đạo": 10000000 * 3,
+    "Yêu Tổ": 50000000 * 3
 };
 
+
 // =====================================================
-// ⚡ LẤY TỐC ĐỘ TU LUYỆN
+// 🔧 CHUẨN HÓA ĐẠO
 // =====================================================
 
-function getCultivationSpeed(canhGioi) {
+function normalizeDao(player) {
 
-    return Math.max(
-        1,
-        Math.floor(
-            CULTIVATION_SPEED[canhGioi] || 1
-        )
-    );
+    const dao = String(
+        player?.dao ||
+        player?.conDuong ||
+        player?.phuongDao ||
+        "chinhdao"
+    ).toLowerCase().trim();
+
+    if (
+        dao === "madao" ||
+        dao === "ma dao" ||
+        dao.includes("ma đạo")
+    ) {
+        return "madao";
+    }
+
+    if (
+        dao === "yeudao" ||
+        dao === "yeu dao" ||
+        dao.includes("yêu đạo")
+    ) {
+        return "yeudao";
+    }
+
+    return "chinhdao";
 }
+
+
+// =====================================================
+// 🏷️ TÊN ĐẠO
+// =====================================================
+
+function getDaoName(dao) {
+
+    if (dao === "madao") {
+        return "😈 Ma Đạo";
+    }
+
+    if (dao === "yeudao") {
+        return "🐺 Yêu Đạo";
+    }
+
+    return "⚔️ Chính Đạo";
+}
+
+
+// =====================================================
+// 🌌 LẤY CẢNH GIỚI THEO ĐẠO
+// =====================================================
+
+function getDaoRealm(player) {
+
+    const dao = normalizeDao(player);
+
+    const realms =
+        DAO_REALMS[dao] ||
+        DAO_REALMS.chinhdao;
+
+    let index = Number(
+        player?.realmIndex ??
+        player?.realm ??
+        NaN
+    );
+
+    if (!Number.isFinite(index)) {
+
+        const current =
+            String(
+                player?.canhGioi || ""
+            ).trim().toLowerCase();
+
+        index =
+            realms.findIndex(
+                name =>
+                    name.toLowerCase() === current
+            );
+    }
+
+    if (
+        !Number.isFinite(index) ||
+        index < 0
+    ) {
+        index = 0;
+    }
+
+    index = Math.min(
+        realms.length - 1,
+        Math.floor(index)
+    );
+
+    return {
+        dao,
+        index,
+        name: realms[index]
+    };
+}
+
 
 // =====================================================
 // 📊 GIAI ĐOẠN 12 TẦNG
@@ -81,8 +266,7 @@ function getCultivationSpeed(canhGioi) {
 
 function getStage(tang) {
 
-    tang =
-        Number(tang) || 1;
+    tang = Number(tang) || 1;
 
     if (tang <= 3) {
         return "Sơ kỳ";
@@ -103,32 +287,64 @@ function getStage(tang) {
     return "Đỉnh phong";
 }
 
+
 // =====================================================
-// 📦 MODULE
+// 🌟 HIỂN THỊ CẢNH GIỚI
+// =====================================================
+
+function getRealmDisplay(player) {
+
+    const realm =
+        getDaoRealm(player);
+
+    const tang =
+        Math.max(
+            1,
+            Math.min(
+                12,
+                Number(player?.tang) || 1
+            )
+        );
+
+    return `${realm.name} ${getStage(tang)} tầng ${tang}`;
+}
+
+
+// =====================================================
+// ⚡ LẤY TỐC ĐỘ
+// =====================================================
+
+function getCultivationSpeed(canhGioi) {
+
+    return Math.max(
+        1,
+        Math.floor(
+            CULTIVATION_SPEED[canhGio] || 1
+        )
+    );
+}
+
+
+// =====================================================
+// 📦 COMMAND
 // =====================================================
 
 module.exports = {
 
     data:
-
         new SlashCommandBuilder()
-
             .setName("tuluyen")
-
             .setDescription(
                 "🧘 Tu luyện để nhận linh lực, tu vi và kinh nghiệm"
             ),
 
-    // =================================================
-    // ⚡ EXECUTE
-    // =================================================
-
     async execute(interaction) {
 
+        const userId =
+            interaction.user.id;
+
         const p =
-            getPlayer(
-                interaction.user.id
-            );
+            getPlayer(userId);
 
         // =================================================
         // ❌ CHƯA CÓ NHÂN VẬT
@@ -137,12 +353,9 @@ module.exports = {
         if (!p) {
 
             return interaction.reply({
-
                 content:
                     "⚠️ Hãy dùng `/batdau` trước.",
-
-                ephemeral:
-                    true
+                ephemeral: true
             });
         }
 
@@ -153,47 +366,49 @@ module.exports = {
         if (p.beQuan) {
 
             return interaction.reply({
-
                 content:
                     "🧘 Bạn đang bế quan. Hãy dùng `/xuatquan` khi hoàn thành.",
-
-                ephemeral:
-                    true
+                ephemeral: true
             });
         }
 
         // =================================================
-        // ⏳ COOLDOWN
+        // ⏳ COOLDOWN 15 GIÂY
         // =================================================
 
         const remaining =
             COOLDOWN -
             (
                 Date.now() -
-                (p.lastTrain || 0)
+                (
+                    p.lastTrain || 0
+                )
             );
 
         if (remaining > 0) {
 
             return interaction.reply({
-
                 content:
                     `⏳ Bạn cần chờ **${Math.ceil(
                         remaining / 1000
                     )} giây** nữa.`,
-
-                ephemeral:
-                    true
+                ephemeral: true
             });
         }
 
         // =================================================
-        // 🌌 CẢNH GIỚI
+        // 🌌 ĐẠO HIỆN TẠI
         // =================================================
 
-        const canhGioi =
-            p.canhGioi ||
-            "Phàm Nhân";
+        const dao =
+            normalizeDao(p);
+
+        // =================================================
+        // 🌌 CẢNH GIỚI RIÊNG CỦA ĐẠO
+        // =================================================
+
+        const realm =
+            getDaoRealm(p);
 
         // =================================================
         // 🔢 TẦNG
@@ -216,12 +431,12 @@ module.exports = {
             getStage(tang);
 
         // =================================================
-        // ⚡ TỐC ĐỘ
+        // ⚡ TỐC ĐỘ ×3
         // =================================================
 
         const speed =
             getCultivationSpeed(
-                canhGioi
+                realm.name
             );
 
         // =================================================
@@ -243,15 +458,32 @@ module.exports = {
         }
 
         // =================================================
-        // ✨ HỆ SỐ BUFF
+        // ⚔️ BUFF ĐẠO
+        // =================================================
+
+        let daoBuff = 0;
+
+        if (
+            p.daoBuff &&
+            typeof p.daoBuff === "object"
+        ) {
+
+            daoBuff =
+                Number(
+                    p.daoBuff.tuLuyen
+                ) || 0;
+        }
+
+        // =================================================
+        // ✨ TỔNG BUFF
         // =================================================
 
         const buffMultiplier =
             1 +
             (
-                linhCanBuff /
-                100
-            );
+                linhCanBuff +
+                daoBuff
+            ) / 100;
 
         // =================================================
         // 🔥 LINH LỰC
@@ -316,10 +548,8 @@ module.exports = {
 
         const tuViHienTai =
             (
-                Number(p.tuvi) ||
-                0
-            ) +
-            tuvi;
+                Number(p.tuvi) || 0
+            ) + tuvi;
 
         // =================================================
         // 🔥 LINH LỰC HIỆN TẠI
@@ -327,47 +557,63 @@ module.exports = {
 
         const linhLucHienTai =
             (
-                Number(p.linhLuc) ||
-                0
-            ) +
-            linhLuc;
+                Number(p.linhLuc) || 0
+            ) + linhLuc;
 
         // =================================================
-        // ✨ KINH NGHIỆM HIỆN TẠI
+        // ✨ KINH NGHIỆM
         // =================================================
 
         const kinhNghiemHienTai =
             (
-                Number(p.kinhNghiem) ||
-                0
-            ) +
-            exp;
+                Number(p.kinhNghiem) || 0
+            ) + exp;
 
         // =================================================
-        // 💾 CẬP NHẬT DATABASE
+        // 💾 LƯU DATA
         // =================================================
 
         updatePlayer(
-
-            interaction.user.id,
-
+            userId,
             {
+
+                dao:
+                    dao,
+
+                conDuong:
+                    dao,
+
+                phuongDao:
+                    dao,
+
+                realm:
+                    realm.index,
+
+                realmIndex:
+                    realm.index,
+
+                // ❗ KHÔNG TỰ TĂNG TẦNG
+                tang:
+                    tang,
+
+                tier:
+                    tang,
+
+                // Cảnh giới luôn theo đạo
+                canhGioi:
+                    realm.name,
 
                 linhLuc:
                     linhLucHienTai,
 
-                // ⚔️ LƯU TU VI
                 tuvi:
                     tuViHienTai,
 
-                // ✨ LƯU KINH NGHIỆM
                 kinhNghiem:
                     kinhNghiemHienTai,
 
-                // ⏳ LƯU COOLDOWN
                 lastTrain:
                     Date.now()
-
             }
         );
 
@@ -382,150 +628,123 @@ module.exports = {
                 ).toLocaleString();
 
         // =================================================
+        // 🎨 MÀU
+        // =================================================
+
+        let color = 0x3498db;
+
+        if (dao === "madao") {
+            color = 0x8e44ad;
+        }
+
+        if (dao === "yeudao") {
+            color = 0xe67e22;
+        }
+
+        // =================================================
+        // 🌌 TÊN ĐẠO
+        // =================================================
+
+        const daoName =
+            getDaoName(dao);
+
+        // =================================================
         // 📜 EMBED
         // =================================================
 
         const embed =
-
             new EmbedBuilder()
 
-                .setColor(
-                    0x8e44ad
-                )
+                .setColor(color)
 
                 .setTitle(
-                    "⚔️ TU LUYỆN THÀNH CÔNG"
+                    `${daoName} • TU LUYỆN THÀNH CÔNG`
                 )
 
                 .setDescription(
 
-                    `**${interaction.user.username}** ` +
-                    `vận chuyển linh khí trong kinh mạch.\n\n` +
+                    `**${interaction.user.username}** vận chuyển linh khí trong kinh mạch.\n\n` +
 
-                    `🌌 **Cảnh giới:** ` +
-                    `**${canhGioi} ${stage} tầng ${tang}**\n` +
+                    `━━━━━━━━━━━━━━━━━━━━\n\n` +
 
-                    `⚡ **Tốc độ tu luyện:** ` +
-                    `**×${format(speed)}**`
+                    `🌌 **Con đường:**\n` +
+                    `**${daoName}**\n\n` +
 
+                    `👑 **Cảnh giới hiện tại:**\n` +
+                    `# **${realm.name}**\n\n` +
+
+                    `✨ **${stage} • Tầng ${tang}/12**\n\n` +
+
+                    `⚠️ Cảnh giới này thuộc **${daoName}**.\n` +
+
+                    `⚔️ Muốn lên tầng tiếp theo phải sử dụng **/dotpha**.\n\n` +
+
+                    `⚡ **Tốc độ tu luyện:** ×${format(speed)}`
                 )
 
                 .addFields(
 
-                    // =================================================
-                    // LINH LỰC
-                    // =================================================
-
                     {
-
-                        name:
-                            "🔥 Linh lực",
-
+                        name: "🔥 Linh lực",
                         value:
-                            `+**${format(
-                                linhLuc
-                            )}**`,
-
-                        inline:
-                            true
+                            `+**${format(linhLuc)}**`,
+                        inline: true
                     },
 
-                    // =================================================
-                    // TU VI
-                    // =================================================
-
                     {
-
-                        name:
-                            "⚔️ Tu Vi",
-
+                        name: "⚔️ Tu Vi",
                         value:
-                            `+**${format(
-                                tuvi
-                            )}**`,
-
-                        inline:
-                            true
+                            `+**${format(tuvi)}**`,
+                        inline: true
                     },
 
-                    // =================================================
-                    // KINH NGHIỆM
-                    // =================================================
-
                     {
-
-                        name:
-                            "✨ Kinh nghiệm",
-
+                        name: "✨ Kinh nghiệm",
                         value:
-                            `+**${format(
-                                exp
-                            )}**`,
-
-                        inline:
-                            true
+                            `+**${format(exp)}**`,
+                        inline: true
                     },
 
-                    // =================================================
-                    // TU VI HIỆN TẠI
-                    // =================================================
-
                     {
-
-                        name:
-                            "📈 Tu Vi hiện tại",
-
+                        name: "📈 Tu Vi hiện tại",
                         value:
-                            `**${format(
-                                tuViHienTai
-                            )}**`,
-
-                        inline:
-                            true
+                            `**${format(tuViHienTai)}**`,
+                        inline: true
                     },
 
-                    // =================================================
-                    // LINH CĂN
-                    // =================================================
+                    {
+                        name: "🧬 Buff linh căn",
+                        value:
+                            `+${linhCanBuff}%`,
+                        inline: true
+                    },
 
                     {
-
-                        name:
-                            "🧬 Linh căn",
-
+                        name: "⚡ Buff đạo",
                         value:
-                            `+${linhCanBuff}% tốc độ`,
-
-                        inline:
-                            true
+                            `+${daoBuff}%`,
+                        inline: true
                     }
-
                 )
 
                 .setFooter({
-
                     text:
-                        "⏳ Cooldown: 15 giây • Hồng Hoang Đại Lục"
-
+                        `⏳ Cooldown: 15 giây • ${daoName} • Tốc độ ×3`
                 });
 
         // =================================================
-        // 📤 TRẢ KẾT QUẢ
+        // 📤 GỬI
         // =================================================
 
         return interaction.reply({
-
-            embeds:
-                [embed]
-
+            embeds: [embed]
         });
-
     }
-
 };
 
+
 // =====================================================
-// 📦 EXPORT
+// 📦 EXPORT HÀM
 // =====================================================
 
 module.exports.getCultivationSpeed =
@@ -533,6 +752,18 @@ module.exports.getCultivationSpeed =
 
 module.exports.getStage =
     getStage;
+
+module.exports.getDaoRealm =
+    getDaoRealm;
+
+module.exports.getRealmDisplay =
+    getRealmDisplay;
+
+module.exports.normalizeDao =
+    normalizeDao;
+
+module.exports.DAO_REALMS =
+    DAO_REALMS;
 
 module.exports.CULTIVATION_SPEED =
     CULTIVATION_SPEED;
