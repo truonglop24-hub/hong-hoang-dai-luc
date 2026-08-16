@@ -16,64 +16,143 @@ const {
 // =====================================================
 
 const realms = [
-    { name: "Phàm Nhân", minTuVi: 0, maxTier: 12 },
-    { name: "Luyện Khí", minTuVi: 1000, maxTier: 12 },
-    { name: "Trúc Cơ", minTuVi: 10000, maxTier: 12 },
-    { name: "Kim Đan", minTuVi: 100000, maxTier: 12 },
-    { name: "Nguyên Anh", minTuVi: 1000000, maxTier: 12 },
-    { name: "Hóa Thần", minTuVi: 10000000, maxTier: 12 },
-    { name: "Luyện Hư", minTuVi: 100000000, maxTier: 12 },
-    { name: "Hợp Thể", minTuVi: 1000000000, maxTier: 12 },
-    { name: "Đại Thừa", minTuVi: 10000000000, maxTier: 12 },
-    { name: "Độ Kiếp", minTuVi: 100000000000, maxTier: 12 },
-    { name: "Chân Tiên", minTuVi: 10000000000000, maxTier: 12 },
-    { name: "Đại Đạo", minTuVi: 10000000000000000000, maxTier: 12 }
+    {
+        name: "Phàm Nhân",
+        minTuVi: 0,
+        maxTier: 12
+    },
+    {
+        name: "Luyện Khí",
+        minTuVi: 1000,
+        maxTier: 12
+    },
+    {
+        name: "Trúc Cơ",
+        minTuVi: 10000,
+        maxTier: 12
+    },
+    {
+        name: "Kim Đan",
+        minTuVi: 100000,
+        maxTier: 12
+    },
+    {
+        name: "Nguyên Anh",
+        minTuVi: 1000000,
+        maxTier: 12
+    },
+    {
+        name: "Hóa Thần",
+        minTuVi: 10000000,
+        maxTier: 12
+    },
+    {
+        name: "Luyện Hư",
+        minTuVi: 100000000,
+        maxTier: 12
+    },
+    {
+        name: "Hợp Thể",
+        minTuVi: 1000000000,
+        maxTier: 12
+    },
+    {
+        name: "Đại Thừa",
+        minTuVi: 10000000000,
+        maxTier: 12
+    },
+    {
+        name: "Độ Kiếp",
+        minTuVi: 100000000000,
+        maxTier: 12
+    },
+    {
+        name: "Chân Tiên",
+        minTuVi: 10000000000000,
+        maxTier: 12
+    },
+    {
+        name: "Đại Đạo",
+        minTuVi: 10000000000000000000,
+        maxTier: 12
+    }
 ];
 
 // =====================================================
-// 📊 GIAI ĐOẠN
+// 📊 GIAI ĐOẠN CẢNH GIỚI
 // =====================================================
 
 function getStage(tier) {
     tier = Number(tier) || 1;
 
-    if (tier <= 3) {
+    if (tier >= 1 && tier <= 3) {
         return "Sơ kỳ";
     }
 
-    if (tier <= 6) {
+    if (tier >= 4 && tier <= 6) {
         return "Trung kỳ";
     }
 
-    if (tier <= 9) {
+    if (tier >= 7 && tier <= 9) {
         return "Hậu kỳ";
     }
 
-    if (tier <= 11) {
+    if (tier >= 10 && tier <= 11) {
         return "Viên mãn";
     }
 
     return "Đỉnh phong";
 }
 
+// =====================================================
+// 📜 HIỂN THỊ CẢNH GIỚI
+// =====================================================
+
 function getRealmDisplay(realmName, tier) {
     return `${realmName} ${getStage(tier)} tầng ${tier}`;
 }
 
 // =====================================================
-// ⚡ 9 LÔI KIẾP
+// ⚡ 9 TRỌNG LÔI KIẾP
 // =====================================================
 
 const LOI_KIEP = [
-    { name: "⚡ Nhất Trọng Lôi Kiếp", damage: 100 },
-    { name: "⚡ Nhị Trọng Lôi Kiếp", damage: 200 },
-    { name: "⚡ Tam Trọng Lôi Kiếp", damage: 300 },
-    { name: "⚡ Tứ Trọng Lôi Kiếp", damage: 400 },
-    { name: "⚡ Ngũ Trọng Lôi Kiếp", damage: 500 },
-    { name: "⚡ Lục Trọng Lôi Kiếp", damage: 600 },
-    { name: "⚡ Thất Trọng Lôi Kiếp", damage: 700 },
-    { name: "⚡ Bát Trọng Lôi Kiếp", damage: 800 },
-    { name: "⚡ Cửu Trọng Lôi Kiếp", damage: 900 }
+    {
+        name: "Nhất Trọng Lôi Kiếp",
+        damage: 100
+    },
+    {
+        name: "Nhị Trọng Lôi Kiếp",
+        damage: 200
+    },
+    {
+        name: "Tam Trọng Lôi Kiếp",
+        damage: 300
+    },
+    {
+        name: "Tứ Trọng Lôi Kiếp",
+        damage: 400
+    },
+    {
+        name: "Ngũ Trọng Lôi Kiếp",
+        damage: 500
+    },
+    {
+        name: "Lục Trọng Lôi Kiếp",
+        damage: 600
+    },
+    {
+        name: "Thất Trọng Lôi Kiếp",
+        damage: 700
+    },
+    {
+        name: "Bát Trọng Lôi Kiếp",
+        damage: 800
+    },
+    {
+        name: "Cửu Trọng Lôi Kiếp",
+        damage: 900
+    }
 ];
 
 // =====================================================
@@ -148,7 +227,7 @@ function getDaoBuff(player) {
 }
 
 // =====================================================
-// 📊 LẤY CẢNH GIỚI
+// 📊 LẤY INDEX CẢNH GIỚI
 // =====================================================
 
 function getRealmIndex(player) {
@@ -220,11 +299,15 @@ function getTier(player) {
 }
 
 // =====================================================
-// 💠 TU VI CẦN THIẾT CHO TỪNG TẦNG
+// 💠 TU VI CẦN CHO TỪNG TẦNG
 // =====================================================
 
-function getTierRequiredTuVi(realmIndex, targetTier) {
-    const currentRealm = realms[realmIndex];
+function getTierRequiredTuVi(
+    realmIndex,
+    targetTier
+) {
+    const currentRealm =
+        realms[realmIndex];
 
     if (!currentRealm) {
         return 0;
@@ -238,15 +321,24 @@ function getTierRequiredTuVi(realmIndex, targetTier) {
             )
         ];
 
-    if (realmIndex >= realms.length - 1) {
-        return Number(currentRealm.minTuVi);
+    if (
+        realmIndex >=
+        realms.length - 1
+    ) {
+        return Number(
+            currentRealm.minTuVi
+        );
     }
 
     const currentMin =
-        Number(currentRealm.minTuVi);
+        Number(
+            currentRealm.minTuVi
+        );
 
     const nextMin =
-        Number(nextRealm.minTuVi);
+        Number(
+            nextRealm.minTuVi
+        );
 
     const tier = Math.max(
         1,
@@ -264,54 +356,25 @@ function getTierRequiredTuVi(realmIndex, targetTier) {
         (
             nextMin -
             currentMin
-        ) *
-        progress
+        ) * progress
     );
 }
 
 // =====================================================
-// ⚡ TỶ LỆ VƯỢT LÔI KIẾP
+// ⚡ DAME LÔI KIẾP
+// =====================================================
+//
+// QUAN TRỌNG:
+// Dame Lôi Kiếp chỉ còn 40% dame gốc.
+// Không có random tỷ lệ ở đây.
+// Không dùng random để quyết định vượt kiếp.
+//
 // =====================================================
 
-function getResistanceRate(player, index) {
-    const realmIndex =
-        getRealmIndex(player);
-
-    const tier =
-        getTier(player);
-
-    const buff =
-        getDaoBuff(player);
-
-    let rate = 50;
-
-    rate += Number(
-        buff.loiKiep || 0
-    );
-
-    rate -=
-        realmIndex * 1.5;
-
-    rate -=
-        (tier - 1) * 0.5;
-
-    rate -=
-        (index - 1) * 4;
-
-    return Math.max(
-        1,
-        Math.min(
-            100,
-            Math.floor(rate)
-        )
-    );
-}
-
-// =====================================================
-// ⚡ SÁT THƯƠNG LÔI KIẾP
-// =====================================================
-
-function getLightningDamage(player, index) {
+function getLightningDamage(
+    player,
+    index
+) {
     const lightning =
         LOI_KIEP[index - 1];
 
@@ -322,14 +385,19 @@ function getLightningDamage(player, index) {
     const buff =
         getDaoBuff(player);
 
-    // =================================================
-    // ⚡ DAME LÔI KIẾP GIẢM CÒN 40%
-    // =================================================
+    // ================================================
+    // ⚡ DAME GỐC GIẢM CÒN 40%
+    // ================================================
 
     let damage =
-        Number(lightning.damage) * 0.4;
+        Number(
+            lightning.damage
+        ) * 0.4;
 
-    // Buff thủ của đạo
+    // ================================================
+    // 🛡️ BUFF THỦ
+    // ================================================
+
     if (buff.thu > 0) {
         damage *=
             1 -
@@ -346,7 +414,10 @@ function getLightningDamage(player, index) {
             );
     }
 
-    // Buff HP
+    // ================================================
+    // ❤️ BUFF HP
+    // ================================================
+
     if (buff.hp > 0) {
         damage *=
             1 -
@@ -398,7 +469,8 @@ function getBuffedCong(player) {
 
     const cong =
         Number(
-            player?.cong || 0
+            player?.cong ||
+            0
         );
 
     return Math.floor(
@@ -420,7 +492,8 @@ function getBuffedThu(player) {
 
     const thu =
         Number(
-            player?.thu || 0
+            player?.thu ||
+            0
         );
 
     return Math.max(
@@ -436,7 +509,7 @@ function getBuffedThu(player) {
 }
 
 // =====================================================
-// ⚡ XỬ LÝ LÔI KIẾP
+// ⚡ XỬ LÝ MỘT TRỌNG LÔI KIẾP
 // =====================================================
 
 async function processLightning(
@@ -455,25 +528,22 @@ async function processLightning(
     const dao =
         getDaoBuff(player);
 
-    const successRate =
-        getResistanceRate(
-            player,
-            index
-        );
-
     const damage =
         getLightningDamage(
             player,
             index
         );
 
-    const success =
-        Math.random() * 100 <
-        successRate;
+    // =================================================
+    // ⚠️ KHÔNG RANDOM
+    // =================================================
+    //
+    // Người chơi bấm chịu Lôi Kiếp:
+    // => LUÔN THÀNH CÔNG
+    //
+    // =================================================
 
-    // =================================================
-    // ⚡ THÀNH CÔNG
-    // =================================================
+    const success = true;
 
     if (success) {
 
@@ -485,36 +555,42 @@ async function processLightning(
                 .setDescription(
                     `🌌 **${dao.name}**\n\n` +
                     `⚡ Thiên Lôi giáng xuống!\n\n` +
-                    `🛡️ Tỷ lệ vượt kiếp: **${successRate}%**\n` +
-                    `💥 Sát thương: **${damage}**\n\n` +
-                    `✨ **Bạn đã vượt qua Lôi Kiếp thứ ${index}/9!**`
+                    `💥 Sát thương Lôi Kiếp: **${damage}**\n\n` +
+                    `✨ **Đã vượt qua Lôi Kiếp ${index}/9!**`
                 )
                 .addFields(
                     {
-                        name: "⚔️ Buff Công",
+                        name: "⚔️ Công",
                         value:
                             `+${dao.cong}%`,
                         inline: true
                     },
                     {
-                        name: "🛡️ Buff Thủ",
+                        name: "🛡️ Thủ",
                         value:
                             `${dao.thu >= 0 ? "+" : ""}${dao.thu}%`,
                         inline: true
                     },
                     {
-                        name: "❤️ Buff HP",
+                        name: "❤️ HP",
                         value:
                             `+${dao.hp}%`,
                         inline: true
                     },
                     {
-                        name: "⚡ Buff Lôi Kiếp",
+                        name: "⚡ Dame Lôi Kiếp",
                         value:
-                            `+${dao.loiKiep}%`,
+                            `40% dame gốc`,
                         inline: true
                     }
+                )
+                .setColor(
+                    0xF1C40F
                 );
+
+        // =============================================
+        // ⚡ CÒN LÔI KIẾP
+        // =============================================
 
         const nextIndex =
             index + 1;
@@ -532,6 +608,17 @@ async function processLightning(
                 }
             );
 
+            const nextLightning =
+                LOI_KIEP[
+                    nextIndex - 1
+                ];
+
+            const nextDamage =
+                getLightningDamage(
+                    player,
+                    nextIndex
+                );
+
             const row =
                 new ActionRowBuilder()
                     .addComponents(
@@ -541,7 +628,7 @@ async function processLightning(
                                 `do_kiep_${nextIndex}`
                             )
                             .setLabel(
-                                `⚡ Độ Kiếp ${nextIndex}/9`
+                                `⚡ Chịu Lôi Kiếp ${nextIndex}/9`
                             )
                             .setStyle(
                                 ButtonStyle.Danger
@@ -552,22 +639,41 @@ async function processLightning(
                                 "do_kiep_cancel"
                             )
                             .setLabel(
-                                "❌ Hủy"
+                                "❌ Bỏ cuộc"
                             )
                             .setStyle(
                                 ButtonStyle.Secondary
                             )
                     );
 
+            const nextEmbed =
+                new EmbedBuilder()
+                    .setTitle(
+                        `⚡ ${nextLightning.name}`
+                    )
+                    .setDescription(
+                        `🌌 **${dao.name}**\n\n` +
+                        `⚡ **Lôi Kiếp ${nextIndex}/9**\n\n` +
+                        `💥 Sát thương: **${nextDamage}**\n\n` +
+                        `✨ **Không random — chắc chắn vượt qua khi bấm chịu Lôi Kiếp.**`
+                    )
+                    .setColor(
+                        0xF1C40F
+                    );
+
             return interaction.update({
-                embeds: [embed],
-                components: [row]
+                embeds: [
+                    nextEmbed
+                ],
+                components: [
+                    row
+                ]
             });
         }
 
-        // =================================================
-        // 👑 VƯỢT 9/9
-        // =================================================
+        // =============================================
+        // 👑 ĐỦ 9/9
+        // =============================================
 
         updatePlayer(
             userId,
@@ -579,92 +685,25 @@ async function processLightning(
         return completeBreakthrough(
             interaction,
             player,
-            userId,
-            embed
+            userId
         );
     }
-
-    // =================================================
-    // 💀 THẤT BẠI
-    // =================================================
-
-    const loss =
-        Math.floor(
-            1000 +
-            Math.random() * 9001
-        );
-
-    const currentTuVi =
-        Number(
-            player.tuvi ||
-            player.tuVi ||
-            0
-        );
-
-    const newTuVi =
-        Math.max(
-            0,
-            currentTuVi - loss
-        );
-
-    updatePlayer(
-        userId,
-        {
-            tuvi: newTuVi,
-            tuVi: newTuVi,
-            lastDoKiep: Date.now(),
-            doKiep: 0
-        }
-    );
-
-    const failEmbed =
-        new EmbedBuilder()
-            .setTitle(
-                "💀 ĐỘ KIẾP THẤT BẠI"
-            )
-            .setDescription(
-                `🌌 **${dao.name}**\n\n` +
-                `⚡ **${lightning.name}** đã đánh trúng bạn!\n\n` +
-                `❌ Tỷ lệ vượt kiếp: **${successRate}%**\n` +
-                `💥 Sát thương: **${damage}**\n\n` +
-                `📉 Tu Vi mất: **-${loss.toLocaleString()}**\n` +
-                `📊 Tu Vi còn: **${newTuVi.toLocaleString()}**`
-            )
-            .setFooter({
-                text:
-                    "Thiên kiếp thất bại — hãy tu luyện lại."
-            });
-
-    return interaction.update({
-        embeds: [failEmbed],
-        components: []
-    });
 }
 
 // =====================================================
-// 👑 HOÀN THÀNH ĐỘ KIẾP
+// 👑 HOÀN THÀNH ĐỘT PHÁ
 // =====================================================
 
-function completeBreakthrough(
+async function completeBreakthrough(
     interaction,
     player,
-    userId,
-    previousEmbed
+    userId
 ) {
     const realmIndex =
         getRealmIndex(player);
 
     const currentRealm =
         realms[realmIndex];
-
-    if (!currentRealm) {
-        return interaction.update({
-            content:
-                "❌ Dữ liệu cảnh giới không hợp lệ.",
-            embeds: [],
-            components: []
-        });
-    }
 
     const currentTier =
         getTier(player);
@@ -689,24 +728,26 @@ function completeBreakthrough(
                 )
                 .setDescription(
                     `🌌 **${buff.name}**\n\n` +
-                    `⚡ Bạn đã vượt qua **Cửu Trọng Lôi Kiếp**!\n\n` +
-                    `👑 Cảnh giới cao nhất:\n` +
+                    `⚡ Bạn đã vượt qua toàn bộ **Cửu Trọng Lôi Kiếp**!\n\n` +
+                    `👑 Cảnh giới:\n` +
                     `# **${currentRealm.name}**\n\n` +
                     `✨ **Đỉnh phong tầng 12**\n\n` +
-                    `🌠 **Không còn cảnh giới hoặc tầng nào phía trên!**`
+                    `🌠 Bạn đã đạt cảnh giới cao nhất!`
                 )
                 .setColor(
                     0xFFD700
                 );
 
         return interaction.update({
-            embeds: [finalEmbed],
+            embeds: [
+                finalEmbed
+            ],
             components: []
         });
     }
 
     // =================================================
-    // 📈 TĂNG TẦNG
+    // 📈 TẦNG 1 → 12
     // =================================================
 
     if (currentTier < 12) {
@@ -716,12 +757,14 @@ function completeBreakthrough(
 
         const oldCong =
             Number(
-                player.cong || 0
+                player.cong ||
+                0
             );
 
         const oldThu =
             Number(
-                player.thu || 0
+                player.thu ||
+                0
             );
 
         const oldHp =
@@ -742,32 +785,39 @@ function completeBreakthrough(
                 0.05
             );
 
-        const newCong =
+        const congIncrease =
             Math.floor(
-                oldCong +
-                (
-                    30 *
-                    tierBonus
-                )
+                30 *
+                tierBonus
             );
+
+        const thuIncrease =
+            Math.floor(
+                20 *
+                tierBonus
+            );
+
+        const hpIncrease =
+            Math.floor(
+                120 *
+                tierBonus
+            );
+
+        const newCong =
+            oldCong +
+            congIncrease;
 
         const newThu =
-            Math.floor(
-                oldThu +
-                (
-                    20 *
-                    tierBonus
-                )
-            );
+            oldThu +
+            thuIncrease;
 
         const newHp =
-            Math.floor(
-                oldHp +
-                (
-                    120 *
-                    tierBonus
-                )
-            );
+            oldHp +
+            hpIncrease;
+
+        // =============================================
+        // 💾 LƯU TẦNG MỚI
+        // =============================================
 
         updatePlayer(
             userId,
@@ -801,46 +851,40 @@ function completeBreakthrough(
                     "✨ ĐỘT PHÁ TẦNG THÀNH CÔNG!"
                 )
                 .setDescription(
-                    `⚔️ **Cửu Trọng Lôi Kiếp đã bị chinh phục!**\n\n` +
+                    `⚡ **Cửu Trọng Lôi Kiếp đã bị chinh phục!**\n\n` +
+
                     `🌌 Con đường: **${buff.name}**\n\n` +
+
                     `📜 Cảnh giới:\n` +
                     `**${currentRealm.name}**\n\n` +
+
                     `📊 Tầng cũ:\n` +
                     `**${getStage(currentTier)} tầng ${currentTier}**\n\n` +
+
                     `⬇️\n\n` +
+
                     `👑 Tầng mới:\n` +
-                    `**${currentRealm.name} ${getStage(newTier)} tầng ${newTier}**\n\n` +
-                    `🔥 Muốn lên tầng tiếp theo, bạn **bắt buộc phải /dotpha** lần nữa!`
+                    `**${getStage(newTier)} tầng ${newTier}**\n\n` +
+
+                    `🔥 Muốn lên tầng tiếp theo, **bắt buộc phải /dotpha lần nữa!**`
                 )
                 .addFields(
                     {
                         name: "⚔️ Công",
                         value:
-                            `+${Math.max(
-                                0,
-                                newCong -
-                                oldCong
-                            )}`,
+                            `+${congIncrease}`,
                         inline: true
                     },
                     {
                         name: "🛡️ Thủ",
                         value:
-                            `+${Math.max(
-                                0,
-                                newThu -
-                                oldThu
-                            )}`,
+                            `+${thuIncrease}`,
                         inline: true
                     },
                     {
                         name: "❤️ HP",
                         value:
-                            `+${Math.max(
-                                0,
-                                newHp -
-                                oldHp
-                            )}`,
+                            `+${hpIncrease}`,
                         inline: true
                     },
                     {
@@ -855,28 +899,27 @@ function completeBreakthrough(
                 );
 
         return interaction.update({
-            embeds: [embed],
+            embeds: [
+                embed
+            ],
             components: []
         });
     }
 
     // =================================================
-    // 👑 TẦNG 12 → CẢNH GIỚI TIẾP THEO
+    // 👑 TẦNG 12 → CẢNH GIỚI MỚI
     // =================================================
 
     const nextRealmIndex =
-        Math.min(
-            realms.length - 1,
-            realmIndex + 1
-        );
+        realmIndex + 1;
 
     const nextRealm =
-        realms[nextRealmIndex];
+        realms[
+            nextRealmIndex
+        ];
 
-    if (
-        !nextRealm ||
-        nextRealmIndex === realmIndex
-    ) {
+    if (!nextRealm) {
+
         return interaction.update({
             content:
                 "❌ Không còn cảnh giới tiếp theo.",
@@ -893,12 +936,14 @@ function completeBreakthrough(
 
     const oldCong =
         Number(
-            player.cong || 0
+            player.cong ||
+            0
         );
 
     const oldThu =
         Number(
-            player.thu || 0
+            player.thu ||
+            0
         );
 
     const oldHp =
@@ -911,39 +956,42 @@ function completeBreakthrough(
     const realmBonus =
         1 +
         (
-            newRealmIndex *
+            nextRealmIndex *
             0.15
         );
 
-    const newCong =
+    const congIncrease =
         Math.floor(
-            oldCong +
-            (
-                100 *
-                realmBonus
-            )
+            100 *
+            realmBonus
         );
+
+    const thuIncrease =
+        Math.floor(
+            80 *
+            realmBonus
+        );
+
+    const hpIncrease =
+        Math.floor(
+            500 *
+            realmBonus
+        );
+
+    const newCong =
+        oldCong +
+        congIncrease;
 
     const newThu =
-        Math.floor(
-            oldThu +
-            (
-                80 *
-                realmBonus
-            )
-        );
+        oldThu +
+        thuIncrease;
 
     const newHp =
-        Math.floor(
-            oldHp +
-            (
-                500 *
-                realmBonus
-            )
-        );
+        oldHp +
+        hpIncrease;
 
     // =================================================
-    // 💾 LƯU
+    // 💾 LƯU CẢNH GIỚI MỚI
     // =================================================
 
     updatePlayer(
@@ -953,10 +1001,10 @@ function completeBreakthrough(
                 nextRealm.name,
 
             realm:
-                newRealmIndex,
+                nextRealmIndex,
 
             realmIndex:
-                newRealmIndex,
+                nextRealmIndex,
 
             tang:
                 newTier,
@@ -982,7 +1030,7 @@ function completeBreakthrough(
     );
 
     // =================================================
-    // 👑 EMBED
+    // 👑 HIỂN THỊ
     // =================================================
 
     const embed =
@@ -991,43 +1039,43 @@ function completeBreakthrough(
                 "👑 ĐỘT PHÁ CẢNH GIỚI THÀNH CÔNG!"
             )
             .setDescription(
-                `⚔️ **Cửu Trọng Lôi Kiếp đã bị chinh phục!**\n\n` +
+                `⚡ **Cửu Trọng Lôi Kiếp đã bị chinh phục!**\n\n` +
+
                 `🌌 Con đường: **${buff.name}**\n\n` +
+
                 `📜 Cảnh giới cũ:\n` +
-                `**${currentRealm.name} ${getStage(12)} tầng 12**\n\n` +
+                `**${currentRealm.name} Đỉnh phong tầng 12**\n\n` +
+
                 `⬇️\n\n` +
+
                 `👑 Cảnh giới mới:\n` +
-                `# **${nextRealm.name} ${getStage(1)} tầng 1**`
+                `# **${nextRealm.name} Sơ kỳ tầng 1**\n\n` +
+
+                `🔥 Từ đây muốn lên tầng 2 cũng phải **/dotpha** tiếp.`
             )
             .addFields(
                 {
                     name: "⚔️ Công",
                     value:
-                        `+${Math.max(
-                            0,
-                            newCong -
-                            oldCong
-                        )}`,
+                        `+${congIncrease}`,
                     inline: true
                 },
                 {
                     name: "🛡️ Thủ",
                     value:
-                        `+${Math.max(
-                            0,
-                            newThu -
-                            oldThu
-                        )}`,
+                        `+${thuIncrease}`,
                     inline: true
                 },
                 {
                     name: "❤️ HP",
                     value:
-                        `+${Math.max(
-                            0,
-                            newHp -
-                            oldHp
-                        )}`,
+                        `+${hpIncrease}`,
+                    inline: true
+                },
+                {
+                    name: "📊 Tầng",
+                    value:
+                        "**1/12**",
                     inline: true
                 }
             )
@@ -1036,13 +1084,15 @@ function completeBreakthrough(
             );
 
     return interaction.update({
-        embeds: [embed],
+        embeds: [
+            embed
+        ],
         components: []
     });
 }
 
 // =====================================================
-// ⚡ LỆNH /DOTPHA
+// ⚡ /DOTPHA
 // =====================================================
 
 module.exports = {
@@ -1051,7 +1101,7 @@ module.exports = {
         new SlashCommandBuilder()
             .setName("dotpha")
             .setDescription(
-                "Độ kiếp và đột phá từng tầng/cảnh giới"
+                "Đột phá từng tầng bằng Cửu Trọng Lôi Kiếp"
             ),
 
     async execute(interaction) {
@@ -1067,6 +1117,7 @@ module.exports = {
         // =================================================
 
         if (!player) {
+
             return interaction.reply({
                 content:
                     "⚠️ Bạn chưa có nhân vật. Hãy dùng `/batdau` trước.",
@@ -1075,7 +1126,7 @@ module.exports = {
         }
 
         // =================================================
-        // 📊 CẢNH GIỚI
+        // 📊 LẤY CẢNH GIỚI
         // =================================================
 
         const realmIndex =
@@ -1088,15 +1139,16 @@ module.exports = {
             realms[realmIndex];
 
         if (!realm) {
+
             return interaction.reply({
                 content:
-                    "❌ Dữ liệu cảnh giới của nhân vật không hợp lệ.",
+                    "❌ Dữ liệu cảnh giới không hợp lệ.",
                 ephemeral: true
             });
         }
 
         // =================================================
-        // 👑 KIỂM TRA ĐẠI ĐẠO
+        // 👑 ĐẠI ĐẠO TẦNG 12
         // =================================================
 
         if (
@@ -1104,6 +1156,7 @@ module.exports = {
             realms.length - 1 &&
             tier >= 12
         ) {
+
             return interaction.reply({
                 embeds: [
                     new EmbedBuilder()
@@ -1111,10 +1164,10 @@ module.exports = {
                             "👑 ĐẠI ĐẠO"
                         )
                         .setDescription(
-                            `🌌 Bạn đã đạt **${realm.name}**.\n\n` +
-                            `✨ Giai đoạn: **${getStage(tier)}**\n` +
-                            `📊 Tầng: **${tier}/12**\n\n` +
-                            `🌠 Bạn đã đạt cảnh giới cao nhất.`
+                            `🌌 Bạn đã đạt:\n\n` +
+                            `# **${realm.name}**\n\n` +
+                            `✨ **Đỉnh phong tầng 12**\n\n` +
+                            `🌠 Không còn cảnh giới nào phía trên.`
                         )
                         .setColor(
                             0xFFD700
@@ -1125,7 +1178,7 @@ module.exports = {
         }
 
         // =================================================
-        // 🎯 XÁC ĐỊNH TẦNG TIẾP THEO
+        // 🎯 XÁC ĐỊNH MỤC TIÊU
         // =================================================
 
         const isRealmBreakthrough =
@@ -1136,22 +1189,30 @@ module.exports = {
                 ? 1
                 : tier + 1;
 
-        const nextRealm =
-            realms[
-                isRealmBreakthrough
-                    ? realmIndex + 1
-                    : realmIndex
-            ];
+        const targetRealm =
+            isRealmBreakthrough
+                ? realms[
+                    realmIndex + 1
+                ]
+                : realm;
+
+        if (!targetRealm) {
+
+            return interaction.reply({
+                content:
+                    "❌ Không tìm thấy cảnh giới tiếp theo.",
+                ephemeral: true
+            });
+        }
 
         // =================================================
-        // 💠 TU VI CẦN THIẾT
+        // 💠 TU VI YÊU CẦU
         // =================================================
 
         const requiredTuVi =
             isRealmBreakthrough
                 ? Number(
-                    nextRealm?.minTuVi ||
-                    0
+                    targetRealm.minTuVi
                 )
                 : getTierRequiredTuVi(
                     realmIndex,
@@ -1178,25 +1239,29 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setTitle(
-                            "❌ CHƯA ĐỦ TU VI"
+                            "❌ CHƯA ĐỦ TU VI ĐỂ ĐỘT PHÁ"
                         )
                         .setDescription(
                             `🌌 Cảnh giới hiện tại:\n` +
                             `**${realm.name} ${getStage(tier)} tầng ${tier}**\n\n` +
 
                             `🎯 Mục tiêu:\n` +
-                            `**${nextRealm?.name || realm.name} ${getStage(targetTier)} tầng ${targetTier}**\n\n` +
+                            `**${targetRealm.name} ${getStage(targetTier)} tầng ${targetTier}**\n\n` +
 
-                            `💠 Tu Vi hiện tại: **${tuVi.toLocaleString()}**\n` +
-                            `💠 Tu Vi cần: **${requiredTuVi.toLocaleString()}**\n\n` +
+                            `💠 Tu Vi hiện tại:\n` +
+                            `**${tuVi.toLocaleString()}**\n\n` +
 
-                            `📉 Còn thiếu: **${Math.max(
+                            `💠 Tu Vi cần:\n` +
+                            `**${requiredTuVi.toLocaleString()}**\n\n` +
+
+                            `📉 Còn thiếu:\n` +
+                            `**${Math.max(
                                 0,
                                 requiredTuVi -
                                 tuVi
                             ).toLocaleString()} Tu Vi**\n\n` +
 
-                            `⚡ Đủ Tu Vi vẫn phải vượt qua **Cửu Trọng Lôi Kiếp**.`
+                            `⚡ Đủ Tu Vi rồi mới có thể bắt đầu Cửu Trọng Lôi Kiếp.`
                         )
                         .setColor(
                             0xED4245
@@ -1214,13 +1279,22 @@ module.exports = {
             getDaoBuff(player);
 
         // =================================================
-        // ⚡ BẮT ĐẦU
+        // ⚡ BẮT ĐẦU ĐỘ KIẾP
         // =================================================
+
+        const firstLightning =
+            LOI_KIEP[0];
+
+        const firstDamage =
+            getLightningDamage(
+                player,
+                1
+            );
 
         const startEmbed =
             new EmbedBuilder()
                 .setTitle(
-                    "⚡ THIÊN KIẾP GIÁNG LÂM"
+                    "⚡ CỬU TRỌNG LÔI KIẾP"
                 )
                 .setDescription(
                     `🌌 Con đường: **${dao.name}**\n\n` +
@@ -1228,16 +1302,17 @@ module.exports = {
                     `📜 Cảnh giới hiện tại:\n` +
                     `**${realm.name} ${getStage(tier)} tầng ${tier}**\n\n` +
 
-                    `👑 Mục tiêu đột phá:\n` +
-                    `**${nextRealm.name} ${getStage(targetTier)} tầng ${targetTier}**\n\n` +
+                    `👑 Mục tiêu:\n` +
+                    `**${targetRealm.name} ${getStage(targetTier)} tầng ${targetTier}**\n\n` +
 
-                    `💠 Tu Vi yêu cầu: **${requiredTuVi.toLocaleString()}**\n\n` +
+                    `💠 Tu Vi yêu cầu:\n` +
+                    `**${requiredTuVi.toLocaleString()}**\n\n` +
 
-                    `⚡ Vượt qua **9 tầng Lôi Kiếp**!\n\n` +
+                    `⚡ Sắp đối mặt với **9 Trọng Lôi Kiếp**.\n\n` +
 
-                    `🎯 Tỷ lệ Lôi Kiếp cơ bản: **50%**\n` +
-                    `✨ Buff đạo: **+${dao.loiKiep}%**\n` +
-                    `💥 Dame Lôi Kiếp: **40% mức gốc**`
+                    `💥 Dame Lôi Kiếp: **40% dame gốc**\n\n` +
+
+                    `✨ **Không có random tỷ lệ. Bấm chịu Lôi Kiếp là chắc chắn vượt qua.**`
                 )
                 .addFields(
                     {
@@ -1257,6 +1332,12 @@ module.exports = {
                         value:
                             `+${dao.hp}%`,
                         inline: true
+                    },
+                    {
+                        name: "⚡ Lôi Kiếp đầu tiên",
+                        value:
+                            `${firstLightning.name}\nDame: **${firstDamage}**`,
+                        inline: false
                     }
                 )
                 .setColor(
@@ -1264,7 +1345,7 @@ module.exports = {
                 );
 
         // =================================================
-        // 🎮 NÚT
+        // 🎮 NÚT BẮT ĐẦU
         // =================================================
 
         const row =
@@ -1296,13 +1377,17 @@ module.exports = {
 
         const response =
             await interaction.reply({
-                embeds: [startEmbed],
-                components: [row],
+                embeds: [
+                    startEmbed
+                ],
+                components: [
+                    row
+                ],
                 fetchReply: true
             });
 
         // =================================================
-        // 🎮 COLLECTOR
+        // 🎮 COLLECTOR BẮT ĐẦU
         // =================================================
 
         const collector =
@@ -1314,14 +1399,11 @@ module.exports = {
             "collect",
             async button => {
 
-                // =========================================
-                // 🔒 CHỈ NGƯỜI GỌI
-                // =========================================
-
                 if (
                     button.user.id !==
                     userId
                 ) {
+
                     return button.reply({
                         content:
                             "❌ Đây không phải phiên Độ Kiếp của bạn.",
@@ -1367,6 +1449,7 @@ module.exports = {
                         getPlayer(userId);
 
                     if (!freshPlayer) {
+
                         return button.update({
                             content:
                                 "❌ Không tìm thấy nhân vật.",
@@ -1382,32 +1465,29 @@ module.exports = {
                         }
                     );
 
-                    const firstRate =
-                        getResistanceRate(
-                            freshPlayer,
-                            1
-                        );
-
-                    const firstLightning =
+                    const lightning =
                         LOI_KIEP[0];
 
-                    const firstDamage =
+                    const damage =
                         getLightningDamage(
                             freshPlayer,
                             1
                         );
 
-                    const firstEmbed =
+                    const embed =
                         new EmbedBuilder()
                             .setTitle(
                                 "⚡ LÔI KIẾP 1/9"
                             )
                             .setDescription(
                                 `🌌 **${dao.name}**\n\n` +
-                                `⚡ ${firstLightning.name}\n\n` +
-                                `🎯 Tỷ lệ vượt kiếp: **${firstRate}%**\n` +
-                                `💥 Sát thương: **${firstDamage}**\n\n` +
-                                `⚔️ Hãy chuẩn bị nghênh đón Thiên Lôi!`
+
+                                `⚡ **${lightning.name}**\n\n` +
+
+                                `💥 Sát thương:\n` +
+                                `**${damage}**\n\n` +
+
+                                `✨ **Không random — chắc chắn vượt qua!**`
                             )
                             .setColor(
                                 0xF1C40F
@@ -1422,7 +1502,7 @@ module.exports = {
                                         "do_kiep_1"
                                     )
                                     .setLabel(
-                                        "⚡ Chịu Lôi Kiếp"
+                                        "⚡ Chịu Lôi Kiếp 1/9"
                                     )
                                     .setStyle(
                                         ButtonStyle.Danger
@@ -1442,8 +1522,12 @@ module.exports = {
 
                     const msg =
                         await button.update({
-                            embeds: [firstEmbed],
-                            components: [lightningRow],
+                            embeds: [
+                                embed
+                            ],
+                            components: [
+                                lightningRow
+                            ],
                             fetchReply: true
                         });
 
@@ -1464,6 +1548,7 @@ module.exports = {
                                 lightningButton.user.id !==
                                 userId
                             ) {
+
                                 return lightningButton.reply({
                                     content:
                                         "❌ Đây không phải phiên Độ Kiếp của bạn.",
@@ -1500,7 +1585,7 @@ module.exports = {
                             }
 
                             // =============================
-                            // ⚡ XỬ LÝ
+                            // ⚡ LÔI KIẾP
                             // =============================
 
                             if (
@@ -1520,7 +1605,9 @@ module.exports = {
                                     );
 
                                 if (
-                                    !Number.isInteger(index) ||
+                                    !Number.isInteger(
+                                        index
+                                    ) ||
                                     index < 1 ||
                                     index > 9
                                 ) {
@@ -1528,11 +1615,14 @@ module.exports = {
                                 }
 
                                 const currentPlayer =
-                                    getPlayer(userId);
+                                    getPlayer(
+                                        userId
+                                    );
 
                                 if (
                                     !currentPlayer
                                 ) {
+
                                     return lightningButton.update({
                                         content:
                                             "❌ Không tìm thấy nhân vật.",
@@ -1550,11 +1640,6 @@ module.exports = {
                             }
                         }
                     );
-
-                    lightningCollector.on(
-                        "end",
-                        async () => {}
-                    );
                 }
             }
         );
@@ -1570,18 +1655,24 @@ module.exports = {
     // =====================================================
 
     realms,
+
     LOI_KIEP,
+
     DAO_BUFFS,
 
     getDaoBuff,
-    getResistanceRate,
+
     getLightningDamage,
 
     getBuffedHp,
+
     getBuffedCong,
+
     getBuffedThu,
 
     getStage,
+
     getRealmDisplay,
+
     getTierRequiredTuVi
 };
