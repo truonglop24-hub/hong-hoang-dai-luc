@@ -11,7 +11,14 @@ const COOLDOWN = 15 * 1000;
 // ⚡ TỐC ĐỘ TU LUYỆN THEO CẢNH GIỚI
 // =====================================================
 //
-// Đã chỉnh X4 so với tốc độ hiện tại.
+// Tốc độ gốc của từng cảnh giới ×4
+//
+// Ví dụ:
+// Phàm Nhân 1 ×4 = 4
+// Luyện Khí 5 ×4 = 20
+// Trúc Cơ 15 ×4 = 60
+// Kim Đan 40 ×4 = 160
+//
 // =====================================================
 
 const CULTIVATION_SPEED = {
@@ -60,17 +67,16 @@ const CULTIVATION_SPEED = {
 
 function getCultivationSpeed(canhGioi) {
 
-    const speed =
-        CULTIVATION_SPEED[canhGioi] || 1;
-
     return Math.max(
         1,
-        Math.floor(speed)
+        Math.floor(
+            CULTIVATION_SPEED[canhGioi] || 1
+        )
     );
 }
 
 // =====================================================
-// 📊 LẤY GIAI ĐOẠN
+// 📊 GIAI ĐOẠN 12 TẦNG
 // =====================================================
 
 function getStage(tang) {
@@ -172,7 +178,6 @@ module.exports = {
             return interaction.reply({
 
                 content:
-
                     `⏳ Bạn cần chờ **${Math.ceil(
                         remaining / 1000
                     )} giây** nữa.`,
@@ -220,20 +225,15 @@ module.exports = {
             );
 
         // =================================================
-        // 🧬 LINH CĂN
+        // 🧬 BUFF LINH CĂN
         // =================================================
 
         let linhCanBuff = 0;
 
         if (
-
             p.linhCan &&
-
-            typeof p.linhCan ===
-                "object" &&
-
+            typeof p.linhCan === "object" &&
             p.linhCan.buff
-
         ) {
 
             linhCanBuff =
@@ -243,7 +243,7 @@ module.exports = {
         }
 
         // =================================================
-        // ✨ BUFF LINH CĂN
+        // ✨ HỆ SỐ BUFF
         // =================================================
 
         const buffMultiplier =
@@ -254,7 +254,7 @@ module.exports = {
             );
 
         // =================================================
-        // 🔥 TÍNH LINH LỰC
+        // 🔥 LINH LỰC
         // =================================================
 
         const baseLinhLuc =
@@ -273,7 +273,7 @@ module.exports = {
             );
 
         // =================================================
-        // ⚔️ TÍNH TU VI
+        // ⚔️ TU VI
         // =================================================
 
         const baseTuVi =
@@ -292,7 +292,7 @@ module.exports = {
             );
 
         // =================================================
-        // ✨ TÍNH KINH NGHIỆM
+        // ✨ KINH NGHIỆM
         // =================================================
 
         const baseExp =
@@ -364,7 +364,7 @@ module.exports = {
                 kinhNghiem:
                     kinhNghiemHienTai,
 
-                // ⏳ LƯU THỜI GIAN
+                // ⏳ LƯU COOLDOWN
                 lastTrain:
                     Date.now()
 
@@ -372,7 +372,7 @@ module.exports = {
         );
 
         // =================================================
-        // 🔢 FORMAT SỐ
+        // 🔢 FORMAT
         // =================================================
 
         const format =
@@ -380,13 +380,6 @@ module.exports = {
                 Number(
                     value || 0
                 ).toLocaleString();
-
-        // =================================================
-        // 📊 TỐC ĐỘ HIỂN THỊ
-        // =================================================
-
-        const speedText =
-            `×${format(speed)}`;
 
         // =================================================
         // 📜 EMBED
@@ -413,13 +406,15 @@ module.exports = {
                     `**${canhGioi} ${stage} tầng ${tang}**\n` +
 
                     `⚡ **Tốc độ tu luyện:** ` +
-                    `**${speedText}**\n\n` +
-
-                    `🚀 **Tốc độ đã được tăng ×4!**`
+                    `**×${format(speed)}**`
 
                 )
 
                 .addFields(
+
+                    // =================================================
+                    // LINH LỰC
+                    // =================================================
 
                     {
 
@@ -435,6 +430,10 @@ module.exports = {
                             true
                     },
 
+                    // =================================================
+                    // TU VI
+                    // =================================================
+
                     {
 
                         name:
@@ -448,6 +447,10 @@ module.exports = {
                         inline:
                             true
                     },
+
+                    // =================================================
+                    // KINH NGHIỆM
+                    // =================================================
 
                     {
 
@@ -463,6 +466,10 @@ module.exports = {
                             true
                     },
 
+                    // =================================================
+                    // TU VI HIỆN TẠI
+                    // =================================================
+
                     {
 
                         name:
@@ -477,33 +484,9 @@ module.exports = {
                             true
                     },
 
-                    {
-
-                        name:
-                            "🔥 Linh lực hiện tại",
-
-                        value:
-                            `**${format(
-                                linhLucHienTai
-                            )}**`,
-
-                        inline:
-                            true
-                    },
-
-                    {
-
-                        name:
-                            "✨ Kinh nghiệm hiện tại",
-
-                        value:
-                            `**${format(
-                                kinhNghiemHienTai
-                            )}**`,
-
-                        inline:
-                            true
-                    },
+                    // =================================================
+                    // LINH CĂN
+                    // =================================================
 
                     {
 
@@ -522,7 +505,7 @@ module.exports = {
                 .setFooter({
 
                     text:
-                        "⏳ Cooldown: 15 giây • 🚀 Tốc độ tu luyện ×4"
+                        "⏳ Cooldown: 15 giây • Hồng Hoang Đại Lục"
 
                 });
 
@@ -542,7 +525,7 @@ module.exports = {
 };
 
 // =====================================================
-// 📦 EXPORT HÀM
+// 📦 EXPORT
 // =====================================================
 
 module.exports.getCultivationSpeed =
