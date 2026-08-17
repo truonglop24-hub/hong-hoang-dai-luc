@@ -304,7 +304,6 @@ function laVatPhamKhongTheDung(item) {
 // ============================================================
 
 function layCategory(item) {
-
     if (!item) {
         return "";
     }
@@ -838,7 +837,6 @@ function truVatPham(
     return true;
 }
 
-
 // ============================================================
 // FORMAT SỐ
 // ============================================================
@@ -861,7 +859,6 @@ function formatNumber(
     );
 }
 
-
 // ============================================================
 // LẤY BUFF CHI TIẾT
 // ============================================================
@@ -871,29 +868,17 @@ function layBuffChiTiet(
 ) {
 
     const buff = {
-
         hp: 0,
-
         maxHp: 0,
-
         linhLuc: 0,
-
         tuvi: 0,
-
         kinhNghiem: 0,
-
         cong: 0,
-
         thu: 0,
-
         chiMang: 0,
-
         neTranh: 0,
-
         hoiPhuc: 0,
-
         tuLuyen: 0,
-
         dotPha: 0
     };
 
@@ -998,7 +983,9 @@ function layBuffChiTiet(
         Number(
             item.dotPha ??
             item.dotPhaBonus ??
-            item.breakthrough ??
+            0
+        ) || 0;
+                item.breakthrough ??
             0
         ) || 0;
 
@@ -1247,7 +1234,6 @@ function apDungBuff(
         if (
             Number(buff.maxHp) > 0
         ) {
-
             player.hp =
                 Number(
                     player.hp || 0
@@ -1983,6 +1969,7 @@ async function dungLinhThu(
             thayDoi.join("\n")
     };
 }
+
 
 // ============================================================
 // CỘNG BUFF
@@ -2859,3 +2846,278 @@ async function xuLyVatPham(
             thongBao
     };
 }
+
+
+// ============================================================
+// LỆNH SLASH /DUNG
+// ============================================================
+// File này trước đây chỉ chứa các hàm xử lý vật phẩm nên
+// index.js không nhận diện được là Slash Command.
+// Khối dưới đây đăng ký /dung và dùng toàn bộ logic ở trên.
+// ============================================================
+
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName("dung")
+        .setDescription("Sử dụng một vật phẩm trong túi đồ")
+        .addStringOption(option =>
+            option
+                .setName("vatpham")
+                .setDescription("Tên hoặc ID vật phẩm muốn sử dụng")
+                .setRequired(true)
+        ),
+
+    async execute(interaction) {
+
+        const userId =
+            interaction.user.id;
+
+        const input =
+            interaction.options.getString(
+                "vatpham",
+                true
+            );
+
+        const data =
+            layTuiDo(userId);
+
+        if (!data) {
+
+            return interaction.reply({
+                content:
+                    "⚠️ Bạn chưa có nhân vật. Hãy dùng `/batdau` trước.",
+                ephemeral: true
+            });
+        }
+
+        const {
+            player,
+            tuiDo,
+            items
+        } = data;
+
+        // Không cho sử dụng nguyên liệu / đồ rèn / đồ chế tạo.
+        if (
+            KHONG_THE_DUNG.some(
+                x =>
+                    chuanHoa(input) ===
+                    chuanHoa(x)
+            )
+        ) {
+
+            return interaction.reply({
+                content:
+                    `🚫 **${input}** không thể sử dụng bằng /dung.`,
+                ephemeral: true
+            });
+        }
+
+        const item =
+            timVatPham(
+                items,
+                input
+            );
+
+        if (!item) {
+
+            return interaction.reply({
+                content:
+                    `❌ Không tìm thấy vật phẩm **${input}** trong túi đồ.`,
+                ephemeral: true
+            });
+        }
+
+        if (
+            laVatPhamKhongTheDung(item)
+        ) {
+
+            return interaction.reply({
+                content:
+                    `🚫 **${layTen(item)}** không thể sử dụng bằng /dung.`,
+                ephemeral: true
+            });
+        }
+
+        if (
+            !kiemTraCoTheDung(item)
+        ) {
+
+            return interaction.reply({
+                content:
+                    `🚫 **${layTen(item)}** không phải vật phẩm có thể sử dụng bằng /dung.`,
+                ephemeral: true
+            });
+        }
+
+        const loai =
+            xacDinhLoaiChiTiet(item);
+
+        let result;
+
+        try {
+
+            if (
+                loai === "phap_bao"
+            ) {
+
+                result =
+                    await xuLyPhapBao(
+                        player,
+                        item
+                    );
+
+            } else if (
+                loai === "linh_thu"
+            ) {
+
+                result =
+                    await xuLyLinhThu(
+                        player,
+                        item
+                    );
+
+            } else if (
+                loai === "cong_phap"
+            ) {
+
+                result =
+                    await xuLyCongPhap(
+                        player,
+                        item
+                    );
+
+            } else if (
+                loai === "dan_duoc"
+            ) {
+
+                result =
+                    await xuLyDanDuoc(
+                        player,
+                        item
+                    );
+
+            } else {
+
+                result =
+                    await xuLyVatPham(
+                        player,
+                        item
+                    );
+            }
+
+        } catch (error) {
+
+            console.error(
+                "❌ Lỗi /dung:",
+                error
+            );
+
+            return interaction.reply({
+                content:
+                    "❌ Có lỗi xảy ra khi sử dụng vật phẩm.",
+                ephemeral: true
+            });
+        }
+
+        if (
+            !result ||
+            result.success === false
+        ) {
+
+            return interaction.reply({
+
+                embeds: [
+
+                    new EmbedBuilder()
+                        .setTitle(
+                            result?.title ||
+                            "⚠️ KHÔNG THỂ SỬ DỤNG"
+                        )
+                        .setDescription(
+                            result?.message ||
+                            "Vật phẩm không thể sử dụng."
+                        )
+                ],
+
+                ephemeral: true
+            });
+        }
+
+        // Chỉ trừ item sau khi sử dụng thành công.
+        if (
+            !truVatPham(
+                tuiDo,
+                item
+            )
+        ) {
+
+            return interaction.reply({
+                content:
+                    "⚠️ Đã kích hoạt vật phẩm nhưng không thể trừ vật phẩm khỏi túi đồ. Vui lòng kiểm tra lại túi đồ.",
+                ephemeral: true
+            });
+        }
+
+        // Lưu toàn bộ thay đổi của nhân vật.
+        updatePlayer(
+            userId,
+            {
+                ...player,
+                tuiDo,
+                id:
+                    player.id,
+                username:
+                    player.username
+            }
+        );
+
+        const embed =
+            new EmbedBuilder()
+                .setTitle(
+                    result.title ||
+                    "✨ SỬ DỤNG THÀNH CÔNG"
+                )
+                .setDescription(
+                    result.message ||
+                    "Đã sử dụng vật phẩm."
+                );
+
+        if (
+            Array.isArray(
+                result.buffs
+            ) &&
+            result.buffs.length > 0
+        ) {
+
+            embed.addFields({
+
+                name:
+                    "📊 Hiệu ứng",
+
+                value:
+                    result.buffs
+                        .join("\n")
+                        .slice(
+                            0,
+                            1024
+                        )
+            });
+        }
+
+        embed.addFields({
+
+            name:
+                "🎒 Vật phẩm",
+
+            value:
+                `**${layTen(item)}** đã được sử dụng và trừ khỏi túi đồ.`
+        });
+
+        return interaction.reply({
+
+            embeds: [
+                embed
+            ]
+        });
+    }
+};
