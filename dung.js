@@ -486,6 +486,7 @@ function timVatPham(
         input
     );
 }
+
 // ============================================================
 // XÁC ĐỊNH LOẠI
 // ============================================================
@@ -620,7 +621,6 @@ function xacDinhLoai(item) {
 
     return "vat_pham";
 }
-
 
 // ============================================================
 // TRỪ VẬT PHẨM
@@ -1198,6 +1198,8 @@ function layBuffChiTiet(
 
     return buff;
 }
+
+
 // ============================================================
 // ÁP DỤNG BUFF VÀO NHÂN VẬT
 // ============================================================
@@ -1242,7 +1244,6 @@ function apDungBuff(
             `❤️ HP tối đa: **${formatNumber(oldMaxHp)} → ${formatNumber(player.maxHp)}**`
         );
 
-        // Tăng HP hiện tại theo phần HP tối đa tăng
         if (
             Number(buff.maxHp) > 0
         ) {
@@ -1982,75 +1983,22 @@ async function dungLinhThu(
             thayDoi.join("\n")
     };
 }
-        thongBao.push(
-            `⚡ **Tỷ lệ đột phá:** ${buff.dotPha >= 0 ? "+" : ""}${buff.dotPha}%`
-        );
+
+// ============================================================
+// CỘNG BUFF
+// ============================================================
+
+function congBuff(
+    player,
+    buff
+) {
+
+    if (!player || !buff) {
+        return [];
     }
 
-    // --------------------------------------------------------
-    // CHÍ MẠNG
-    // --------------------------------------------------------
-
-    if (
-        Number(buff.chiMang) !== 0
-    ) {
-
-        player.chiMang =
-            Number(
-                player.chiMang || 0
-            ) +
-            Number(
-                buff.chiMang
-            );
-
-        thongBao.push(
-            `💥 **Chí mạng:** ${buff.chiMang >= 0 ? "+" : ""}${buff.chiMang}%`
-        );
-    }
-
-    // --------------------------------------------------------
-    // NÉ TRÁNH
-    // --------------------------------------------------------
-
-    if (
-        Number(buff.neTranh) !== 0
-    ) {
-
-        player.neTranh =
-            Number(
-                player.neTranh || 0
-            ) +
-            Number(
-                buff.neTranh
-            );
-
-        thongBao.push(
-            `💨 **Né tránh:** ${buff.neTranh >= 0 ? "+" : ""}${buff.neTranh}%`
-        );
-    }
-
-    // --------------------------------------------------------
-    // HỒI PHỤC
-    // --------------------------------------------------------
-
-    if (
-        Number(buff.hoiPhuc) !== 0
-    ) {
-
-        player.hoiPhuc =
-            Number(
-                player.hoiPhuc || 0
-            ) +
-            Number(
-                buff.hoiPhuc
-            );
-
-        thongBao.push(
-            `💚 **Hồi phục:** ${buff.hoiPhuc >= 0 ? "+" : ""}${buff.hoiPhuc}%`
-        );
-    }
-
-    return thongBao;
+    // Dùng chung logic áp dụng buff để tránh cộng chỉ số trùng lặp.
+    return apDungBuff(player, buff);
 }
 
 
