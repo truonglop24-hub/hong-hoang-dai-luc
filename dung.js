@@ -304,6 +304,7 @@ function laVatPhamKhongTheDung(item) {
 // ============================================================
 
 function layCategory(item) {
+
     if (!item) {
         return "";
     }
@@ -868,17 +869,29 @@ function layBuffChiTiet(
 ) {
 
     const buff = {
+
         hp: 0,
+
         maxHp: 0,
+
         linhLuc: 0,
+
         tuvi: 0,
+
         kinhNghiem: 0,
+
         cong: 0,
+
         thu: 0,
+
         chiMang: 0,
+
         neTranh: 0,
+
         hoiPhuc: 0,
+
         tuLuyen: 0,
+
         dotPha: 0
     };
 
@@ -983,6 +996,7 @@ function layBuffChiTiet(
         Number(
             item.dotPha ??
             item.dotPhaBonus ??
+            item.breakthrough ??
             0
         ) || 0;
                 item.breakthrough ??
@@ -1234,6 +1248,7 @@ function apDungBuff(
         if (
             Number(buff.maxHp) > 0
         ) {
+
             player.hp =
                 Number(
                     player.hp || 0
@@ -1970,7 +1985,6 @@ async function dungLinhThu(
     };
 }
 
-
 // ============================================================
 // CỘNG BUFF
 // ============================================================
@@ -2447,10 +2461,6 @@ async function xuLyPhapBao(
     const buff =
         layBuffChiTiet(item);
 
-    // --------------------------------------------------------
-    // GỠ PHÁP BẢO CŨ
-    // --------------------------------------------------------
-
     if (
         player.phapBaoDangDung &&
         player.phapBaoDangDung.buff
@@ -2462,19 +2472,11 @@ async function xuLyPhapBao(
         );
     }
 
-    // --------------------------------------------------------
-    // CỘNG PHÁP BẢO MỚI
-    // --------------------------------------------------------
-
     const thongBao =
         congBuff(
             player,
             buff
         );
-
-    // --------------------------------------------------------
-    // LƯU
-    // --------------------------------------------------------
 
     player.phapBaoDangDung =
         taoPhapBaoDangDung(
@@ -2516,10 +2518,6 @@ async function xuLyLinhThu(
     const buff =
         layBuffChiTiet(item);
 
-    // --------------------------------------------------------
-    // GỠ BUFF LINH THÚ CŨ
-    // --------------------------------------------------------
-
     if (
         player.linhThuDangDung &&
         player.linhThuDangDung.buff
@@ -2531,19 +2529,11 @@ async function xuLyLinhThu(
         );
     }
 
-    // --------------------------------------------------------
-    // CỘNG BUFF LINH THÚ MỚI
-    // --------------------------------------------------------
-
     const thongBao =
         congBuff(
             player,
             buff
         );
-
-    // --------------------------------------------------------
-    // LƯU
-    // --------------------------------------------------------
 
     player.linhThuDangDung =
         taoLinhThuDangDung(
@@ -2591,10 +2581,6 @@ async function xuLyCongPhap(
     const buff =
         layBuffChiTiet(item);
 
-    // --------------------------------------------------------
-    // KHỞI TẠO DANH SÁCH
-    // --------------------------------------------------------
-
     if (
         !Array.isArray(
             player.congPhap
@@ -2604,17 +2590,11 @@ async function xuLyCongPhap(
         player.congPhap = [];
     }
 
-    // --------------------------------------------------------
-    // KIỂM TRA ĐÃ HỌC
-    // --------------------------------------------------------
-
     const daHoc =
         player.congPhap.some(
             cp => {
 
-                if (
-                    !cp
-                ) {
+                if (!cp) {
                     return false;
                 }
 
@@ -2635,12 +2615,8 @@ async function xuLyCongPhap(
                 ) {
 
                     if (
-                        String(
-                            oldId
-                        ) ===
-                        String(
-                            id
-                        )
+                        String(oldId) ===
+                        String(id)
                     ) {
                         return true;
                     }
@@ -2648,12 +2624,8 @@ async function xuLyCongPhap(
 
                 if (
                     oldName &&
-                    chuanHoa(
-                        oldName
-                    ) ===
-                    chuanHoa(
-                        ten
-                    )
+                    chuanHoa(oldName) ===
+                    chuanHoa(ten)
                 ) {
                     return true;
                 }
@@ -2678,19 +2650,11 @@ async function xuLyCongPhap(
         };
     }
 
-    // --------------------------------------------------------
-    // CỘNG BUFF
-    // --------------------------------------------------------
-
     const thongBao =
         congBuff(
             player,
             buff
         );
-
-    // --------------------------------------------------------
-    // LƯU CÔNG PHÁP
-    // --------------------------------------------------------
 
     player.congPhap.push({
 
@@ -2783,9 +2747,7 @@ async function xuLyVatPham(
         layTen(item);
 
     if (
-        !kiemTraCoTheDung(
-            item
-        )
+        !kiemTraCoTheDung(item)
     ) {
 
         return {
@@ -2851,23 +2813,28 @@ async function xuLyVatPham(
 // ============================================================
 // LỆNH SLASH /DUNG
 // ============================================================
-// File này trước đây chỉ chứa các hàm xử lý vật phẩm nên
-// index.js không nhận diện được là Slash Command.
-// Khối dưới đây đăng ký /dung và dùng toàn bộ logic ở trên.
-// ============================================================
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName("dung")
-        .setDescription("Sử dụng một vật phẩm trong túi đồ")
-        .addStringOption(option =>
-            option
-                .setName("vatpham")
-                .setDescription("Tên hoặc ID vật phẩm muốn sử dụng")
-                .setRequired(true)
-        ),
 
-    async execute(interaction) {
+    data:
+        new SlashCommandBuilder()
+            .setName("dung")
+            .setDescription(
+                "Sử dụng một vật phẩm trong túi đồ"
+            )
+            .addStringOption(
+                option =>
+                    option
+                        .setName("vatpham")
+                        .setDescription(
+                            "Tên hoặc ID vật phẩm muốn sử dụng"
+                        )
+                        .setRequired(true)
+            ),
+
+    async execute(
+        interaction
+    ) {
 
         const userId =
             interaction.user.id;
@@ -2879,13 +2846,17 @@ module.exports = {
             );
 
         const data =
-            layTuiDo(userId);
+            layTuiDo(
+                userId
+            );
 
         if (!data) {
 
             return interaction.reply({
+
                 content:
                     "⚠️ Bạn chưa có nhân vật. Hãy dùng `/batdau` trước.",
+
                 ephemeral: true
             });
         }
@@ -2896,7 +2867,6 @@ module.exports = {
             items
         } = data;
 
-        // Không cho sử dụng nguyên liệu / đồ rèn / đồ chế tạo.
         if (
             KHONG_THE_DUNG.some(
                 x =>
@@ -2906,8 +2876,10 @@ module.exports = {
         ) {
 
             return interaction.reply({
+
                 content:
                     `🚫 **${input}** không thể sử dụng bằng /dung.`,
+
                 ephemeral: true
             });
         }
@@ -2921,36 +2893,48 @@ module.exports = {
         if (!item) {
 
             return interaction.reply({
+
                 content:
                     `❌ Không tìm thấy vật phẩm **${input}** trong túi đồ.`,
+
                 ephemeral: true
             });
         }
 
         if (
-            laVatPhamKhongTheDung(item)
+            laVatPhamKhongTheDung(
+                item
+            )
         ) {
 
             return interaction.reply({
+
                 content:
                     `🚫 **${layTen(item)}** không thể sử dụng bằng /dung.`,
+
                 ephemeral: true
             });
         }
 
         if (
-            !kiemTraCoTheDung(item)
+            !kiemTraCoTheDung(
+                item
+            )
         ) {
 
             return interaction.reply({
+
                 content:
                     `🚫 **${layTen(item)}** không phải vật phẩm có thể sử dụng bằng /dung.`,
+
                 ephemeral: true
             });
         }
 
         const loai =
-            xacDinhLoaiChiTiet(item);
+            xacDinhLoaiChiTiet(
+                item
+            );
 
         let result;
 
@@ -3013,8 +2997,10 @@ module.exports = {
             );
 
             return interaction.reply({
+
                 content:
                     "❌ Có lỗi xảy ra khi sử dụng vật phẩm.",
+
                 ephemeral: true
             });
         }
@@ -3043,7 +3029,6 @@ module.exports = {
             });
         }
 
-        // Chỉ trừ item sau khi sử dụng thành công.
         if (
             !truVatPham(
                 tuiDo,
@@ -3052,13 +3037,14 @@ module.exports = {
         ) {
 
             return interaction.reply({
+
                 content:
                     "⚠️ Đã kích hoạt vật phẩm nhưng không thể trừ vật phẩm khỏi túi đồ. Vui lòng kiểm tra lại túi đồ.",
+
                 ephemeral: true
             });
         }
 
-        // Lưu toàn bộ thay đổi của nhân vật.
         updatePlayer(
             userId,
             {
