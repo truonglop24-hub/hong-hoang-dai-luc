@@ -95,7 +95,10 @@ const DAO_REALMS = {
 
 const CULTIVATION_SPEED = {
 
+    // =================================================
     // ⚔️ CHÍNH ĐẠO
+    // =================================================
+
     "Phàm Nhân": 1 * 3,
     "Luyện Khí": 5 * 3,
     "Trúc Cơ": 15 * 3,
@@ -115,7 +118,10 @@ const CULTIVATION_SPEED = {
     "Thiên Đạo": 10000000 * 3,
     "Đại Đạo": 50000000 * 3,
 
+    // =================================================
     // 😈 MA ĐẠO
+    // =================================================
+
     "Ma Phàm": 1 * 3,
     "Ma Khí": 5 * 3,
     "Ma Cơ": 15 * 3,
@@ -135,7 +141,10 @@ const CULTIVATION_SPEED = {
     "Ma Đạo": 10000000 * 3,
     "Ma Tổ": 50000000 * 3,
 
+    // =================================================
     // 🐺 YÊU ĐẠO
+    // =================================================
+
     "Yêu Phàm": 1 * 3,
     "Yêu Khí": 5 * 3,
     "Yêu Cơ": 15 * 3,
@@ -168,13 +177,16 @@ function normalizeDao(player) {
         player?.conDuong ||
         player?.phuongDao ||
         "chinhdao"
-    ).toLowerCase().trim();
+    )
+        .toLowerCase()
+        .trim();
 
     if (
         dao === "madao" ||
         dao === "ma dao" ||
         dao.includes("ma đạo")
     ) {
+
         return "madao";
     }
 
@@ -183,6 +195,7 @@ function normalizeDao(player) {
         dao === "yeu dao" ||
         dao.includes("yêu đạo")
     ) {
+
         return "yeudao";
     }
 
@@ -197,10 +210,12 @@ function normalizeDao(player) {
 function getDaoName(dao) {
 
     if (dao === "madao") {
+
         return "😈 Ma Đạo";
     }
 
     if (dao === "yeudao") {
+
         return "🐺 Yêu Đạo";
     }
 
@@ -214,29 +229,44 @@ function getDaoName(dao) {
 
 function getDaoRealm(player) {
 
-    const dao = normalizeDao(player);
+    const dao =
+        normalizeDao(player);
 
     const realms =
         DAO_REALMS[dao] ||
         DAO_REALMS.chinhdao;
 
-    let index = Number(
-        player?.realmIndex ??
-        player?.realm ??
-        NaN
-    );
+    let index =
+        Number(
+            player?.realmIndex
+        );
 
-    if (!Number.isFinite(index)) {
+    if (
+        !Number.isFinite(index)
+    ) {
+
+        index =
+            Number(
+                player?.realm
+            );
+    }
+
+    if (
+        !Number.isFinite(index)
+    ) {
 
         const current =
             String(
                 player?.canhGioi || ""
-            ).trim().toLowerCase();
+            )
+                .trim()
+                .toLowerCase();
 
         index =
             realms.findIndex(
                 name =>
-                    name.toLowerCase() === current
+                    name.toLowerCase() ===
+                    current
             );
     }
 
@@ -244,18 +274,24 @@ function getDaoRealm(player) {
         !Number.isFinite(index) ||
         index < 0
     ) {
+
         index = 0;
     }
 
-    index = Math.min(
-        realms.length - 1,
-        Math.floor(index)
-    );
+    index =
+        Math.min(
+            realms.length - 1,
+            Math.floor(index)
+        );
 
     return {
+
         dao,
+
         index,
-        name: realms[index]
+
+        name:
+            realms[index]
     };
 }
 
@@ -266,21 +302,34 @@ function getDaoRealm(player) {
 
 function getStage(tang) {
 
-    tang = Number(tang) || 1;
+    tang =
+        Number(tang) || 1;
 
-    if (tang <= 3) {
+    if (
+        tang <= 3
+    ) {
+
         return "Sơ kỳ";
     }
 
-    if (tang <= 6) {
+    if (
+        tang <= 6
+    ) {
+
         return "Trung kỳ";
     }
 
-    if (tang <= 9) {
+    if (
+        tang <= 9
+    ) {
+
         return "Hậu kỳ";
     }
 
-    if (tang <= 11) {
+    if (
+        tang <= 11
+    ) {
+
         return "Viên mãn";
     }
 
@@ -302,24 +351,56 @@ function getRealmDisplay(player) {
             1,
             Math.min(
                 12,
-                Number(player?.tang) || 1
+                Number(
+                    player?.tang
+                ) || 1
             )
         );
 
-    return `${realm.name} ${getStage(tang)} tầng ${tang}`;
+    return (
+        `${realm.name} ` +
+        `${getStage(tang)} ` +
+        `tầng ${tang}`
+    );
 }
 
 
 // =====================================================
 // ⚡ LẤY TỐC ĐỘ
 // =====================================================
+// FIX:
+// Không dùng biến canhGio.
+// Dùng realmName để tránh ReferenceError.
+// =====================================================
 
-function getCultivationSpeed(canhGioi) {
+function getCultivationSpeed(realmName) {
+
+    const name =
+        String(
+            realmName || ""
+        ).trim();
+
+    const speed =
+        CULTIVATION_SPEED[name];
+
+    if (
+        speed === undefined ||
+        !Number.isFinite(
+            Number(speed)
+        )
+    ) {
+
+        console.warn(
+            `⚠️ Không tìm thấy tốc độ tu luyện cho cảnh giới: ${name}`
+        );
+
+        return 3;
+    }
 
     return Math.max(
         1,
         Math.floor(
-            CULTIVATION_SPEED[canhGio] || 1
+            Number(speed)
         )
     );
 }
@@ -351,8 +432,10 @@ module.exports = {
 
         try {
 
-            // FIX: PHẢI await database
-            p = await getPlayer(userId);
+            p =
+                await getPlayer(
+                    userId
+                );
 
         } catch (error) {
 
@@ -361,9 +444,19 @@ module.exports = {
                 error
             );
 
+            console.error(
+                "❌ Message:",
+                error?.message
+            );
+
+            console.error(
+                "❌ Stack:",
+                error?.stack
+            );
+
             return interaction.reply({
                 content:
-                    "❌ Không thể đọc dữ liệu nhân vật. Hãy kiểm tra Railway Console.",
+                    "❌ Không thể đọc dữ liệu nhân vật.",
                 ephemeral: true
             });
         }
@@ -387,7 +480,9 @@ module.exports = {
         // 🧘 ĐANG BẾ QUAN
         // =================================================
 
-        if (p.beQuan) {
+        if (
+            p.beQuan
+        ) {
 
             return interaction.reply({
                 content:
@@ -402,7 +497,9 @@ module.exports = {
         // =================================================
 
         const lastTrain =
-            Number(p.lastTrain) || 0;
+            Number(
+                p.lastTrain
+            ) || 0;
 
         const remaining =
             COOLDOWN -
@@ -411,7 +508,9 @@ module.exports = {
                 lastTrain
             );
 
-        if (remaining > 0) {
+        if (
+            remaining > 0
+        ) {
 
             return interaction.reply({
                 content:
@@ -424,7 +523,7 @@ module.exports = {
 
 
         // =================================================
-        // 🌌 ĐẠO HIỆN TẠI
+        // 🌌 ĐẠO
         // =================================================
 
         const dao =
@@ -432,7 +531,7 @@ module.exports = {
 
 
         // =================================================
-        // 🌌 CẢNH GIỚI RIÊNG CỦA ĐẠO
+        // 🌌 CẢNH GIỚI
         // =================================================
 
         const realm =
@@ -448,7 +547,9 @@ module.exports = {
                 1,
                 Math.min(
                     12,
-                    Number(p.tang) || 1
+                    Number(
+                        p.tang
+                    ) || 1
                 )
             );
 
@@ -589,7 +690,9 @@ module.exports = {
 
         const tuViHienTai =
             (
-                Number(p.tuvi) || 0
+                Number(
+                    p.tuvi
+                ) || 0
             ) + tuvi;
 
 
@@ -599,7 +702,9 @@ module.exports = {
 
         const linhLucHienTai =
             (
-                Number(p.linhLuc) || 0
+                Number(
+                    p.linhLuc
+                ) || 0
             ) + linhLuc;
 
 
@@ -609,7 +714,9 @@ module.exports = {
 
         const kinhNghiemHienTai =
             (
-                Number(p.kinhNghiem) || 0
+                Number(
+                    p.kinhNghiem
+                ) || 0
             ) + exp;
 
 
@@ -619,12 +726,11 @@ module.exports = {
 
         try {
 
-            // FIX QUAN TRỌNG:
-            // PHẢI await updatePlayer nếu database async
             const updated =
                 await updatePlayer(
                     userId,
                     {
+
                         dao:
                             dao,
 
@@ -640,14 +746,12 @@ module.exports = {
                         realmIndex:
                             realm.index,
 
-                        // Không tự tăng tầng
                         tang:
                             tang,
 
                         tier:
                             tang,
 
-                        // Cảnh giới luôn theo đạo
                         canhGioi:
                             realm.name,
 
@@ -677,7 +781,7 @@ module.exports = {
 
                 return interaction.reply({
                     content:
-                        "❌ Không thể lưu dữ liệu tu luyện. Hãy kiểm tra Railway Console.",
+                        "❌ Không thể lưu dữ liệu tu luyện.",
                     ephemeral: true
                 });
             }
@@ -690,13 +794,18 @@ module.exports = {
             );
 
             console.error(
+                "❌ Message:",
+                error?.message
+            );
+
+            console.error(
                 "❌ Stack:",
                 error?.stack
             );
 
             return interaction.reply({
                 content:
-                    "❌ Đã xảy ra lỗi khi lưu dữ liệu tu luyện. Hãy kiểm tra Railway Console.",
+                    "❌ Đã xảy ra lỗi khi lưu dữ liệu tu luyện.",
                 ephemeral: true
             });
         }
@@ -717,14 +826,23 @@ module.exports = {
         // 🎨 MÀU
         // =================================================
 
-        let color = 0x3498db;
+        let color =
+            0x3498db;
 
-        if (dao === "madao") {
-            color = 0x8e44ad;
+        if (
+            dao === "madao"
+        ) {
+
+            color =
+                0x8e44ad;
         }
 
-        if (dao === "yeudao") {
-            color = 0xe67e22;
+        if (
+            dao === "yeudao"
+        ) {
+
+            color =
+                0xe67e22;
         }
 
 
@@ -733,7 +851,9 @@ module.exports = {
         // =================================================
 
         const daoName =
-            getDaoName(dao);
+            getDaoName(
+                dao
+            );
 
 
         // =================================================
@@ -743,78 +863,118 @@ module.exports = {
         const embed =
             new EmbedBuilder()
 
-                .setColor(color)
+                .setColor(
+                    color
+                )
 
                 .setTitle(
                     `${daoName} • TU LUYỆN THÀNH CÔNG`
                 )
 
                 .setDescription(
+
                     `**${interaction.user.username}** vận chuyển linh khí trong kinh mạch.\n\n` +
 
                     `━━━━━━━━━━━━━━━━━━━━\n\n` +
 
                     `🌌 **Con đường:**\n` +
+
                     `**${daoName}**\n\n` +
 
                     `👑 **Cảnh giới hiện tại:**\n` +
+
                     `# **${realm.name}**\n\n` +
 
                     `✨ **${stage} • Tầng ${tang}/12**\n\n` +
 
-                    `⚠️ Cảnh giới này thuộc **${daoName}**.\n` +
+                    `⚠️ Cảnh giới này thuộc **${daoName}**.\n\n` +
 
                     `⚔️ Muốn lên tầng tiếp theo phải sử dụng **/dotpha**.\n\n` +
 
-                    `⚡ **Tốc độ tu luyện:** ×${format(speed)}`
+                    `⚡ **Tốc độ tu luyện:** ×${format(
+                        speed
+                    )}`
                 )
 
                 .addFields(
 
                     {
-                        name: "🔥 Linh lực",
+                        name:
+                            "🔥 Linh lực",
+
                         value:
-                            `+**${format(linhLuc)}**`,
-                        inline: true
+                            `+**${format(
+                                linhLuc
+                            )}**`,
+
+                        inline:
+                            true
                     },
 
                     {
-                        name: "⚔️ Tu Vi",
+                        name:
+                            "⚔️ Tu Vi",
+
                         value:
-                            `+**${format(tuvi)}**`,
-                        inline: true
+                            `+**${format(
+                                tuvi
+                            )}**`,
+
+                        inline:
+                            true
                     },
 
                     {
-                        name: "✨ Kinh nghiệm",
+                        name:
+                            "✨ Kinh nghiệm",
+
                         value:
-                            `+**${format(exp)}**`,
-                        inline: true
+                            `+**${format(
+                                exp
+                            )}**`,
+
+                        inline:
+                            true
                     },
 
                     {
-                        name: "📈 Tu Vi hiện tại",
+                        name:
+                            "📈 Tu Vi hiện tại",
+
                         value:
-                            `**${format(tuViHienTai)}**`,
-                        inline: true
+                            `**${format(
+                                tuViHienTai
+                            )}**`,
+
+                        inline:
+                            true
                     },
 
                     {
-                        name: "🧬 Buff linh căn",
+                        name:
+                            "🧬 Buff linh căn",
+
                         value:
                             `+${linhCanBuff}%`,
-                        inline: true
+
+                        inline:
+                            true
                     },
 
                     {
-                        name: "⚡ Buff đạo",
+                        name:
+                            "⚡ Buff đạo",
+
                         value:
                             `+${daoBuff}%`,
-                        inline: true
+
+                        inline:
+                            true
                     }
                 )
 
                 .setFooter({
+
                     text:
                         `⏳ Cooldown: 15 giây • ${daoName} • Tốc độ ×3`
                 });
@@ -825,7 +985,10 @@ module.exports = {
         // =================================================
 
         return interaction.reply({
-            embeds: [embed]
+
+            embeds: [
+                embed
+            ]
         });
     }
 };
