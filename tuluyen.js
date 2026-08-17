@@ -351,8 +351,8 @@ module.exports = {
 
         try {
 
-            p =
-                getPlayer(userId);
+            // FIX: PHẢI await database
+            p = await getPlayer(userId);
 
         } catch (error) {
 
@@ -401,13 +401,14 @@ module.exports = {
         // ⏳ COOLDOWN 15 GIÂY
         // =================================================
 
+        const lastTrain =
+            Number(p.lastTrain) || 0;
+
         const remaining =
             COOLDOWN -
             (
                 Date.now() -
-                (
-                    p.lastTrain || 0
-                )
+                lastTrain
             );
 
         if (remaining > 0) {
@@ -512,11 +513,14 @@ module.exports = {
         // =================================================
 
         const buffMultiplier =
-            1 +
-            (
-                linhCanBuff +
-                daoBuff
-            ) / 100;
+            Math.max(
+                0,
+                1 +
+                (
+                    linhCanBuff +
+                    daoBuff
+                ) / 100
+            );
 
 
         // =================================================
@@ -600,7 +604,7 @@ module.exports = {
 
 
         // =================================================
-        // ✨ KINH NGHIỆM
+        // ✨ KINH NGHIỆM HIỆN TẠI
         // =================================================
 
         const kinhNghiemHienTai =
@@ -615,11 +619,12 @@ module.exports = {
 
         try {
 
+            // FIX QUAN TRỌNG:
+            // PHẢI await updatePlayer nếu database async
             const updated =
-                updatePlayer(
+                await updatePlayer(
                     userId,
                     {
-
                         dao:
                             dao,
 
@@ -635,7 +640,7 @@ module.exports = {
                         realmIndex:
                             realm.index,
 
-                        // ❗ KHÔNG TỰ TĂNG TẦNG
+                        // Không tự tăng tầng
                         tang:
                             tang,
 
