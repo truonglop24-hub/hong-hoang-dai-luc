@@ -44,7 +44,9 @@ let LINH_CAN = [];
 let THE_CHAT = [];
 
 try {
-    const linhCanData = require("./linhcan");
+
+    const linhCanData =
+        require("./linhcan");
 
     LINH_CAN =
         linhCanData.LINH_CAN || [];
@@ -63,6 +65,7 @@ try {
 }
 
 try {
+
     const theChatData =
         require("./thechat");
 
@@ -104,7 +107,10 @@ const commandFiles =
                 ].includes(file)
         );
 
-for (const file of commandFiles) {
+for (
+    const file
+    of commandFiles
+) {
 
     try {
 
@@ -154,6 +160,16 @@ for (const file of commandFiles) {
         );
 
         console.error(error);
+
+        console.error(
+            "❌ Message:",
+            error?.message
+        );
+
+        console.error(
+            "❌ Stack:",
+            error?.stack
+        );
     }
 }
 
@@ -166,6 +182,7 @@ client.once(
     () => {
 
         console.log("");
+
         console.log(
             "===================================="
         );
@@ -198,7 +215,10 @@ client.once(
             "🟢 Bot đang hoạt động."
         );
 
+        // ==================================
         // ❤️ HỒI MÁU TỰ ĐỘNG MỖI GIÂY
+        // ==================================
+
         setInterval(
             () => {
 
@@ -211,6 +231,16 @@ client.once(
                     console.error(
                         "❌ Lỗi hồi máu:",
                         error
+                    );
+
+                    console.error(
+                        "❌ Message:",
+                        error?.message
+                    );
+
+                    console.error(
+                        "❌ Stack:",
+                        error?.stack
                     );
                 }
 
@@ -253,7 +283,9 @@ client.on(
                 ) {
 
                     const phoban =
-                        client.commands.get("phoban");
+                        client.commands.get(
+                            "phoban"
+                        );
 
                     if (!phoban) {
 
@@ -436,90 +468,6 @@ client.on(
                             ephemeral: true
                         });
                     }
-                }
-
-                // ==================================
-                // ☠️ MENU MA ĐẠO
-                // ==================================
-
-                if (
-                    interaction.isStringSelectMenu() &&
-                    customId.startsWith(
-                        "madao_menu_"
-                    )
-                ) {
-
-                    const madao =
-                        client.commands.get(
-                            "madao"
-                        );
-
-                    if (!madao) {
-
-                        return interaction.reply({
-                            content:
-                                "❌ Không tải được hệ thống Ma Đạo.",
-                            ephemeral: true
-                        });
-                    }
-
-                    if (
-                        typeof madao.handleMenu ===
-                        "function"
-                    ) {
-
-                        return await madao.handleMenu(
-                            interaction
-                        );
-                    }
-
-                    return interaction.reply({
-                        content:
-                            "❌ Hệ thống Ma Đạo chưa hỗ trợ menu.",
-                        ephemeral: true
-                    });
-                }
-
-                // ==================================
-                // 🐉 MENU YÊU ĐẠO
-                // ==================================
-
-                if (
-                    interaction.isStringSelectMenu() &&
-                    customId.startsWith(
-                        "yeudao_menu_"
-                    )
-                ) {
-
-                    const yeudao =
-                        client.commands.get(
-                            "yeudao"
-                        );
-
-                    if (!yeudao) {
-
-                        return interaction.reply({
-                            content:
-                                "❌ Không tải được hệ thống Yêu Đạo. Hãy kiểm tra file yeudao.js.",
-                            ephemeral: true
-                        });
-                    }
-
-                    if (
-                        typeof yeudao.handleMenu ===
-                        "function"
-                    ) {
-
-                        return await yeudao.handleMenu(
-                            interaction
-                        );
-                    }
-
-                    return interaction.reply({
-                        content:
-                            "❌ Hệ thống Yêu Đạo chưa hỗ trợ menu.",
-                        ephemeral: true
-                    });
                 }
 
                 // ==================================
@@ -731,8 +679,12 @@ client.on(
                 // ==================================
 
                 if (
-                    customId.startsWith("menu_") ||
-                    customId.startsWith("pvp_")
+                    customId.startsWith(
+                        "menu_"
+                    ) ||
+                    customId.startsWith(
+                        "pvp_"
+                    )
                 ) {
 
                     const menu =
@@ -761,7 +713,9 @@ client.on(
                 // ==================================
 
                 if (
-                    customId.startsWith("shop_")
+                    customId.startsWith(
+                        "shop_"
+                    )
                 ) {
 
                     const cuahang =
@@ -913,6 +867,7 @@ client.on(
             if (
                 !interaction.isChatInputCommand()
             ) {
+
                 return;
             }
 
@@ -930,24 +885,79 @@ client.on(
                 });
             }
 
+            console.log(
+                `📥 Chạy /${interaction.commandName} | User: ${interaction.user.id}`
+            );
+
             await command.execute(
                 interaction
             );
 
         } catch (error) {
 
+            // ==================================
+            // ❌ HIỆN LỖI THẬT
+            // ==================================
+
+            const interactionName =
+                interaction.commandName ||
+                interaction.customId ||
+                "unknown";
+
             console.error(
-                `❌ Lỗi interaction ${
-                    interaction.commandName ||
-                    interaction.customId ||
-                    ""
-                }:`,
+                "===================================="
+            );
+
+            console.error(
+                `❌ LỖI INTERACTION: ${interactionName}`
+            );
+
+            console.error(
+                "❌ Error:",
                 error
             );
 
+            console.error(
+                "❌ Message:",
+                error?.message
+            );
+
+            console.error(
+                "❌ Stack:",
+                error?.stack
+            );
+
+            console.error(
+                "===================================="
+            );
+
+            let errorText =
+                String(
+                    error?.message ||
+                    error ||
+                    "Lỗi không xác định"
+                );
+
+            // Không để Discord vượt quá giới hạn
+            if (
+                errorText.length > 1500
+            ) {
+
+                errorText =
+                    errorText.substring(
+                        0,
+                        1500
+                    ) +
+                    "...";
+            }
+
             const message = {
                 content:
-                    "❌ Đã xảy ra lỗi khi thực hiện chức năng.",
+                    "❌ **Đã xảy ra lỗi khi thực hiện chức năng.**\n\n" +
+                    "🔎 **Lỗi thật:**\n" +
+                    "```text\n" +
+                    errorText +
+                    "\n```",
                 ephemeral: true
             };
 
@@ -969,7 +979,26 @@ client.on(
                     );
                 }
 
-            } catch {}
+            } catch (replyError) {
+
+                console.error(
+                    "❌ Không thể gửi thông báo lỗi về Discord:"
+                );
+
+                console.error(
+                    replyError
+                );
+
+                console.error(
+                    "❌ Message:",
+                    replyError?.message
+                );
+
+                console.error(
+                    "❌ Stack:",
+                    replyError?.stack
+                );
+            }
         }
     }
 );
@@ -987,6 +1016,18 @@ client.login(
             "❌ Không thể đăng nhập Discord:"
         );
 
-        console.error(error);
+        console.error(
+            error
+        );
+
+        console.error(
+            "❌ Message:",
+            error?.message
+        );
+
+        console.error(
+            "❌ Stack:",
+            error?.stack
+        );
     }
 );
