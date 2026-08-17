@@ -214,8 +214,7 @@ function getDaoName(dao) {
 
 function getDaoRealm(player) {
 
-    const dao =
-        normalizeDao(player);
+    const dao = normalizeDao(player);
 
     const realms =
         DAO_REALMS[dao] ||
@@ -344,8 +343,30 @@ module.exports = {
         const userId =
             interaction.user.id;
 
-        const p =
-            getPlayer(userId);
+        let p;
+
+        // =================================================
+        // 👤 LẤY PLAYER
+        // =================================================
+
+        try {
+
+            p =
+                getPlayer(userId);
+
+        } catch (error) {
+
+            console.error(
+                "❌ LỖI getPlayer /tuluyen:",
+                error
+            );
+
+            return interaction.reply({
+                content:
+                    "❌ Không thể đọc dữ liệu nhân vật. Hãy kiểm tra Railway Console.",
+                ephemeral: true
+            });
+        }
 
 
         // =================================================
@@ -592,49 +613,88 @@ module.exports = {
         // 💾 LƯU DATA
         // =================================================
 
-        updatePlayer(
-            userId,
-            {
+        try {
 
-                dao:
-                    dao,
+            const updated =
+                updatePlayer(
+                    userId,
+                    {
 
-                conDuong:
-                    dao,
+                        dao:
+                            dao,
 
-                phuongDao:
-                    dao,
+                        conDuong:
+                            dao,
 
-                realm:
-                    realm.index,
+                        phuongDao:
+                            dao,
 
-                realmIndex:
-                    realm.index,
+                        realm:
+                            realm.index,
 
-                // ❗ KHÔNG TỰ TĂNG TẦNG
-                tang:
-                    tang,
+                        realmIndex:
+                            realm.index,
 
-                tier:
-                    tang,
+                        // ❗ KHÔNG TỰ TĂNG TẦNG
+                        tang:
+                            tang,
 
-                // Cảnh giới luôn theo đạo
-                canhGioi:
-                    realm.name,
+                        tier:
+                            tang,
 
-                linhLuc:
-                    linhLucHienTai,
+                        // Cảnh giới luôn theo đạo
+                        canhGioi:
+                            realm.name,
 
-                tuvi:
-                    tuViHienTai,
+                        linhLuc:
+                            linhLucHienTai,
 
-                kinhNghiem:
-                    kinhNghiemHienTai,
+                        tuvi:
+                            tuViHienTai,
 
-                lastTrain:
-                    Date.now()
+                        kinhNghiem:
+                            kinhNghiemHienTai,
+
+                        lastTrain:
+                            Date.now()
+                    }
+                );
+
+
+            if (!updated) {
+
+                console.error(
+                    "❌ updatePlayer /tuluyen trả về null/undefined.",
+                    {
+                        userId
+                    }
+                );
+
+                return interaction.reply({
+                    content:
+                        "❌ Không thể lưu dữ liệu tu luyện. Hãy kiểm tra Railway Console.",
+                    ephemeral: true
+                });
             }
-        );
+
+        } catch (error) {
+
+            console.error(
+                "❌ LỖI updatePlayer /tuluyen:",
+                error
+            );
+
+            console.error(
+                "❌ Stack:",
+                error?.stack
+            );
+
+            return interaction.reply({
+                content:
+                    "❌ Đã xảy ra lỗi khi lưu dữ liệu tu luyện. Hãy kiểm tra Railway Console.",
+                ephemeral: true
+            });
+        }
 
 
         // =================================================
